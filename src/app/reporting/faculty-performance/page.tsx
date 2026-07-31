@@ -16,10 +16,10 @@ export default function FacultyPerformancePage() {
     <>
       <ScopeBreadcrumb />
 
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
+      <div className="sf-panel">
+        <div className="sf-panel-head">
           <h2>Faculty class performance</h2>
-          <span className="config-status-summary">
+          <span className="sf-panel-note">
             Rolls up to class level — no individual faculty profiles
           </span>
         </div>
@@ -30,7 +30,7 @@ export default function FacultyPerformancePage() {
             message="Widen the filters above to see class performance."
           />
         ) : (
-          <table className="admin-table">
+          <table className="sf-table">
             <thead>
               <tr>
                 <th scope="col">Class</th>

@@ -1,0 +1,1071 @@
+/**
+ * Edison 360 Admin — Salesforce Lightning Analytics dark theme.
+ *
+ * Values read off the reference dashboard screenshots. This is the only place
+ * colour is defined; screens compose from these tokens so the theme stays
+ * consistent app-wide (nav, forms, tables, buttons — not just charts).
+ *
+ * Status colours are deliberately a fixed three-way scale reused across every
+ * chart: sky = primary status (Present / Neutral / Faculty / Grade 10),
+ * purple = the contrasting status (Absent / Unpleasant / Grade 9), lavender =
+ * the partial/third status (Attended half a day / Pleasant / Grade 8). Keeping
+ * one mapping means a colour means the same thing on every card.
+ */
+
+:root {
+  /* Surfaces */
+  --sf-canvas: #060f2b;
+  --sf-card: #0d1b45;
+  --sf-card-border: #1c2a5e;
+  --sf-plot: #0a1538;
+  --sf-gridline: #1e2c5c;
+  --sf-raised: #16255a;
+  --sf-sidebar: #050c22;
+
+  /* Text */
+  --sf-text: #ffffff;
+  --sf-text-muted: #a8b6da;
+  --sf-text-dim: #7f8fba;
+
+  /* The large single-number stats */
+  --sf-stat: #3f9c8a;
+
+  /* Fixed status scale, consistent across all charts */
+  --sf-series-1: #5aa9e6;
+  --sf-series-2: #a855f7;
+  --sf-series-3: #b9b4ee;
+  --sf-series-4: #2fb3a0;
+  --sf-series-5: #4b7fd4;
+
+  /* Interaction */
+  --sf-link: #7ab7f0;
+  --sf-focus: #9ec7f5;
+  --sf-accent: #5aa9e6;
+
+  /* Feedback tones — dark-theme variants, light text on dark tint */
+  --sf-ok-bg: #0c3b30;
+  --sf-ok-text: #5fd6b6;
+  --sf-warn-bg: #43310c;
+  --sf-warn-text: #f0c05a;
+  --sf-error-bg: #45151b;
+  --sf-error-text: #f58a96;
+  --sf-neutral-bg: #1b2853;
+  --sf-neutral-text: #b6c3e4;
+
+  /* Geometry */
+  --sf-radius-card: 10px;
+  --sf-radius-control: 6px;
+  --sf-radius-pill: 999px;
+}
+
+/* Base surfaces */
+
+body {
+  background: var(--sf-canvas);
+  color: var(--sf-text);
+}
+
+/* Keyboard focus, tuned for the dark canvas. */
+:focus-visible {
+  outline: 2px solid var(--sf-focus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Shell */
+
+.sf-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 244px 1fr;
+  background: var(--sf-canvas);
+}
+
+.sf-sidebar {
+  background: var(--sf-sidebar);
+  border-right: 1px solid var(--sf-card-border);
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  min-width: 0;
+}
+
+.sf-brand {
+  padding: 4px 8px 16px;
+  border-bottom: 1px solid var(--sf-card-border);
+}
+
+.sf-brand-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--sf-text);
+  letter-spacing: -0.2px;
+}
+
+.sf-brand-role {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--sf-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.sf-nav {
+  display: grid;
+  gap: 2px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.sf-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--sf-radius-control);
+  color: var(--sf-text-muted);
+  text-decoration: none;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.sf-nav-item:hover {
+  background: var(--sf-raised);
+  color: var(--sf-text);
+}
+
+.sf-nav-item.active {
+  background: var(--sf-raised);
+  color: var(--sf-text);
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--sf-accent);
+}
+
+.sf-nav-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  opacity: 0.9;
+}
+
+.sf-nav-icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.sf-nav-count {
+  margin-left: auto;
+  background: var(--sf-error-bg);
+  color: var(--sf-error-text);
+  border-radius: var(--sf-radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+}
+
+.sf-sidebar-foot {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--sf-card-border);
+}
+
+/* Main region + the Salesforce-style context strip above the canvas */
+
+.sf-main-region {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sf-context-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 24px;
+  background: var(--sf-raised);
+  border-bottom: 1px solid var(--sf-card-border);
+  font-size: 12px;
+  color: var(--sf-text-muted);
+}
+
+.sf-context-sep {
+  color: var(--sf-text-dim);
+}
+
+.sf-main {
+  padding: 20px 24px 32px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sf-page-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.sf-page-sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--sf-text-muted);
+  max-width: 90ch;
+}
+
+.sf-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--sf-card);
+  color: var(--sf-link);
+  border: 1px solid var(--sf-card-border);
+  padding: 10px 16px;
+  border-radius: 0 0 var(--sf-radius-control) 0;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.sf-skip-link:focus {
+  left: 0;
+}
+
+.sf-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 1024px) {
+  .sf-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sf-sidebar {
+    position: static;
+    height: auto;
+    flex-direction: column;
+  }
+
+  .sf-nav {
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+  }
+
+  .sf-nav-item {
+    flex: 0 0 auto;
+  }
+
+  .sf-sidebar-foot {
+    margin-top: 0;
+  }
+
+  .sf-main {
+    padding: 16px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   App-wide controls. The brief is explicit that the theme applies to nav,
+   forms, tables and buttons — not only the dashboard cards.
+   --------------------------------------------------------------------------- */
+
+/* Panels — the generic container for non-chart screens */
+
+.sf-panel {
+  background: var(--sf-card);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-card);
+  padding: 18px 20px;
+  margin-top: 16px;
+  min-width: 0;
+}
+
+.sf-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.sf-panel-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.sf-panel-note {
+  font-size: 12px;
+  color: var(--sf-text-muted);
+}
+
+/* Buttons */
+
+.sf-btn {
+  border: 1px solid var(--sf-card-border);
+  background: var(--sf-raised);
+  color: var(--sf-text);
+  border-radius: var(--sf-radius-control);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sf-btn:hover {
+  border-color: var(--sf-accent);
+}
+
+.sf-btn--primary {
+  background: var(--sf-accent);
+  border-color: var(--sf-accent);
+  color: #05203a;
+  font-weight: 600;
+}
+
+.sf-btn--primary:hover {
+  background: #7ab7f0;
+  border-color: #7ab7f0;
+}
+
+.sf-btn--quiet {
+  background: transparent;
+  color: var(--sf-text-muted);
+}
+
+.sf-btn--quiet:hover {
+  color: var(--sf-text);
+}
+
+.sf-btn--block {
+  width: 100%;
+  text-align: left;
+}
+
+.sf-btn--sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.sf-btn--danger {
+  color: var(--sf-error-text);
+  border-color: #5c2029;
+  background: transparent;
+}
+
+.sf-btn--danger:hover {
+  border-color: var(--sf-error-text);
+}
+
+.sf-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sf-link-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  color: var(--sf-link);
+  cursor: pointer;
+}
+
+.sf-link-btn:hover {
+  text-decoration: underline;
+}
+
+.sf-link-btn--danger {
+  color: var(--sf-error-text);
+}
+
+/* Forms */
+
+.sf-field {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.sf-field > span {
+  font-size: 12px;
+  color: var(--sf-text-muted);
+}
+
+.sf-field input,
+.sf-field select,
+.sf-field textarea,
+.sf-input {
+  background: var(--sf-plot);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-control);
+  color: var(--sf-text);
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  min-height: 36px;
+  min-width: 0;
+}
+
+.sf-field textarea {
+  resize: vertical;
+}
+
+.sf-field select option {
+  background: var(--sf-card);
+  color: var(--sf-text);
+}
+
+.sf-field input::placeholder,
+.sf-field textarea::placeholder,
+.sf-input::placeholder {
+  color: var(--sf-text-dim);
+}
+
+.sf-field select:disabled,
+.sf-field select:disabled option {
+  color: var(--sf-text-dim);
+  background: #0a1230;
+}
+
+.sf-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  background: var(--sf-card);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-card);
+  padding: 14px 16px;
+  margin-top: 16px;
+}
+
+.sf-filter-bar .sf-field select,
+.sf-filter-bar .sf-field input {
+  min-width: 168px;
+}
+
+.sf-filter-note {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 12px;
+  color: var(--sf-text-muted);
+}
+
+/* Tabs */
+
+.sf-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: 16px;
+  border-bottom: 1px solid var(--sf-card-border);
+}
+
+.sf-tab {
+  text-decoration: none;
+  color: var(--sf-text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 14px;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.sf-tab:hover {
+  color: var(--sf-text);
+}
+
+.sf-tab.active {
+  color: var(--sf-text);
+  border-bottom-color: var(--sf-accent);
+}
+
+/* Tables */
+
+.sf-table-wrap {
+  overflow-x: auto;
+}
+
+.sf-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+}
+
+.sf-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sf-text-muted);
+  padding: 0 12px 10px;
+  border-bottom: 1px solid var(--sf-card-border);
+  white-space: nowrap;
+}
+
+.sf-table td {
+  padding: 11px 12px;
+  font-size: 13px;
+  color: var(--sf-text);
+  border-bottom: 1px solid rgba(28, 42, 94, 0.6);
+}
+
+.sf-table tbody tr:hover td {
+  background: rgba(22, 37, 90, 0.5);
+}
+
+/* Status pills */
+
+.sf-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--sf-radius-pill);
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sf-status--ok { background: var(--sf-ok-bg); color: var(--sf-ok-text); }
+.sf-status--warn { background: var(--sf-warn-bg); color: var(--sf-warn-text); }
+.sf-status--error { background: var(--sf-error-bg); color: var(--sf-error-text); }
+.sf-status--neutral { background: var(--sf-neutral-bg); color: var(--sf-neutral-text); }
+
+/* Empty states */
+
+.sf-empty {
+  border: 1px dashed var(--sf-card-border);
+  border-radius: var(--sf-radius-card);
+  background: var(--sf-plot);
+  padding: 26px 22px;
+  text-align: center;
+}
+
+.sf-empty h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.sf-empty p {
+  margin: 8px auto 0;
+  max-width: 62ch;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--sf-text-muted);
+}
+
+.sf-empty--gap {
+  border-color: #4d3a12;
+  background: #1d1607;
+}
+
+/* ---------------------------------------------------------------------------
+   Metric card — the base unit of nearly every screen. Anatomy taken from the
+   reference screenshots: white title left, refresh + expand icons right, chart
+   body, then a footer with the report link left and freshness stamp right.
+   --------------------------------------------------------------------------- */
+
+.sf-card-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.sf-col-3 { grid-column: span 3; }
+.sf-col-4 { grid-column: span 4; }
+.sf-col-5 { grid-column: span 5; }
+.sf-col-6 { grid-column: span 6; }
+.sf-col-7 { grid-column: span 7; }
+.sf-col-8 { grid-column: span 8; }
+.sf-col-12 { grid-column: span 12; }
+
+.sf-card {
+  background: var(--sf-card);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-card);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sf-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px 11px;
+}
+
+.sf-card-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sf-text);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.sf-card-tools {
+  display: inline-flex;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.sf-card-tool {
+  border: none;
+  background: transparent;
+  color: var(--sf-text-muted);
+  padding: 3px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+}
+
+.sf-card-tool:hover {
+  color: var(--sf-text);
+  background: var(--sf-raised);
+}
+
+.sf-card-tool svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.sf-card-body {
+  padding: 0 16px 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sf-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px 12px;
+  border-top: 1px solid rgba(28, 42, 94, 0.7);
+  font-size: 11.5px;
+}
+
+.sf-card-report {
+  color: var(--sf-link);
+  text-decoration: none;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sf-card-report:hover {
+  text-decoration: underline;
+}
+
+.sf-card-stamp {
+  color: var(--sf-text-dim);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+/* Big single-number stat */
+
+.sf-stat-value {
+  color: var(--sf-stat);
+  font-size: 62px;
+  line-height: 1.05;
+  font-weight: 400;
+  letter-spacing: -1.5px;
+  padding: 14px 0 20px;
+  text-align: center;
+}
+
+.sf-col-3 .sf-stat-value,
+.sf-col-4 .sf-stat-value {
+  font-size: 52px;
+}
+
+/* Chart scaffolding shared by the bar charts */
+
+.sf-chart {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  min-width: 0;
+}
+
+.sf-chart-main {
+  min-width: 0;
+}
+
+.sf-axis-title {
+  text-align: center;
+  font-size: 11px;
+  color: var(--sf-text-muted);
+  margin-bottom: 6px;
+}
+
+.sf-legend {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  font-size: 11px;
+  color: var(--sf-text-muted);
+  flex: 0 0 auto;
+}
+
+.sf-legend-title {
+  color: var(--sf-text);
+  font-weight: 600;
+  margin-bottom: 2px;
+  text-align: right;
+}
+
+.sf-legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.sf-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+
+/* Grouped horizontal bars */
+
+.sf-bars {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sf-bar-group {
+  display: grid;
+  grid-template-columns: minmax(90px, 168px) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(28, 42, 94, 0.55);
+}
+
+.sf-bar-group:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sf-bar-group-label {
+  font-size: 11.5px;
+  color: var(--sf-text-muted);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.sf-bar-rows {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sf-bar-row {
+  display: grid;
+  grid-template-columns: minmax(56px, 110px) minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.sf-bar-row-label {
+  font-size: 11px;
+  color: var(--sf-text-dim);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sf-bar-track {
+  position: relative;
+  height: 15px;
+  min-width: 0;
+}
+
+.sf-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 5px;
+  min-width: 2px;
+  /* Bars are mid-to-light fills, so in-bar labels use dark ink. Values that
+     fall outside the bar use .sf-bar-value-outside and stay light. */
+  color: #06203c;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.sf-bar-value-outside {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding-left: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+/* Stacked 100% bars */
+
+.sf-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.sf-stack-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 150px) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.sf-stack-track {
+  display: flex;
+  height: 62px;
+  border-radius: 2px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.sf-stack-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Dark ink: these fills are the light end of the scale, so white labels only
+     reached 2.5:1 against them. */
+  color: #06203c;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 0;
+}
+
+/* Donut */
+
+.sf-donut-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.sf-donut {
+  width: 100%;
+  max-width: 230px;
+  margin: 0 auto;
+  display: block;
+}
+
+.sf-donut-total {
+  fill: var(--sf-text);
+  font-size: 20px;
+  font-weight: 600;
+  text-anchor: middle;
+}
+
+.sf-donut-label {
+  fill: #06203c;
+  font-size: 8px;
+  font-weight: 600;
+  text-anchor: middle;
+}
+
+/* Funnel */
+
+.sf-funnel {
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  display: block;
+}
+
+.sf-funnel-label {
+  fill: #06203c;
+  font-size: 11px;
+  font-weight: 600;
+  text-anchor: middle;
+}
+
+.sf-funnel-caption {
+  text-align: center;
+  font-size: 11px;
+  color: var(--sf-text-muted);
+  margin-bottom: 4px;
+}
+
+/* Axis ruler across the top of bar charts */
+
+.sf-ruler {
+  position: relative;
+  height: 14px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--sf-gridline);
+}
+
+.sf-ruler-tick {
+  position: absolute;
+  top: 0;
+  font-size: 10px;
+  color: var(--sf-text-dim);
+  transform: translateX(-50%);
+}
+
+@media (max-width: 1280px) {
+  .sf-col-3 { grid-column: span 4; }
+  .sf-col-5 { grid-column: span 6; }
+  .sf-col-7 { grid-column: span 6; }
+  .sf-col-8 { grid-column: span 12; }
+}
+
+@media (max-width: 900px) {
+  .sf-col-3,
+  .sf-col-4,
+  .sf-col-5,
+  .sf-col-6,
+  .sf-col-7,
+  .sf-col-8 {
+    grid-column: span 12;
+  }
+
+  .sf-chart,
+  .sf-donut-wrap {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sf-legend-item,
+  .sf-legend-title {
+    justify-content: flex-start;
+    text-align: left;
+  }
+}
+
+/* Needs Attention summary card on Home */
+
+.sf-attention-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  padding: 8px 0 4px;
+}
+
+.sf-attention-total {
+  font-size: 52px;
+  line-height: 1;
+  font-weight: 400;
+  color: var(--sf-error-text);
+}
+
+.sf-attention-breakdown {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--sf-text-muted);
+}
+
+.sf-attention-breakdown li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sf-attention-breakdown strong {
+  color: var(--sf-text);
+}
+
+.sf-inline-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--sf-link);
+  text-decoration: none;
+}
+
+.sf-inline-link:hover {
+  text-decoration: underline;
+}
+
+.sf-stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  margin: 0;
+}
+
+.sf-stat-row dt {
+  font-size: 12px;
+  color: var(--sf-text-muted);
+}
+
+.sf-stat-row dd {
+  margin: 5px 0 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+/* Page headings inside the themed main region */
+
+.sf-main > h1,
+.sf-main h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+/* Panel headings that aren't inside a .sf-panel-head wrapper */
+.sf-panel > h2 {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.sf-panel > h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sf-text);
+}

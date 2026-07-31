@@ -37,7 +37,7 @@ export default function ClassroomIntegrationPage() {
 
       <ApiSyncStatusTile api={api} />
 
-      <div className="admin-content-panel">
+      <div className="sf-panel">
         <h2>Recent activity</h2>
         <SyncLogTable entries={syncLog.filter((entry) => entry.source === "classroom")} />
       </div>

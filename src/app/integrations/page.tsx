@@ -43,8 +43,8 @@ export default function GenesisIntegrationPage() {
 
       <FileIngestStatusPanel />
 
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
+      <div className="sf-panel">
+        <div className="sf-panel-head">
           <h2>Homeroom mapping</h2>
           <StatusBadge tone="warn">Incomplete source data</StatusBadge>
         </div>
@@ -53,15 +53,15 @@ export default function GenesisIntegrationPage() {
         />
       </div>
 
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
+      <div className="sf-panel">
+        <div className="sf-panel-head">
           <h2>File history</h2>
-          <span className="config-status-summary">
+          <span className="sf-panel-note">
             {history.length} {history.length === 1 ? "day" : "days"} shown
           </span>
         </div>
 
-        <table className="admin-table">
+        <table className="sf-table">
           <thead>
             <tr>
               <th scope="col">Date</th>

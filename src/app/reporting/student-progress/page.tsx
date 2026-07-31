@@ -15,10 +15,10 @@ export default function StudentProgressPage() {
     <>
       <ScopeBreadcrumb />
 
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
+      <div className="sf-panel">
+        <div className="sf-panel-head">
           <h2>Student progress rollups</h2>
-          <span className="config-status-summary">
+          <span className="sf-panel-note">
             Rolls up to class level — no individual student profiles
           </span>
         </div>
@@ -29,7 +29,7 @@ export default function StudentProgressPage() {
             message="Widen the filters above to see student progress rollups."
           />
         ) : (
-          <table className="admin-table">
+          <table className="sf-table">
             <thead>
               <tr>
                 <th scope="col">Cohort</th>

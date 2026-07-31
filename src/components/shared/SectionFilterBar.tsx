@@ -17,9 +17,9 @@ export type SectionFilterConfig = {
  */
 export function SectionFilterBar({ filters }: { filters: SectionFilterConfig[] }) {
   return (
-    <div className="filter-bar filter-bar--page">
+    <div className="sf-filter-bar">
       {filters.map((filter) => (
-        <label className="filter-field" key={filter.id}>
+        <label className="sf-field" key={filter.id}>
           <span>{filter.label}</span>
           <select value={filter.value} onChange={(event) => filter.onChange(event.target.value)}>
             {filter.options.map((option) => (

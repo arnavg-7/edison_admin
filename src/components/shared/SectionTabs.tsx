@@ -18,7 +18,7 @@ export function SectionTabs({ tabs }: { tabs: SectionTab[] }) {
   const query = searchParams.toString();
 
   return (
-    <nav className="section-tabs" aria-label="Section navigation">
+    <nav className="sf-tabs" aria-label="Section navigation">
       {tabs.map((tab) => {
         const isActive = pathname === tab.href;
         return (
@@ -26,7 +26,7 @@ export function SectionTabs({ tabs }: { tabs: SectionTab[] }) {
             key={tab.href}
             href={query ? `${tab.href}?${query}` : tab.href}
             aria-current={isActive ? "page" : undefined}
-            className={isActive ? "section-tab active" : "section-tab"}
+            className={isActive ? "sf-tab active" : "sf-tab"}
           >
             {tab.label}
           </Link>

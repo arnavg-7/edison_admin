@@ -125,7 +125,7 @@ export function SkillsProfileEditor({ level }: { level: SchoolLevel }) {
 
   const subSkillForm = (onSave: () => void, onCancel: () => void, saveLabel: string) => (
     <div className="subskill-form">
-      <label className="list-editor-field">
+      <label className="sf-field">
         <span>Sub-skill name</span>
         <input
           type="text"
@@ -140,10 +140,10 @@ export function SkillsProfileEditor({ level }: { level: SchoolLevel }) {
         />
       </label>
 
-      <label className="list-editor-field">
+      <label className="sf-field">
         <span>Level</span>
         <select
-          className="inline-select"
+          className="sf-input"
           value={subDraft.level}
           onChange={(event) =>
             setSubDraft({ ...subDraft, level: event.target.value as SkillLevel })
@@ -157,7 +157,7 @@ export function SkillsProfileEditor({ level }: { level: SchoolLevel }) {
         </select>
       </label>
 
-      <label className="list-editor-field">
+      <label className="sf-field">
         <span>Description</span>
         <textarea
           rows={2}
@@ -168,10 +168,10 @@ export function SkillsProfileEditor({ level }: { level: SchoolLevel }) {
       </label>
 
       <div className="list-editor-form-actions">
-        <button type="button" className="btn btn--primary" onClick={onSave}>
+        <button type="button" className="sf-btn sf-btn--primary" onClick={onSave}>
           {saveLabel}
         </button>
-        <button type="button" className="btn" onClick={onCancel}>
+        <button type="button" className="sf-btn" onClick={onCancel}>
           Cancel
         </button>
       </div>
@@ -181,10 +181,10 @@ export function SkillsProfileEditor({ level }: { level: SchoolLevel }) {
   const totalSubSkills = groups.reduce((sum, group) => sum + group.subSkills.length, 0);
 
   return (
-    <div className="admin-content-panel">
-      <div className="home-panel-head">
+    <div className="sf-panel">
+      <div className="sf-panel-head">
         <h2>Skills profile</h2>
-        <span className="config-status-summary">
+        <span className="sf-panel-note">
           {groups.length} skills · {totalSubSkills} sub-skills ·{" "}
           {groups.filter((group) => group.published).length} published
         </span>
@@ -202,7 +202,7 @@ export function SkillsProfileEditor({ level }: { level: SchoolLevel }) {
       <div className="list-editor-head">
         <button
           type="button"
-          className="btn btn--primary"
+          className="sf-btn sf-btn--primary"
           onClick={() => {
             setGroupTitle("");
             setEditingGroupId(null);
@@ -215,7 +215,7 @@ export function SkillsProfileEditor({ level }: { level: SchoolLevel }) {
 
       {addingGroup ? (
         <div className="area-form">
-          <label className="list-editor-field">
+          <label className="sf-field">
             <span>Skill name</span>
             <input
               type="text"
@@ -230,10 +230,10 @@ export function SkillsProfileEditor({ level }: { level: SchoolLevel }) {
             />
           </label>
           <div className="list-editor-form-actions">
-            <button type="button" className="btn btn--primary" onClick={saveNewGroup}>
+            <button type="button" className="sf-btn sf-btn--primary" onClick={saveNewGroup}>
               Create skill
             </button>
-            <button type="button" className="btn" onClick={() => setAddingGroup(false)}>
+            <button type="button" className="sf-btn" onClick={() => setAddingGroup(false)}>
               Cancel
             </button>
           </div>
@@ -265,14 +265,14 @@ export function SkillsProfileEditor({ level }: { level: SchoolLevel }) {
                     />
                     <button
                       type="button"
-                      className="btn btn--sm btn--primary"
+                      className="sf-btn sf-btn--sm sf-btn--primary"
                       onClick={() => saveGroupTitle(group.id)}
                     >
                       Save
                     </button>
                     <button
                       type="button"
-                      className="btn btn--sm"
+                      className="sf-btn sf-btn--sm"
                       onClick={() => setEditingGroupId(null)}
                     >
                       Cancel
@@ -312,7 +312,7 @@ export function SkillsProfileEditor({ level }: { level: SchoolLevel }) {
                       <span className="skill-pill-actions">
                         <button
                           type="button"
-                          className="link-btn"
+                          className="sf-link-btn"
                           onClick={() => {
                             setSubDraft({
                               label: sub.label,
@@ -323,14 +323,14 @@ export function SkillsProfileEditor({ level }: { level: SchoolLevel }) {
                             setEditingSub({ groupId: group.id, subId: sub.id });
                           }}
                         >
-                          Edit<span className="sr-only"> {sub.label}</span>
+                          Edit<span className="sf-sr-only"> {sub.label}</span>
                         </button>
                         <button
                           type="button"
-                          className="link-btn link-btn--danger"
+                          className="sf-link-btn sf-link-btn--danger"
                           onClick={() => removeSubSkill(group.id, sub.id)}
                         >
-                          Remove<span className="sr-only"> {sub.label}</span>
+                          Remove<span className="sf-sr-only"> {sub.label}</span>
                         </button>
                       </span>
                     </li>
@@ -358,35 +358,35 @@ export function SkillsProfileEditor({ level }: { level: SchoolLevel }) {
                       setSubDraftFor(group.id);
                     }}
                   >
-                    + Add sub-skill<span className="sr-only"> to {group.title}</span>
+                    + Add sub-skill<span className="sf-sr-only"> to {group.title}</span>
                   </button>
                 )}
 
               <div className="area-card-actions">
                 <button
                   type="button"
-                  className="btn btn--sm"
+                  className="sf-btn sf-btn--sm"
                   onClick={() => togglePublished(group.id)}
                 >
                   {group.published ? "Unpublish" : "Publish"}
                 </button>
                 <button
                   type="button"
-                  className="btn btn--sm"
+                  className="sf-btn sf-btn--sm"
                   onClick={() => {
                     setGroupTitle(group.title);
                     setAddingGroup(false);
                     setEditingGroupId(group.id);
                   }}
                 >
-                  Rename<span className="sr-only"> skill {group.title}</span>
+                  Rename<span className="sf-sr-only"> skill {group.title}</span>
                 </button>
                 <button
                   type="button"
-                  className="btn btn--sm btn--danger"
+                  className="sf-btn sf-btn--sm sf-btn--danger"
                   onClick={() => removeGroup(group.id)}
                 >
-                  Delete<span className="sr-only"> skill {group.title}</span>
+                  Delete<span className="sf-sr-only"> skill {group.title}</span>
                 </button>
               </div>
             </article>

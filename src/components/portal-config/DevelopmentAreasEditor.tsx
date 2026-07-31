@@ -131,7 +131,7 @@ export function DevelopmentAreasEditor({ level }: { level: SchoolLevel }) {
 
   const areaForm = (onSave: () => void, onCancel: () => void, saveLabel: string) => (
     <div className="area-form">
-      <label className="list-editor-field">
+      <label className="sf-field">
         <span>Area name</span>
         <input
           type="text"
@@ -165,10 +165,10 @@ export function DevelopmentAreasEditor({ level }: { level: SchoolLevel }) {
         </div>
       </fieldset>
 
-      <label className="list-editor-field">
+      <label className="sf-field">
         <span>Icon</span>
         <select
-          className="inline-select"
+          className="sf-input"
           value={areaDraft.icon}
           onChange={(event) => setAreaDraft({ ...areaDraft, icon: event.target.value as IconName })}
         >
@@ -181,10 +181,10 @@ export function DevelopmentAreasEditor({ level }: { level: SchoolLevel }) {
       </label>
 
       <div className="list-editor-form-actions">
-        <button type="button" className="btn btn--primary" onClick={onSave}>
+        <button type="button" className="sf-btn sf-btn--primary" onClick={onSave}>
           {saveLabel}
         </button>
-        <button type="button" className="btn" onClick={onCancel}>
+        <button type="button" className="sf-btn" onClick={onCancel}>
           Cancel
         </button>
       </div>
@@ -194,10 +194,10 @@ export function DevelopmentAreasEditor({ level }: { level: SchoolLevel }) {
   const totalSkills = areas.reduce((sum, area) => sum + area.skills.length, 0);
 
   return (
-    <div className="admin-content-panel">
-      <div className="home-panel-head">
+    <div className="sf-panel">
+      <div className="sf-panel-head">
         <h2>Development areas</h2>
-        <span className="config-status-summary">
+        <span className="sf-panel-note">
           {areas.length} areas · {totalSkills} skills ·{" "}
           {areas.filter((area) => area.published).length} published
         </span>
@@ -206,7 +206,7 @@ export function DevelopmentAreasEditor({ level }: { level: SchoolLevel }) {
       <div className="list-editor-head">
         <button
           type="button"
-          className="btn btn--primary"
+          className="sf-btn sf-btn--primary"
           onClick={() => {
             resetAreaDraft();
             setEditingAreaId(null);
@@ -259,12 +259,12 @@ export function DevelopmentAreasEditor({ level }: { level: SchoolLevel }) {
                             if (event.key === "Escape") setEditingSkill(null);
                           }}
                         />
-                        <button type="button" className="btn btn--sm btn--primary" onClick={saveSkillEdit}>
+                        <button type="button" className="sf-btn sf-btn--sm sf-btn--primary" onClick={saveSkillEdit}>
                           Save
                         </button>
                         <button
                           type="button"
-                          className="btn btn--sm"
+                          className="sf-btn sf-btn--sm"
                           onClick={() => setEditingSkill(null)}
                         >
                           Cancel
@@ -276,20 +276,20 @@ export function DevelopmentAreasEditor({ level }: { level: SchoolLevel }) {
                         <span className="area-skill-actions">
                           <button
                             type="button"
-                            className="link-btn"
+                            className="sf-link-btn"
                             onClick={() => {
                               setSkillDraft(skill.label);
                               setEditingSkill({ areaId: area.id, skillId: skill.id });
                             }}
                           >
-                            Edit<span className="sr-only"> {skill.label}</span>
+                            Edit<span className="sf-sr-only"> {skill.label}</span>
                           </button>
                           <button
                             type="button"
-                            className="link-btn link-btn--danger"
+                            className="sf-link-btn sf-link-btn--danger"
                             onClick={() => removeSkill(area.id, skill.id)}
                           >
-                            Remove<span className="sr-only"> {skill.label}</span>
+                            Remove<span className="sf-sr-only"> {skill.label}</span>
                           </button>
                         </span>
                       </li>
@@ -317,14 +317,14 @@ export function DevelopmentAreasEditor({ level }: { level: SchoolLevel }) {
                     />
                     <button
                       type="button"
-                      className="btn btn--sm btn--primary"
+                      className="sf-btn sf-btn--sm sf-btn--primary"
                       onClick={() => addSkill(area.id)}
                     >
                       Add
                     </button>
                     <button
                       type="button"
-                      className="btn btn--sm"
+                      className="sf-btn sf-btn--sm"
                       onClick={() => setSkillDraftFor(null)}
                     >
                       Cancel
@@ -340,27 +340,27 @@ export function DevelopmentAreasEditor({ level }: { level: SchoolLevel }) {
                       setSkillDraftFor(area.id);
                     }}
                   >
-                    + Add skill<span className="sr-only"> to {area.title}</span>
+                    + Add skill<span className="sf-sr-only"> to {area.title}</span>
                   </button>
                 )}
 
                 <div className="area-card-actions">
                   <button
                     type="button"
-                    className="btn btn--sm"
+                    className="sf-btn sf-btn--sm"
                     onClick={() => togglePublished(area.id)}
                   >
                     {area.published ? "Unpublish" : "Publish"}
                   </button>
-                  <button type="button" className="btn btn--sm" onClick={() => startAreaEdit(area)}>
-                    Edit<span className="sr-only"> area {area.title}</span>
+                  <button type="button" className="sf-btn sf-btn--sm" onClick={() => startAreaEdit(area)}>
+                    Edit<span className="sf-sr-only"> area {area.title}</span>
                   </button>
                   <button
                     type="button"
-                    className="btn btn--sm btn--danger"
+                    className="sf-btn sf-btn--sm sf-btn--danger"
                     onClick={() => removeArea(area.id)}
                   >
-                    Delete<span className="sr-only"> area {area.title}</span>
+                    Delete<span className="sf-sr-only"> area {area.title}</span>
                   </button>
                 </div>
               </article>

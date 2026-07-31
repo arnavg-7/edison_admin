@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-import { SectionGuard } from "@/components/shell/SectionGuard";
 import { SectionTabs } from "@/components/shared/SectionTabs";
 
 const TABS = [
@@ -12,10 +11,9 @@ const TABS = [
 
 export default function PortalConfigurationLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SectionGuard section="portal-configuration">
-      <section className="admin-main">
+      <section className="sf-main">
         <h1>Portal Configuration</h1>
-        <p className="admin-subtitle">
+        <p className="sf-page-sub">
           Content shown in the student and faculty portals. Configured for high school and
           kindergarten only — elementary and middle school are out of scope for this phase, not
           missing.
@@ -26,6 +24,5 @@ export default function PortalConfigurationLayout({ children }: { children: Reac
         </Suspense>
         {children}
       </section>
-    </SectionGuard>
   );
 }

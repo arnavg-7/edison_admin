@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-import { SectionGuard } from "@/components/shell/SectionGuard";
 import { SectionTabs } from "@/components/shared/SectionTabs";
 
 const TABS = [
@@ -13,10 +12,9 @@ const TABS = [
 
 export default function IntegrationsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SectionGuard section="integrations">
-      <section className="admin-main">
+      <section className="sf-main">
         <h1>Integrations</h1>
-        <p className="admin-subtitle">
+        <p className="sf-page-sub">
           Genesis file ingest and the Classroom/Calendar API connections.
         </p>
 
@@ -25,6 +23,5 @@ export default function IntegrationsLayout({ children }: { children: React.React
         </Suspense>
         {children}
       </section>
-    </SectionGuard>
   );
 }

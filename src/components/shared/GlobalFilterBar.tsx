@@ -15,8 +15,8 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
   const term = currentTerm();
 
   return (
-    <div className="filter-bar">
-      <label className="filter-field">
+    <div className="sf-filter-bar">
+      <label className="sf-field">
         <span>Date Range</span>
         <select
           value={filters.range}
@@ -32,7 +32,7 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
 
       {filters.range === "custom" ? (
         <>
-          <label className="filter-field">
+          <label className="sf-field">
             <span>From</span>
             <input
               type="date"
@@ -40,7 +40,7 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
               onChange={(event) => setFilters({ from: event.target.value || null })}
             />
           </label>
-          <label className="filter-field">
+          <label className="sf-field">
             <span>To</span>
             <input
               type="date"
@@ -51,7 +51,7 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
         </>
       ) : null}
 
-      <label className="filter-field">
+      <label className="sf-field">
         <span>School</span>
         <select
           value={filters.school ?? ""}
@@ -66,7 +66,7 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
         </select>
       </label>
 
-      <label className="filter-field">
+      <label className="sf-field">
         <span>Grade</span>
         <select
           value={filters.grade ?? ""}
@@ -83,7 +83,7 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
       </label>
 
       {showSection ? (
-        <label className="filter-field">
+        <label className="sf-field">
           <span>Class / Section</span>
           <select
             value={filters.section ?? ""}
@@ -101,7 +101,7 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
       ) : null}
 
       {filters.range === "term" ? (
-        <p className="filter-note">
+        <p className="sf-filter-note">
           {/* TODO: validate against the real academic calendar. */}
           This Term = {term.label} ({term.start} to {term.end})
         </p>

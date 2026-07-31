@@ -106,7 +106,7 @@ export function ListEditor({
   const form = (
     <div className="list-editor-form">
       {fields.map((field) => (
-        <label key={field.name} className="list-editor-field">
+        <label key={field.name} className="sf-field">
           <span>{field.label}</span>
           {field.multiline ? (
             <textarea
@@ -126,10 +126,10 @@ export function ListEditor({
         </label>
       ))}
       <div className="list-editor-form-actions">
-        <button type="button" className="btn btn--primary" onClick={save}>
+        <button type="button" className="sf-btn sf-btn--primary" onClick={save}>
           Save
         </button>
-        <button type="button" className="btn" onClick={cancel}>
+        <button type="button" className="sf-btn" onClick={cancel}>
           Cancel
         </button>
       </div>
@@ -139,7 +139,7 @@ export function ListEditor({
   return (
     <div className="list-editor">
       <div className="list-editor-head">
-        <button type="button" className="btn btn--primary" onClick={startAdd}>
+        <button type="button" className="sf-btn sf-btn--primary" onClick={startAdd}>
           {addLabel}
         </button>
       </div>
@@ -164,12 +164,12 @@ export function ListEditor({
                   {item.status ? (
                     <StatusBadge tone={item.status.tone}>{item.status.label}</StatusBadge>
                   ) : null}
-                  <button type="button" className="btn btn--sm" onClick={() => startEdit(item)}>
+                  <button type="button" className="sf-btn sf-btn--sm" onClick={() => startEdit(item)}>
                     Edit
                   </button>
                   <button
                     type="button"
-                    className="btn btn--sm btn--danger"
+                    className="sf-btn sf-btn--sm sf-btn--danger"
                     onClick={() => remove(item.id)}
                   >
                     Delete

@@ -7,10 +7,10 @@ export default function NotificationTemplatesPage() {
   const active = notificationTemplates.filter((item) => item.status?.label === "Active").length;
 
   return (
-    <div className="admin-content-panel">
-      <div className="home-panel-head">
+    <div className="sf-panel">
+      <div className="sf-panel-head">
         <h2>Notification templates</h2>
-        <span className="config-status-summary">
+        <span className="sf-panel-note">
           {active} of {notificationTemplates.length} active
         </span>
       </div>

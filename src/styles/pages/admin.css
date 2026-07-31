@@ -1,20 +1,16 @@
+/* v1 tokens now alias the v2 Salesforce dark theme. Screens still referencing
+   --admin-* pick up dark surfaces without touching every rule. Remaining
+   hardcoded light hexes are handled per-module. */
 :root {
-  --admin-bg: #cecae3;
-  --admin-sidebar: #1d2346;
-  --admin-sidebar-border: #31385d;
-  --admin-card: #efefef;
-  --admin-text: #182235;
-  --admin-accent: #9849f2;
-
-  /* Text colours are darkened from the faculty palette to clear 4.5:1 against
-     all three surfaces this text lands on — the lavender page background, the
-     card grey, and white. The lavender is the tightest of the three and is easy
-     to miss, since subtitles sit directly on it. Most of this text is 12–14px,
-     so the large-text allowance doesn't apply. --admin-accent stays as the
-     brand fill colour; --admin-accent-text is the readable text variant. */
-  --admin-subtle: #4a5463;
-  --admin-muted: #5f6878;
-  --admin-accent-text: #7c3aed;
+  --admin-bg: var(--sf-canvas);
+  --admin-sidebar: var(--sf-sidebar);
+  --admin-sidebar-border: var(--sf-card-border);
+  --admin-card: var(--sf-card);
+  --admin-text: var(--sf-text);
+  --admin-accent: var(--sf-accent);
+  --admin-subtle: var(--sf-text-muted);
+  --admin-muted: var(--sf-text-dim);
+  --admin-accent-text: var(--sf-link);
 }
 
 .admin-shell {
@@ -44,7 +40,7 @@
   left: -9999px;
   top: 0;
   z-index: 100;
-  background: #ffffff;
+  background: var(--sf-plot);
   color: var(--admin-accent-text);
   padding: 10px 16px;
   border-radius: 0 0 10px 0;
@@ -231,7 +227,7 @@
 
 .admin-metric-card {
   background: var(--admin-card);
-  border: 1px solid #c2c2cd;
+  border: 1px solid var(--sf-card-border);
   border-radius: 20px;
   min-height: 96px;
   padding: 22px;
@@ -253,7 +249,7 @@
 .admin-content-panel {
   margin-top: 24px;
   background: var(--admin-card);
-  border: 1px solid #c2c2cd;
+  border: 1px solid var(--sf-card-border);
   border-radius: 24px;
   padding: 24px;
 }
@@ -285,7 +281,7 @@
 
 .metric-tile {
   background: var(--admin-card);
-  border: 1px solid #c2c2cd;
+  border: 1px solid var(--sf-card-border);
   border-radius: 20px;
   padding: 20px 22px 18px;
   display: flex;
@@ -323,7 +319,7 @@
 
 .freshness-stamp-main {
   font-size: 12px;
-  color: #414c5e;
+  color: var(--sf-text-muted);
 }
 
 .freshness-stamp-cadence {
@@ -348,7 +344,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: #ffffff;
+  background: var(--sf-plot);
   border-radius: 14px;
   padding: 14px 16px;
   text-decoration: none;
@@ -398,7 +394,7 @@
 
 .home-panel {
   background: var(--admin-card);
-  border: 1px solid #c2c2cd;
+  border: 1px solid var(--sf-card-border);
   border-radius: 24px;
   padding: 22px 24px;
   display: flex;
@@ -447,7 +443,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: #ffffff;
+  background: var(--sf-plot);
   border-radius: 14px;
   padding: 12px 14px;
 }
@@ -495,7 +491,7 @@
 
 .btn {
   border: 1px solid #c5c6d4;
-  background: #ffffff;
+  background: var(--sf-plot);
   color: var(--admin-text);
   border-radius: 10px;
   padding: 8px 14px;
@@ -563,7 +559,7 @@
 }
 
 .section-tab.active {
-  background: #ffffff;
+  background: var(--sf-plot);
   color: var(--admin-accent-text);
   box-shadow: 0 1px 3px rgba(20, 40, 92, 0.1);
 }
@@ -578,7 +574,7 @@
   margin-top: 16px;
   padding: 16px 18px;
   background: var(--admin-card);
-  border: 1px solid #c2c2cd;
+  border: 1px solid var(--sf-card-border);
   border-radius: 18px;
 }
 
@@ -597,9 +593,9 @@
 .filter-field input {
   height: 38px;
   min-width: 170px;
-  border: 1px solid #d1d5dc;
+  border: 1px solid var(--sf-card-border);
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--sf-plot);
   color: var(--admin-text);
   padding: 0 12px;
   font-size: 13px;
@@ -611,7 +607,7 @@
    readable. The option needs the colour too — it doesn't inherit it. */
 .filter-field select:disabled,
 .filter-field select:disabled option {
-  background: #f1f1f5;
+  background: var(--sf-raised);
   color: #4a5463;
 }
 
@@ -625,16 +621,18 @@
 /* Empty states */
 
 .empty-state {
-  background: #ffffff;
-  border: 1px dashed #c5c6d4;
+  background: var(--sf-plot);
+  border: 1px dashed var(--sf-card-border);
   border-radius: 16px;
   padding: 28px 24px;
   text-align: center;
 }
 
+/* The awaiting-Genesis variant keeps its amber signal, but as a dark tint so
+   the white body text stays readable. */
 .empty-state--gap {
-  border-color: #e3c98f;
-  background: #fffbf0;
+  border-color: #6b4f16;
+  background: #241a06;
 }
 
 .empty-state h3 {
@@ -673,7 +671,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  background: #ffffff;
+  background: var(--sf-plot);
   border-radius: 14px;
   padding: 14px 16px;
 }
@@ -704,8 +702,8 @@
 }
 
 .list-editor-form {
-  background: #ffffff;
-  border: 1px solid #d9dae4;
+  background: var(--sf-plot);
+  border: 1px solid var(--sf-card-border);
   border-radius: 14px;
   padding: 16px;
   margin-bottom: 12px;
@@ -725,7 +723,7 @@
 
 .list-editor-field input,
 .list-editor-field textarea {
-  border: 1px solid #d1d5dc;
+  border: 1px solid var(--sf-card-border);
   border-radius: 10px;
   padding: 9px 12px;
   font-size: 13px;
@@ -818,7 +816,7 @@
   flex: 1;
   height: 8px;
   border-radius: 999px;
-  background: #e6e6ee;
+  background: var(--sf-raised);
   overflow: hidden;
   min-width: 80px;
 }
@@ -839,7 +837,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: #ffffff;
+  background: var(--sf-plot);
   border-radius: 14px;
   padding: 12px 16px;
 }
@@ -861,7 +859,7 @@
   gap: 24px;
   margin-top: 18px;
   padding-top: 14px;
-  border-top: 1px solid #d7d7e2;
+  border-top: 1px solid var(--sf-card-border);
 }
 
 .dual-stamp .freshness-stamp {
@@ -884,13 +882,13 @@
 }
 
 .builder-columns {
-  border: 1px solid #d1d5dc;
+  border: 1px solid var(--sf-card-border);
   border-radius: 12px;
   padding: 10px 14px 12px;
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  background: #ffffff;
+  background: var(--sf-plot);
 }
 
 .builder-columns legend {
@@ -996,7 +994,7 @@
   justify-content: space-between;
   gap: 10px;
   font-size: 13px;
-  color: #414c5e;
+  color: var(--sf-text);
 }
 
 .area-skill-label {
@@ -1047,7 +1045,7 @@
 .area-card-actions {
   margin-top: auto;
   padding-top: 12px;
-  border-top: 1px solid rgba(24, 34, 53, 0.12);
+  border-top: 1px solid var(--sf-card-border);
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -1055,12 +1053,16 @@
 
 /* Tones. Card tint, icon fill and title colour are set together so the pairing
    always clears 4.5:1 — the title sits on the tint, the icon glyph on the fill. */
-.area-card.tone-blue { background: #eaf1fd; }
-.area-card.tone-green { background: #e7f7ee; }
-.area-card.tone-cyan { background: #e6f5fb; }
-.area-card.tone-orange { background: #fdf0e3; }
-.area-card.tone-violet { background: #f1ecfd; }
-.area-card.tone-rose { background: #fdeaf0; }
+/* v2: cards are dark like every other surface. The tone survives as the icon
+   fill, the title colour and a left accent bar, so areas stay distinguishable
+   without light islands on a dark canvas. */
+.area-card { background: var(--sf-plot); border-color: var(--sf-card-border); }
+.area-card.tone-blue { box-shadow: inset 3px 0 0 #5aa9e6; }
+.area-card.tone-green { box-shadow: inset 3px 0 0 #37b98f; }
+.area-card.tone-cyan { box-shadow: inset 3px 0 0 #37b3cf; }
+.area-card.tone-orange { box-shadow: inset 3px 0 0 #e08b3c; }
+.area-card.tone-violet { box-shadow: inset 3px 0 0 #a855f7; }
+.area-card.tone-rose { box-shadow: inset 3px 0 0 #ef5f8a; }
 
 .area-icon.tone-blue, .tone-swatch.tone-blue { background: #1d4ed8; }
 .area-icon.tone-green, .tone-swatch.tone-green { background: #047857; }
@@ -1069,12 +1071,12 @@
 .area-icon.tone-violet, .tone-swatch.tone-violet { background: #6d28d9; }
 .area-icon.tone-rose, .tone-swatch.tone-rose { background: #be1244; }
 
-.area-title.tone-blue { color: #17439c; }
-.area-title.tone-green { color: #036147; }
-.area-title.tone-cyan { color: #0b5c72; }
-.area-title.tone-orange { color: #8a3d0b; }
-.area-title.tone-violet { color: #5b21b6; }
-.area-title.tone-rose { color: #9c0f37; }
+.area-title.tone-blue { color: #8cc6f5; }
+.area-title.tone-green { color: #6ddcb4; }
+.area-title.tone-cyan { color: #74d3e8; }
+.area-title.tone-orange { color: #f2b071; }
+.area-title.tone-violet { color: #c79bfb; }
+.area-title.tone-rose { color: #f79ab6; }
 
 /* Leadership home — report entry cards */
 
@@ -1085,8 +1087,8 @@
 }
 
 .report-card {
-  background: #ffffff;
-  border: 1px solid #e2e2ea;
+  background: var(--sf-plot);
+  border: 1px solid var(--sf-card-border);
   border-radius: 16px;
   padding: 18px;
   display: flex;
@@ -1127,7 +1129,7 @@
 .report-card-go {
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid #eceaf4;
+  border-top: 1px solid var(--sf-card-border);
   font-size: 13px;
   font-weight: 500;
   color: var(--admin-accent-text);
@@ -1165,8 +1167,8 @@
 }
 
 .skill-group-card {
-  background: #ffffff;
-  border: 1px solid #e2e2ea;
+  background: var(--sf-plot);
+  border: 1px solid var(--sf-card-border);
   border-radius: 16px;
   padding: 18px;
   display: flex;
@@ -1235,15 +1237,15 @@
 /* Level colours. Text is darkened from the faculty palette so 13px pill labels
    clear 4.5:1 on their own tint; the dot inherits the same colour. */
 .skill-pill.level-high,
-.skills-legend-item.level-high { color: #047857; }
+.skills-legend-item.level-high { color: #5fd6b6; }
 .skill-pill.level-middle,
-.skills-legend-item.level-middle { color: #6d28d9; }
+.skills-legend-item.level-middle { color: #c79bfb; }
 .skill-pill.level-elementary,
-.skills-legend-item.level-elementary { color: #92400e; }
+.skills-legend-item.level-elementary { color: #f0c05a; }
 
-.skill-pill.level-high { background: #d1fae5; }
-.skill-pill.level-middle { background: #f3e8ff; }
-.skill-pill.level-elementary { background: #fef3c7; }
+.skill-pill.level-high { background: #0d3b31; }
+.skill-pill.level-middle { background: #2c1c52; }
+.skill-pill.level-elementary { background: #3d2c0c; }
 
 /* Tooltip carrying the sub-skill description. Shown on hover and on keyboard
    focus, so it isn't mouse-only. */
@@ -1253,8 +1255,8 @@
   bottom: calc(100% + 8px);
   z-index: 8;
   width: 240px;
-  background: #ffffff;
-  border: 1px solid #d1d5dc;
+  background: var(--sf-raised);
+  border: 1px solid var(--sf-card-border);
   border-radius: 12px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   padding: 10px 12px;
@@ -1275,7 +1277,7 @@
   display: block;
   font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: var(--sf-text);
   margin-bottom: 4px;
 }
 
@@ -1284,12 +1286,12 @@
   font-style: normal;
   font-size: 12px;
   line-height: 1.5;
-  color: #414c5e;
+  color: var(--sf-text-muted);
 }
 
 .subskill-form {
-  background: #f8f8fb;
-  border: 1px solid #d9dae4;
+  background: var(--sf-plot);
+  border: 1px solid var(--sf-card-border);
   border-radius: 12px;
   padding: 12px;
   margin-bottom: 10px;
@@ -1300,8 +1302,8 @@
 /* Area create/edit form */
 
 .area-form {
-  background: #ffffff;
-  border: 1px solid #d9dae4;
+  background: var(--sf-plot);
+  border: 1px solid var(--sf-card-border);
   border-radius: 14px;
   padding: 16px;
   margin-bottom: 14px;
@@ -1310,7 +1312,7 @@
 }
 
 .tone-picker {
-  border: 1px solid #d1d5dc;
+  border: 1px solid var(--sf-card-border);
   border-radius: 12px;
   padding: 10px 12px 12px;
 }
@@ -1358,7 +1360,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: #ffffff;
+  background: var(--sf-plot);
   border-radius: 14px;
   padding: 14px 16px;
 }
@@ -1380,14 +1382,14 @@
 }
 
 .setting-value.is-unset {
-  color: #667085;
+  color: var(--sf-text-muted);
   font-style: italic;
 }
 
 .setting-input {
   margin-top: 6px;
   width: min(340px, 100%);
-  border: 1px solid #d1d5dc;
+  border: 1px solid var(--sf-card-border);
   border-radius: 10px;
   padding: 8px 12px;
   font-size: 13px;
@@ -1421,9 +1423,9 @@
 
 .inline-select {
   height: 34px;
-  border: 1px solid #d1d5dc;
+  border: 1px solid var(--sf-card-border);
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--sf-plot);
   color: var(--admin-text);
   padding: 0 10px;
   font-size: 13px;
@@ -1436,7 +1438,7 @@
 }
 
 .permission-none {
-  color: #667085;
+  color: var(--sf-text-muted);
 }
 
 .audit-search {
@@ -1446,12 +1448,12 @@
 
 .audit-search input {
   height: 38px;
-  border: 1px solid #d1d5dc;
+  border: 1px solid var(--sf-card-border);
   border-radius: 10px;
   padding: 0 12px;
   font-size: 13px;
   font-family: inherit;
-  background: #ffffff;
+  background: var(--sf-plot);
 }
 
 .calendar-note {
@@ -1476,7 +1478,7 @@
   gap: 24px;
   margin-top: 18px;
   padding-top: 14px;
-  border-top: 1px solid #d7d7e2;
+  border-top: 1px solid var(--sf-card-border);
   font-size: 13px;
   color: var(--admin-subtle);
 }
@@ -1509,13 +1511,13 @@
   font-weight: 500;
   color: var(--admin-subtle);
   padding: 0 12px 12px;
-  border-bottom: 1px solid #c2c2cd;
+  border-bottom: 1px solid var(--sf-card-border);
 }
 
 .admin-table td {
   padding: 14px 12px;
   font-size: 14px;
-  background: #ffffff;
+  background: var(--sf-plot);
 }
 
 .admin-table tr td:first-child {
@@ -1540,23 +1542,23 @@
 }
 
 .admin-status--ok {
-  background: #d1fae5;
-  color: #047857;
+  background: var(--sf-ok-bg);
+  color: var(--sf-ok-text);
 }
 
 .admin-status--warn {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--sf-warn-bg);
+  color: var(--sf-warn-text);
 }
 
 .admin-status--error {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--sf-error-bg);
+  color: var(--sf-error-text);
 }
 
 .admin-status--neutral {
   background: #e8e6f2;
-  color: #4b5563;
+  color: var(--sf-text-muted);
 }
 
 @media (max-width: 1024px) {

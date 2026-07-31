@@ -85,14 +85,14 @@ export default function CustomReportPage() {
     <>
       <ScopeBreadcrumb />
 
-      <div className="admin-content-panel">
+      <div className="sf-panel">
         <h2>Build a report</h2>
         <p className="builder-note">
           Starts from your current filter scope and reads the same data as the named reports.
         </p>
 
         <div className="builder-controls">
-          <label className="filter-field">
+          <label className="sf-field">
             <span>Report type</span>
             <select value={reportType} onChange={(event) => changeType(event.target.value as ReportType)}>
               <option value="student-progress">Student progress</option>
@@ -116,7 +116,7 @@ export default function CustomReportPage() {
 
           <button
             type="button"
-            className="btn btn--primary"
+            className="sf-btn sf-btn--primary"
             onClick={exportCsv}
             disabled={activeColumns.length === 0 || rows.length === 0}
           >
@@ -125,10 +125,10 @@ export default function CustomReportPage() {
         </div>
       </div>
 
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
+      <div className="sf-panel">
+        <div className="sf-panel-head">
           <h2>Preview</h2>
-          <span className="config-status-summary">{rows.length} rows</span>
+          <span className="sf-panel-note">{rows.length} rows</span>
         </div>
 
         {activeColumns.length === 0 ? (
@@ -136,7 +136,7 @@ export default function CustomReportPage() {
         ) : rows.length === 0 ? (
           <EmptyState title="No rows in this scope" message="Widen the filters above." />
         ) : (
-          <table className="admin-table">
+          <table className="sf-table">
             <thead>
               <tr>
                 {activeColumns.map((column) => (

@@ -7,10 +7,10 @@ export default function AlertRulesPage() {
   const active = alertRules.filter((item) => item.status?.label === "Active").length;
 
   return (
-    <div className="admin-content-panel">
-      <div className="home-panel-head">
+    <div className="sf-panel">
+      <div className="sf-panel-head">
         <h2>Alert rules</h2>
-        <span className="config-status-summary">
+        <span className="sf-panel-note">
           {active} of {alertRules.length} active
         </span>
       </div>

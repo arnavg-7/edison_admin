@@ -4,7 +4,6 @@ import { useState } from "react";
 import { auditLog } from "@/lib/data/systemSettings";
 import { formatDateTime } from "@/lib/format";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { SettingsScreenGuard } from "@/components/settings/SettingsScreenGuard";
 
 export default function AuditLogPage() {
   const [query, setQuery] = useState("");
@@ -14,11 +13,10 @@ export default function AuditLogPage() {
   );
 
   return (
-    <SettingsScreenGuard screen="audit-log">
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
+      <div className="sf-panel">
+        <div className="sf-panel-head">
           <h2>Data privacy &amp; audit log</h2>
-          <span className="config-status-summary">
+          <span className="sf-panel-note">
             {entries.length} of {auditLog.length} entries
           </span>
         </div>
@@ -39,7 +37,7 @@ export default function AuditLogPage() {
             message="No audit entries match that search. Try a different term."
           />
         ) : (
-          <table className="admin-table">
+          <table className="sf-table">
             <thead>
               <tr>
                 <th scope="col">When</th>
@@ -61,6 +59,5 @@ export default function AuditLogPage() {
           </table>
         )}
       </div>
-    </SettingsScreenGuard>
   );
 }

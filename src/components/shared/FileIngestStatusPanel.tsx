@@ -13,8 +13,8 @@ export function FileIngestStatusPanel() {
 
   return (
     <>
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
+      <div className="sf-panel">
+        <div className="sf-panel-head">
           <h2>Today&rsquo;s file</h2>
           <StatusBadge tone={genesisIngest.status}>{genesisIngest.statusLabel}</StatusBadge>
         </div>
@@ -43,9 +43,9 @@ export function FileIngestStatusPanel() {
         </div>
       </div>
 
-      <div className="admin-content-panel">
+      <div className="sf-panel">
         <h2>Rows per file type</h2>
-        <table className="admin-table">
+        <table className="sf-table">
           <thead>
             <tr>
               <th scope="col">File</th>
@@ -72,9 +72,9 @@ export function FileIngestStatusPanel() {
       </div>
 
       {genesisIngest.validationErrors.length > 0 ? (
-        <div className="admin-content-panel">
+        <div className="sf-panel">
           <h2>Validation errors</h2>
-          <table className="admin-table">
+          <table className="sf-table">
             <thead>
               <tr>
                 <th scope="col">File</th>

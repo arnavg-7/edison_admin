@@ -17,8 +17,8 @@ export default function FacultyDashboardConfigPage() {
   };
 
   return (
-    <div className="admin-content-panel">
-      <div className="home-panel-head">
+    <div className="sf-panel">
+      <div className="sf-panel-head">
         <h2>Faculty dashboard components</h2>
         <StatusBadge tone="neutral">
           {enabled} of {components.length} enabled

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { terms } from "@/lib/data/academicCalendar";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { SettingsScreenGuard } from "@/components/settings/SettingsScreenGuard";
 
 /**
  * Source of truth for the "This Term" preset in the Reporting date filter.
@@ -30,16 +29,15 @@ export default function AcademicCalendarPage() {
   };
 
   return (
-    <SettingsScreenGuard screen="calendar">
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
+      <div className="sf-panel">
+        <div className="sf-panel-head">
           <h2>Academic calendar</h2>
-          <span className="config-status-summary">
+          <span className="sf-panel-note">
             {`${rows.length} terms · drives the “This Term” reporting filter`}
           </span>
         </div>
 
-        <table className="admin-table">
+        <table className="sf-table">
           <thead>
             <tr>
               <th scope="col">Term</th>
@@ -57,7 +55,7 @@ export default function AcademicCalendarPage() {
                   {editingId === term.id ? (
                     <input
                       type="date"
-                      className="setting-input"
+                      className="sf-input"
                       value={draft.start}
                       onChange={(event) => setDraft({ ...draft, start: event.target.value })}
                     />
@@ -69,7 +67,7 @@ export default function AcademicCalendarPage() {
                   {editingId === term.id ? (
                     <input
                       type="date"
-                      className="setting-input"
+                      className="sf-input"
                       value={draft.end}
                       onChange={(event) => setDraft({ ...draft, end: event.target.value })}
                     />
@@ -89,19 +87,19 @@ export default function AcademicCalendarPage() {
                     <div className="setting-actions">
                       <button
                         type="button"
-                        className="btn btn--sm btn--primary"
+                        className="sf-btn sf-btn--sm sf-btn--primary"
                         onClick={() => save(term.id)}
                       >
                         Save
                       </button>
-                      <button type="button" className="btn btn--sm" onClick={() => setEditingId(null)}>
+                      <button type="button" className="sf-btn sf-btn--sm" onClick={() => setEditingId(null)}>
                         Cancel
                       </button>
                     </div>
                   ) : (
                     <button
                       type="button"
-                      className="btn btn--sm"
+                      className="sf-btn sf-btn--sm"
                       onClick={() => startEdit(term.id, term.start, term.end)}
                     >
                       Edit
@@ -121,6 +119,5 @@ export default function AcademicCalendarPage() {
           The current values are placeholders pending the district calendar.
         </p>
       </div>
-    </SettingsScreenGuard>
   );
 }

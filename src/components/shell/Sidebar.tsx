@@ -2,52 +2,51 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRole } from "@/lib/role/RoleContext";
-import { ROLE_LABELS, sectionsForRole } from "@/lib/role/roles";
+import { ADMIN_ROLE_LABEL, SECTIONS } from "@/lib/nav";
+import { needsAttentionOpenCount } from "@/lib/data/needsAttention";
 import { NavIcon } from "./NavIcon";
-import { RoleSwitcher } from "./RoleSwitcher";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { role } = useRole();
-  const sections = sectionsForRole(role);
+  const openCount = needsAttentionOpenCount();
 
   return (
-    <aside className="admin-sidebar">
-      <div>
-        <div className="admin-profile">
-          <div className="admin-brand">Edison360</div>
-          <p>{ROLE_LABELS[role]}</p>
-        </div>
-
-        <nav className="admin-nav" aria-label="Admin navigation">
-          {sections.map((section) => {
-            const isActive =
-              section.href === "/" ? pathname === "/" : pathname.startsWith(section.href);
-            return (
-              <Link
-                key={section.id}
-                href={section.href}
-                aria-current={isActive ? "page" : undefined}
-                className={isActive ? "admin-nav-item active" : "admin-nav-item"}
-              >
-                <span className="admin-nav-icon" aria-hidden>
-                  <NavIcon name={section.id} />
-                </span>
-                <span className="admin-nav-label">{section.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+    <aside className="sf-sidebar">
+      <div className="sf-brand">
+        <div className="sf-brand-name">Edison360 Admin</div>
+        <div className="sf-brand-role">{ADMIN_ROLE_LABEL}</div>
       </div>
 
-      <div className="admin-sidebar-footer">
-        <RoleSwitcher />
-        <button className="admin-logout" type="button">
-          <span aria-hidden>
-            <NavIcon name="logout" />
-          </span>
-          Logout
+      <nav className="sf-nav" aria-label="Sections">
+        {SECTIONS.map((section) => {
+          const isActive =
+            section.href === "/" ? pathname === "/" : pathname.startsWith(section.href);
+
+          return (
+            <Link
+              key={section.id}
+              href={section.href}
+              aria-current={isActive ? "page" : undefined}
+              className={isActive ? "sf-nav-item active" : "sf-nav-item"}
+            >
+              <span className="sf-nav-icon" aria-hidden>
+                <NavIcon name={section.id} />
+              </span>
+              <span>{section.label}</span>
+              {section.id === "needs-attention" && openCount > 0 ? (
+                <span className="sf-nav-count">
+                  {openCount}
+                  <span className="sf-sr-only"> items need attention</span>
+                </span>
+              ) : null}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="sf-sidebar-foot">
+        <button className="sf-btn sf-btn--quiet sf-btn--block" type="button">
+          Log out
         </button>
       </div>
     </aside>

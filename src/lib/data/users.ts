@@ -1,10 +1,10 @@
-import type { Role } from "@/lib/role/roles";
+import type { UserRole } from "./userRoles";
 
 // TODO: replace with the real Admin DB user/provisioning contract.
 
 export type UserSummary = {
   totalUsers: number;
-  byRole: { role: Role; count: number }[];
+  byRole: { role: UserRole; count: number }[];
   pendingProvisioning: number;
   recentAccessChanges: number;
   asOf: string;
@@ -13,9 +13,10 @@ export type UserSummary = {
 export const userSummary: UserSummary = {
   totalUsers: 14208,
   byRole: [
-    { role: "leadership", count: 18 },
-    { role: "portal_admin", count: 6 },
-    { role: "it_admin", count: 4 }
+    { role: "school_leader", count: 18 },
+    { role: "super_admin", count: 6 },
+    { role: "support_staff", count: 4 },
+    { role: "faculty", count: 96 }
   ],
   pendingProvisioning: 7,
   recentAccessChanges: 3,

@@ -8,8 +8,8 @@ import { StatusBadge } from "./StatusBadge";
  */
 export function ApiSyncStatusTile({ api }: { api: ApiSyncStatus }) {
   return (
-    <div className="admin-content-panel">
-      <div className="home-panel-head">
+    <div className="sf-panel">
+      <div className="sf-panel-head">
         <h2>{api.label}</h2>
         <StatusBadge tone={api.status}>{api.statusLabel}</StatusBadge>
       </div>

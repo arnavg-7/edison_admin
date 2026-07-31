@@ -15,7 +15,7 @@ export default function ProgressTrackingPage() {
 
   return (
     <>
-      <div className="admin-content-panel">
+      <div className="sf-panel">
         <h2>Progress tracking</h2>
 
         <div className="setting-list">
@@ -59,7 +59,7 @@ export default function ProgressTrackingPage() {
         </div>
       </div>
 
-      <div className="admin-content-panel">
+      <div className="sf-panel">
         <h2>Goal activity</h2>
         <div className="home-panel-stats">
           <div>

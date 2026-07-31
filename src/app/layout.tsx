@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "../styles/theme.css";
 import "../styles/pages/admin.css";
-import { RoleProvider } from "@/lib/role/RoleContext";
 import { Sidebar } from "@/components/shell/Sidebar";
+import { ContextBar } from "@/components/shell/ContextBar";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Edison Admin",
-  description: "Edison360 admin portal"
+  title: "Edison360 Admin",
+  description: "Edison 360 Super Admin portal"
 };
 
 export default function RootLayout({
@@ -20,17 +21,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <RoleProvider>
-          <a className="skip-link" href="#main-content">
-            Skip to main content
-          </a>
-          <div className="admin-shell">
-            <Sidebar />
-            <div id="main-content" className="admin-content-root">
-              {children}
-            </div>
+        <a className="sf-skip-link" href="#main-content">
+          Skip to main content
+        </a>
+        <div className="sf-shell">
+          <Sidebar />
+          <div className="sf-main-region">
+            <ContextBar />
+            <div id="main-content">{children}</div>
           </div>
-        </RoleProvider>
+        </div>
       </body>
     </html>
   );

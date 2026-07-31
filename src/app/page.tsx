@@ -1,65 +1,135 @@
-"use client";
+import Link from "next/link";
+import { MetricCard } from "@/components/sf/MetricCard";
+import { Donut, Funnel, StackedBars, StatValue } from "@/components/sf/charts";
+import { REPORTS } from "@/lib/data/salesforce";
+import {
+  RATIO_SERIES,
+  STATUS_SERIES,
+  eventParticipants,
+  numberOfStudents,
+  studentCountBySchool,
+  studentsStatus,
+  teacherStudentRatio,
+  totalEventsHeld,
+  totalFaculty
+} from "@/lib/data/dashboard";
+import { attentionCountsByCategory, needsAttentionOpenCount } from "@/lib/data/needsAttention";
+import { ATTENTION_CATEGORIES } from "@/lib/data/needsAttention";
 
-import { useRole } from "@/lib/role/RoleContext";
-import { platformPulse } from "@/lib/data/metrics";
-import { configurationStatus } from "@/lib/data/configStatus";
-import { MetricStrip } from "@/components/shared/MetricTile";
-import { ConfigStatusRow } from "@/components/shared/ConfigStatusRow";
-import { GenesisSummaryPanel } from "@/components/home/GenesisSummaryPanel";
-import { ApiSummaryPanel } from "@/components/home/ApiSummaryPanel";
-import { UserManagementTile } from "@/components/home/UserManagementTile";
-import { LeadershipHome } from "@/components/home/LeadershipHome";
-
-/** One route, three renders resolved by role. */
+/**
+ * Super Admin landing dashboard. Curated top-level set per brief §5; the full
+ * catalog lives in Reporting & Analytics.
+ *
+ * TODO: exact card set is an open item (brief §6 / open item 6). This is the
+ * brief's own suggestion, not a confirmed selection.
+ */
 export default function HomePage() {
-  const { role } = useRole();
-
-  if (role === "leadership") {
-    return <LeadershipHome />;
-  }
-
-  if (role === "it_admin") {
-    return (
-      <section className="admin-main">
-        <h1>Platform Pulse</h1>
-        <p className="admin-subtitle">District-wide health at a glance.</p>
-
-        <MetricStrip metrics={platformPulse} />
-
-        <div className="home-panel-grid">
-          <GenesisSummaryPanel />
-          <ApiSummaryPanel />
-        </div>
-
-        <div className="home-panel-grid home-panel-grid--single">
-          <UserManagementTile />
-        </div>
-      </section>
-    );
-  }
-
-  const configured = configurationStatus.filter((item) => item.configured >= item.total).length;
+  const counts = attentionCountsByCategory();
+  const open = needsAttentionOpenCount();
 
   return (
-    <section className="admin-main">
-      <h1>Platform Pulse</h1>
-      <p className="admin-subtitle">District-wide health at a glance.</p>
+    <section className="sf-main">
+      <h1 className="sf-page-title">Home</h1>
+      <p className="sf-page-sub">
+        District-wide overview. Every card carries its own refresh time, because Salesforce reports
+        refresh on their own schedules.
+      </p>
 
-      <MetricStrip metrics={platformPulse} />
+      <div className="sf-card-grid">
+        <MetricCard
+          title="Needs Attention"
+          report="Needs Attention Queue"
+          asOf={REPORTS.studentsStatus.asOf}
+          span="sf-col-4"
+        >
+          <div className="sf-attention-summary">
+            <div className="sf-attention-total">{open}</div>
+            <ul className="sf-attention-breakdown">
+              {ATTENTION_CATEGORIES.map((category) => (
+                <li key={category.value}>
+                  <span>{category.label}</span>
+                  <strong>{counts[category.value]}</strong>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <Link className="sf-inline-link" href="/needs-attention">
+            Open triage queue →
+          </Link>
+        </MetricCard>
 
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
-          <h2>Configuration status</h2>
-          <span className="config-status-summary">
-            {configured} of {configurationStatus.length} modules fully configured
-          </span>
-        </div>
+        <MetricCard
+          title="Number of Students"
+          report={REPORTS.numberOfStudents.name}
+          asOf={REPORTS.numberOfStudents.asOf}
+          span="sf-col-4"
+        >
+          <StatValue value={numberOfStudents} label="Number of Students" />
+        </MetricCard>
 
-        <div className="config-status-list">
-          {configurationStatus.map((item) => (
-            <ConfigStatusRow key={item.id} item={item} />
-          ))}
-        </div>
+        <MetricCard
+          title="Total Faculty"
+          report={REPORTS.totalFaculty.name}
+          asOf={REPORTS.totalFaculty.asOf}
+          span="sf-col-4"
+        >
+          <StatValue value={totalFaculty} label="Total Faculty" />
+        </MetricCard>
+
+        <MetricCard
+          title="Teacher-Student Ratio"
+          report={REPORTS.teacherStudentRatio.name}
+          asOf={REPORTS.teacherStudentRatio.asOf}
+          span="sf-col-8"
+        >
+          <StackedBars
+            rows={teacherStudentRatio}
+            axisTitle="Record Count (%)"
+            legendTitle="Program Enrollment: Record Type"
+            series={RATIO_SERIES}
+          />
+        </MetricCard>
+
+        <MetricCard
+          title="Students' Status"
+          report={REPORTS.studentsStatus.name}
+          asOf={REPORTS.studentsStatus.asOf}
+          span="sf-col-4"
+        >
+          <Funnel stages={studentsStatus} legendTitle="Status" total={numberOfStudents} />
+        </MetricCard>
+
+        <MetricCard
+          title="Student Count By School"
+          report={REPORTS.studentCountBySchool.name}
+          asOf={REPORTS.studentCountBySchool.asOf}
+          span="sf-col-6"
+        >
+          <Donut
+            slices={studentCountBySchool}
+            legendTitle="Account Name"
+            caption="Record Count"
+            total={numberOfStudents}
+          />
+        </MetricCard>
+
+        <MetricCard
+          title="Total Events Held"
+          report={REPORTS.totalEventsHeld.name}
+          asOf={REPORTS.totalEventsHeld.asOf}
+          span="sf-col-3"
+        >
+          <StatValue value={totalEventsHeld} label="Total Events Held" />
+        </MetricCard>
+
+        <MetricCard
+          title="Event Participants"
+          report={REPORTS.eventParticipants.name}
+          asOf={REPORTS.eventParticipants.asOf}
+          span="sf-col-3"
+        >
+          <StatValue value={eventParticipants} label="Event Participants" />
+        </MetricCard>
       </div>
     </section>
   );

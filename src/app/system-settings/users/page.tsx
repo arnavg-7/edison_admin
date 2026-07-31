@@ -2,39 +2,39 @@
 
 import { useState } from "react";
 import {
+  auditLog,
   managedUsers,
   provisioningRequests,
   type ManagedUser
 } from "@/lib/data/systemSettings";
-import { auditLog } from "@/lib/data/systemSettings";
-import {
-  ROLE_LABELS,
-  SECTIONS,
-  SECTION_ACCESS,
-  type Role
-} from "@/lib/role/roles";
+import { USER_ROLE_LABELS, USER_ROLE_ORDER, type UserRole } from "@/lib/data/userRoles";
 import { formatDateTime, formatNumber } from "@/lib/format";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { FreshnessStamp } from "@/components/shared/FreshnessStamp";
-import { SettingsScreenGuard } from "@/components/settings/SettingsScreenGuard";
 import { userSummary } from "@/lib/data/users";
 
-const ROLE_ORDER: Role[] = ["leadership", "portal_admin", "it_admin"];
-
+/**
+ * v2 has a single Super Admin role for Admin access, so v1's section-by-role
+ * permission matrix is gone — there is nothing left to gate. What remains is the
+ * user directory: who exists, what they are, and what changed recently.
+ */
 export default function UserManagementPage() {
   const [users, setUsers] = useState<ManagedUser[]>(managedUsers);
 
-  const changeRole = (id: string, role: Role) => {
+  const changeRole = (id: string, role: UserRole) => {
     setUsers((current) => current.map((user) => (user.id === id ? { ...user, role } : user)));
   };
 
   const recentChanges = auditLog.filter((entry) => entry.action === "Changed role").length;
 
   return (
-    <SettingsScreenGuard screen="users">
-      <div className="admin-content-panel">
-        <h2>Overview</h2>
-        <div className="home-panel-stats">
+    <>
+      <div className="sf-panel">
+        <div className="sf-panel-head">
+          <h2>Overview</h2>
+          <span className="sf-panel-note">Single Super Admin role — no section gating</span>
+        </div>
+
+        <div className="sf-stat-row">
           <div>
             <dt>Total users</dt>
             <dd>{formatNumber(userSummary.totalUsers)}</dd>
@@ -48,108 +48,108 @@ export default function UserManagementPage() {
             <dd>{recentChanges}</dd>
           </div>
         </div>
-        <FreshnessStamp asOf={userSummary.asOf} source="admin_db" cadence="Immediate on write" />
       </div>
 
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
+      <div className="sf-panel">
+        <div className="sf-panel-head">
           <h2>Pending provisioning requests</h2>
           <StatusBadge tone={provisioningRequests.length > 0 ? "warn" : "ok"}>
             {provisioningRequests.length} pending
           </StatusBadge>
         </div>
 
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Requested role</th>
-              <th scope="col">Requested</th>
-            </tr>
-          </thead>
-          <tbody>
-            {provisioningRequests.map((request) => (
-              <tr key={request.id}>
-                <td>{request.name}</td>
-                <td>{ROLE_LABELS[request.requestedRole]}</td>
-                <td>{formatDateTime(request.requestedOn)}</td>
+        <div className="sf-table-wrap">
+          <table className="sf-table">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Requested role</th>
+                <th scope="col">Requested</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {provisioningRequests.map((request) => (
+                <tr key={request.id}>
+                  <td>{request.name}</td>
+                  <td>{USER_ROLE_LABELS[request.requestedRole]}</td>
+                  <td>{formatDateTime(request.requestedOn)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="admin-content-panel">
-        <h2>Role assignments</h2>
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Email</th>
-              <th scope="col">Role</th>
-              <th scope="col">Last active</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-                <td>
-                  <select
-                    className="inline-select"
-                    value={user.role}
-                    onChange={(event) => changeRole(user.id, event.target.value as Role)}
-                  >
-                    {ROLE_ORDER.map((role) => (
-                      <option key={role} value={role}>
-                        {ROLE_LABELS[role]}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td>{formatDateTime(user.lastActive)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
-          <h2>Permissions by role</h2>
-          <span className="config-status-summary">
-            The same model the sidebar and every section guard read
+      <div className="sf-panel">
+        <div className="sf-panel-head">
+          <h2>Role assignments</h2>
+          <span className="sf-panel-note">
+            {users.filter((user) => user.role === "super_admin").length} Super Admins
           </span>
         </div>
 
-        <table className="admin-table permission-matrix">
-          <thead>
-            <tr>
-              <th scope="col">Section</th>
-              {ROLE_ORDER.map((role) => (
-                <th scope="col" key={role}>{ROLE_LABELS[role]}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {SECTIONS.map((section) => (
-              <tr key={section.id}>
-                <td>{section.label}</td>
-                {ROLE_ORDER.map((role) => (
-                  <td key={role}>
-                    {SECTION_ACCESS[section.id].includes(role) ? (
-                      <StatusBadge tone="ok">Access</StatusBadge>
-                    ) : (
-                      <span className="permission-none">—</span>
-                    )}
-                  </td>
-                ))}
+        <div className="sf-table-wrap">
+          <table className="sf-table">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Role</th>
+                <th scope="col">Last active</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id}>
+                  <td>{user.name}</td>
+                  <td>{user.email}</td>
+                  <td>
+                    <select
+                      className="sf-input"
+                      value={user.role}
+                      aria-label={`Role for ${user.name}`}
+                      onChange={(event) => changeRole(user.id, event.target.value as UserRole)}
+                    >
+                      {USER_ROLE_ORDER.map((role) => (
+                        <option key={role} value={role}>
+                          {USER_ROLE_LABELS[role]}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>{formatDateTime(user.lastActive)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </SettingsScreenGuard>
+
+      <div className="sf-panel">
+        <div className="sf-panel-head">
+          <h2>Directory by role</h2>
+          <span className="sf-panel-note">Across all schools</span>
+        </div>
+
+        <div className="sf-table-wrap">
+          <table className="sf-table">
+            <thead>
+              <tr>
+                <th scope="col">Role</th>
+                <th scope="col">People</th>
+              </tr>
+            </thead>
+            <tbody>
+              {userSummary.byRole.map((entry) => (
+                <tr key={entry.role}>
+                  <td>{USER_ROLE_LABELS[entry.role]}</td>
+                  <td>{formatNumber(entry.count)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
   );
 }

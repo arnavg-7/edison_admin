@@ -1,5 +1,5 @@
 import type { ListEditorItem } from "@/components/shared/ListEditor";
-import type { Role } from "@/lib/role/roles";
+import type { UserRole } from "./userRoles";
 
 // TODO: replace with the real Admin DB system-settings contract.
 
@@ -93,7 +93,7 @@ export type ManagedUser = {
   id: string;
   name: string;
   email: string;
-  role: Role;
+  role: UserRole;
   lastActive: string;
 };
 
@@ -102,28 +102,28 @@ export const managedUsers: ManagedUser[] = [
     id: "u-1",
     name: "Dana Whitfield",
     email: "dwhitfield@edison.example.org",
-    role: "leadership",
+    role: "school_leader",
     lastActive: "2026-07-31T09:14:00-04:00"
   },
   {
     id: "u-2",
     name: "Marcus Reyes",
     email: "mreyes@edison.example.org",
-    role: "leadership",
+    role: "school_leader",
     lastActive: "2026-07-30T16:42:00-04:00"
   },
   {
     id: "u-3",
     name: "Priya Nair",
     email: "pnair@edison.example.org",
-    role: "portal_admin",
+    role: "super_admin",
     lastActive: "2026-07-31T12:05:00-04:00"
   },
   {
     id: "u-4",
     name: "Sam Okonkwo",
     email: "sokonkwo@edison.example.org",
-    role: "it_admin",
+    role: "support_staff",
     lastActive: "2026-07-31T11:38:00-04:00"
   }
 ];
@@ -131,7 +131,7 @@ export const managedUsers: ManagedUser[] = [
 export type ProvisioningRequest = {
   id: string;
   name: string;
-  requestedRole: Role;
+  requestedRole: UserRole;
   requestedOn: string;
 };
 
@@ -139,13 +139,13 @@ export const provisioningRequests: ProvisioningRequest[] = [
   {
     id: "pr-1",
     name: "Alicia Gomez",
-    requestedRole: "portal_admin",
+    requestedRole: "super_admin",
     requestedOn: "2026-07-29T10:20:00-04:00"
   },
   {
     id: "pr-2",
     name: "Tom Bradley",
-    requestedRole: "it_admin",
+    requestedRole: "support_staff",
     requestedOn: "2026-07-30T14:03:00-04:00"
   }
 ];
@@ -170,7 +170,7 @@ export const auditLog: AuditEntry[] = [
     id: "al-2",
     actor: "Sam Okonkwo",
     action: "Changed role",
-    target: "Marcus Reyes → District & School Leadership",
+    target: "Marcus Reyes → School Leader",
     at: "2026-07-31T10:12:00-04:00"
   },
   {

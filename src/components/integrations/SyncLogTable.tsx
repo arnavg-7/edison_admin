@@ -28,7 +28,7 @@ export function SyncLogTable({
   }
 
   return (
-    <table className="admin-table">
+    <table className="sf-table">
       <thead>
         <tr>
           <th scope="col">When</th>

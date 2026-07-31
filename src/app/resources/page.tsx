@@ -1,7 +1,6 @@
 "use client";
 
 import { resourceGroups } from "@/lib/data/resources";
-import { SectionGuard } from "@/components/shell/SectionGuard";
 import { ListEditor } from "@/components/shared/ListEditor";
 
 /**
@@ -12,19 +11,18 @@ export default function ResourcesPage() {
   const total = resourceGroups.reduce((sum, group) => sum + group.items.length, 0);
 
   return (
-    <SectionGuard section="resources">
-      <section className="admin-main">
+      <section className="sf-main">
         <h1>Resources &amp; Content</h1>
-        <p className="admin-subtitle">
+        <p className="sf-page-sub">
           External links surfaced in the student and faculty portals. {total} resources across{" "}
           {resourceGroups.length} categories.
         </p>
 
         {resourceGroups.map((group) => (
-          <div className="admin-content-panel" key={group.category}>
-            <div className="home-panel-head">
+          <div className="sf-panel" key={group.category}>
+            <div className="sf-panel-head">
               <h2>{group.category}</h2>
-              <span className="config-status-summary">{group.items.length} resources</span>
+              <span className="sf-panel-note">{group.items.length} resources</span>
             </div>
 
             <ListEditor
@@ -40,6 +38,5 @@ export default function ResourcesPage() {
           </div>
         ))}
       </section>
-    </SectionGuard>
   );
 }

@@ -54,10 +54,10 @@ export default function SyncLogPage() {
         ]}
       />
 
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
+      <div className="sf-panel">
+        <div className="sf-panel-head">
           <h2>Sync &amp; error log</h2>
-          <span className="config-status-summary">
+          <span className="sf-panel-note">
             {entries.length} of {syncLog.length} entries
           </span>
         </div>

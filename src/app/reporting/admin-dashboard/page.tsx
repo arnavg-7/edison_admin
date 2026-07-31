@@ -9,15 +9,15 @@ export default function AdminDashboardPage() {
 
   return (
     <>
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
+      <div className="sf-panel">
+        <div className="sf-panel-head">
           <h2>Portal adoption by school</h2>
-          <span className="config-status-summary">
+          <span className="sf-panel-note">
             {formatNumber(totalLogins)} active logins in range
           </span>
         </div>
 
-        <table className="admin-table">
+        <table className="sf-table">
           <thead>
             <tr>
               <th scope="col">School</th>
@@ -51,7 +51,7 @@ export default function AdminDashboardPage() {
         />
       </div>
 
-      <div className="admin-content-panel">
+      <div className="sf-panel">
         <h2>Last successful sync per integration</h2>
         <div className="sync-list">
           {lastSyncByIntegration.map((item) => (

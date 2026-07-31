@@ -1,30 +1,33 @@
 "use client";
 
 import { Suspense } from "react";
-import { SectionGuard } from "@/components/shell/SectionGuard";
 import { SectionTabs } from "@/components/shared/SectionTabs";
-import { useRole } from "@/lib/role/RoleContext";
-import { settingsScreensForRole } from "@/lib/role/systemSettingsAccess";
+
+/**
+ * v2 merges what v1 split by persona (academic config vs. users/audit) into one
+ * unified section — Super Admin manages all of it.
+ */
+const TABS = [
+  { label: "Grade Levels", href: "/system-settings" },
+  { label: "Subjects", href: "/system-settings/subjects" },
+  { label: "Academic Calendar", href: "/system-settings/calendar" },
+  { label: "Announcements", href: "/system-settings/announcements" },
+  { label: "User Management", href: "/system-settings/users" },
+  { label: "Data Privacy & Audit Log", href: "/system-settings/audit-log" }
+];
 
 export default function SystemSettingsLayout({ children }: { children: React.ReactNode }) {
-  const { role } = useRole();
-  const screens = settingsScreensForRole(role);
-
   return (
-    <SectionGuard section="system-settings">
-      <section className="admin-main">
-        <h1>System Settings</h1>
-        <p className="admin-subtitle">
-          {role === "it_admin"
-            ? "User provisioning, permissions, and audit history."
-            : "Grade levels, subjects, calendar, and announcements."}
-        </p>
+    <section className="sf-main">
+      <h1 className="sf-page-title">System Settings</h1>
+      <p className="sf-page-sub">
+        Grade levels, subjects, calendar, announcements, users and audit history.
+      </p>
 
-        <Suspense fallback={null}>
-          <SectionTabs tabs={screens.map(({ label, href }) => ({ label, href }))} />
-        </Suspense>
-        {children}
-      </section>
-    </SectionGuard>
+      <Suspense fallback={null}>
+        <SectionTabs tabs={TABS} />
+      </Suspense>
+      {children}
+    </section>
   );
 }

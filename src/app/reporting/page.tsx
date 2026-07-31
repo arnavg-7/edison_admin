@@ -50,20 +50,20 @@ export default function CoreMetricsPage() {
         ))}
       </div>
 
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
+      <div className="sf-panel">
+        <div className="sf-panel-head">
           <h2>Breakdown by {level.toLowerCase()}</h2>
           {canDrill ? (
-            <span className="config-status-summary">Select a row to drill down</span>
+            <span className="sf-panel-note">Select a row to drill down</span>
           ) : (
-            <span className="config-status-summary">Class level — deepest available</span>
+            <span className="sf-panel-note">Class level — deepest available</span>
           )}
         </div>
 
         {rows.length === 0 ? (
           <NoAttendanceData scope="the selected scope" />
         ) : (
-          <table className="admin-table">
+          <table className="sf-table">
             <thead>
               <tr>
                 <th scope="col">{level}</th>

@@ -3,6 +3,20 @@
 // Academic Calendar owns it.
 const TIME_ZONE = "America/New_York";
 
+const dayFormatter = new Intl.DateTimeFormat("en-GB", {
+  timeZone: TIME_ZONE,
+  day: "2-digit",
+  month: "short",
+  year: "numeric"
+});
+
+const timeFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: TIME_ZONE,
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true
+});
+
 const dateTimeFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: TIME_ZONE,
   month: "short",
@@ -18,6 +32,16 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric"
 });
 
+/**
+ * The Salesforce card-footer stamp, matching the reference dashboards exactly:
+ * "17-Jul-2026, 12:12 pm".
+ */
+export function formatSalesforceStamp(iso: string): string {
+  const day = dayFormatter.format(new Date(iso)).replace(/ /g, "-");
+  const time = timeFormatter.format(new Date(iso)).toLowerCase();
+  return `${day}, ${time}`;
+}
+
 export function formatDateTime(iso: string): string {
   return dateTimeFormatter.format(new Date(iso));
 }
@@ -28,4 +52,11 @@ export function formatDate(iso: string): string {
 
 export function formatNumber(value: number): string {
   return value.toLocaleString("en-US");
+}
+
+/** Compact form for big-number stats, e.g. 1.7k for a funnel total. */
+export function formatCompact(value: number): string {
+  return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(
+    value
+  );
 }

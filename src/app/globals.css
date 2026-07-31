@@ -1,0 +1,19 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  color: #1a1a1a;
+  background: #f8f7f4;
+}
+
+button {
+  font-family: inherit;
+}

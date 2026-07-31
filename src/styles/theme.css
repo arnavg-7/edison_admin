@@ -1409,3 +1409,117 @@ body {
 }
 
 .permission-none { color: var(--sf-text-dim); }
+
+/* ---------------------------------------------------------------------------
+   Needs Attention triage queue
+   --------------------------------------------------------------------------- */
+
+.sf-callout {
+  border-left: 3px solid var(--sf-warn-text);
+}
+
+.sf-callout h2 {
+  color: var(--sf-warn-text);
+}
+
+.sf-callout p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--sf-text-muted);
+  max-width: 90ch;
+}
+
+.sf-rule-list {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--sf-text-muted);
+}
+
+.sf-triage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.sf-triage-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--sf-plot);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-control);
+  padding: 13px 15px;
+}
+
+.sf-triage-row.is-resolved {
+  opacity: 0.55;
+}
+
+.sf-triage-row.is-resolved .sf-triage-subject {
+  text-decoration: line-through;
+}
+
+.sf-triage-main {
+  min-width: 0;
+}
+
+.sf-triage-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+
+.sf-triage-category {
+  font-size: 11px;
+  color: var(--sf-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.sf-triage-when {
+  font-size: 11px;
+  color: var(--sf-text-dim);
+}
+
+.sf-triage-subject {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--sf-text);
+  overflow-wrap: anywhere;
+}
+
+.sf-triage-reason {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--sf-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.sf-triage-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.sf-triage-actions .sf-btn {
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .sf-triage-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

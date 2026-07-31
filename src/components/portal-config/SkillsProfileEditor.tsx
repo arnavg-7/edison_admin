@@ -1,0 +1,398 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  SKILL_LEVELS,
+  skillsProfile,
+  type SchoolLevel,
+  type SkillGroup,
+  type SkillLevel
+} from "@/lib/data/portalConfig";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { EmptyState } from "@/components/shared/EmptyState";
+
+// TODO: local state only — persist through the Admin DB portal-configuration
+// contract when it exists.
+
+let seq = 0;
+const nextId = (prefix: string) => `${prefix}-local-${Date.now()}-${seq++}`;
+
+type SubSkillDraft = { label: string; level: SkillLevel; description: string };
+
+const emptyDraft: SubSkillDraft = { label: "", level: "high", description: "" };
+
+export function SkillsProfileEditor({ level }: { level: SchoolLevel }) {
+  const [groups, setGroups] = useState<SkillGroup[]>(skillsProfile[level]);
+
+  useEffect(() => {
+    setGroups(skillsProfile[level]);
+  }, [level]);
+
+  const [addingGroup, setAddingGroup] = useState(false);
+  const [groupTitle, setGroupTitle] = useState("");
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+
+  const [subDraftFor, setSubDraftFor] = useState<string | null>(null);
+  const [editingSub, setEditingSub] = useState<{ groupId: string; subId: string } | null>(null);
+  const [subDraft, setSubDraft] = useState<SubSkillDraft>(emptyDraft);
+
+  const saveNewGroup = () => {
+    if (!groupTitle.trim()) return;
+    setGroups((current) => [
+      ...current,
+      { id: nextId("group"), title: groupTitle.trim(), published: false, subSkills: [] }
+    ]);
+    setGroupTitle("");
+    setAddingGroup(false);
+  };
+
+  const saveGroupTitle = (id: string) => {
+    if (!groupTitle.trim()) return;
+    setGroups((current) =>
+      current.map((group) => (group.id === id ? { ...group, title: groupTitle.trim() } : group))
+    );
+    setEditingGroupId(null);
+    setGroupTitle("");
+  };
+
+  const removeGroup = (id: string) =>
+    setGroups((current) => current.filter((group) => group.id !== id));
+
+  const togglePublished = (id: string) =>
+    setGroups((current) =>
+      current.map((group) =>
+        group.id === id ? { ...group, published: !group.published } : group
+      )
+    );
+
+  const addSubSkill = (groupId: string) => {
+    if (!subDraft.label.trim()) return;
+    setGroups((current) =>
+      current.map((group) =>
+        group.id === groupId
+          ? {
+              ...group,
+              subSkills: [
+                ...group.subSkills,
+                {
+                  id: nextId("sub"),
+                  label: subDraft.label.trim(),
+                  level: subDraft.level,
+                  description: subDraft.description.trim()
+                }
+              ]
+            }
+          : group
+      )
+    );
+    setSubDraft(emptyDraft);
+    setSubDraftFor(null);
+  };
+
+  const saveSubSkill = () => {
+    if (!editingSub || !subDraft.label.trim()) return;
+    setGroups((current) =>
+      current.map((group) =>
+        group.id === editingSub.groupId
+          ? {
+              ...group,
+              subSkills: group.subSkills.map((sub) =>
+                sub.id === editingSub.subId
+                  ? {
+                      ...sub,
+                      label: subDraft.label.trim(),
+                      level: subDraft.level,
+                      description: subDraft.description.trim()
+                    }
+                  : sub
+              )
+            }
+          : group
+      )
+    );
+    setEditingSub(null);
+    setSubDraft(emptyDraft);
+  };
+
+  const removeSubSkill = (groupId: string, subId: string) =>
+    setGroups((current) =>
+      current.map((group) =>
+        group.id === groupId
+          ? { ...group, subSkills: group.subSkills.filter((sub) => sub.id !== subId) }
+          : group
+      )
+    );
+
+  const subSkillForm = (onSave: () => void, onCancel: () => void, saveLabel: string) => (
+    <div className="subskill-form">
+      <label className="list-editor-field">
+        <span>Sub-skill name</span>
+        <input
+          type="text"
+          autoFocus
+          value={subDraft.label}
+          placeholder="e.g. Perseverance"
+          onChange={(event) => setSubDraft({ ...subDraft, label: event.target.value })}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") onSave();
+            if (event.key === "Escape") onCancel();
+          }}
+        />
+      </label>
+
+      <label className="list-editor-field">
+        <span>Level</span>
+        <select
+          className="inline-select"
+          value={subDraft.level}
+          onChange={(event) =>
+            setSubDraft({ ...subDraft, level: event.target.value as SkillLevel })
+          }
+        >
+          {SKILL_LEVELS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="list-editor-field">
+        <span>Description</span>
+        <textarea
+          rows={2}
+          value={subDraft.description}
+          placeholder="Shown when a student hovers the skill"
+          onChange={(event) => setSubDraft({ ...subDraft, description: event.target.value })}
+        />
+      </label>
+
+      <div className="list-editor-form-actions">
+        <button type="button" className="btn btn--primary" onClick={onSave}>
+          {saveLabel}
+        </button>
+        <button type="button" className="btn" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+
+  const totalSubSkills = groups.reduce((sum, group) => sum + group.subSkills.length, 0);
+
+  return (
+    <div className="admin-content-panel">
+      <div className="home-panel-head">
+        <h2>Skills profile</h2>
+        <span className="config-status-summary">
+          {groups.length} skills · {totalSubSkills} sub-skills ·{" "}
+          {groups.filter((group) => group.published).length} published
+        </span>
+      </div>
+
+      <div className="skills-legend" aria-label="Skill levels">
+        {SKILL_LEVELS.map((option) => (
+          <span className={`skills-legend-item level-${option.value}`} key={option.value}>
+            <span className="skill-dot" aria-hidden />
+            {option.label}
+          </span>
+        ))}
+      </div>
+
+      <div className="list-editor-head">
+        <button
+          type="button"
+          className="btn btn--primary"
+          onClick={() => {
+            setGroupTitle("");
+            setEditingGroupId(null);
+            setAddingGroup(true);
+          }}
+        >
+          Add skill
+        </button>
+      </div>
+
+      {addingGroup ? (
+        <div className="area-form">
+          <label className="list-editor-field">
+            <span>Skill name</span>
+            <input
+              type="text"
+              autoFocus
+              value={groupTitle}
+              placeholder="e.g. Resilience"
+              onChange={(event) => setGroupTitle(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") saveNewGroup();
+                if (event.key === "Escape") setAddingGroup(false);
+              }}
+            />
+          </label>
+          <div className="list-editor-form-actions">
+            <button type="button" className="btn btn--primary" onClick={saveNewGroup}>
+              Create skill
+            </button>
+            <button type="button" className="btn" onClick={() => setAddingGroup(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {groups.length === 0 && !addingGroup ? (
+        <EmptyState
+          title="No skills configured yet"
+          message="Add a skill such as Resilience, then add the sub-skills rated under it."
+        />
+      ) : (
+        <div className="skill-group-grid">
+          {groups.map((group) => (
+            <article className="skill-group-card" key={group.id}>
+              <div className="skill-group-head">
+                {editingGroupId === group.id ? (
+                  <div className="area-skill-editing">
+                    <input
+                      type="text"
+                      className="setting-input area-skill-input"
+                      autoFocus
+                      value={groupTitle}
+                      onChange={(event) => setGroupTitle(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") saveGroupTitle(group.id);
+                        if (event.key === "Escape") setEditingGroupId(null);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn--sm btn--primary"
+                      onClick={() => saveGroupTitle(group.id)}
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--sm"
+                      onClick={() => setEditingGroupId(null)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <h3 className="skill-group-title">{group.title}</h3>
+                    {!group.published ? <StatusBadge tone="neutral">Draft</StatusBadge> : null}
+                  </>
+                )}
+              </div>
+
+              <ul className="skill-pill-list">
+                {group.subSkills.map((sub) =>
+                  editingSub?.subId === sub.id ? (
+                    <li key={sub.id}>
+                      {subSkillForm(saveSubSkill, () => setEditingSub(null), "Save sub-skill")}
+                    </li>
+                  ) : (
+                    <li className="skill-pill-row" key={sub.id}>
+                      <span
+                        className={`skill-pill level-${sub.level}`}
+                        tabIndex={0}
+                        aria-describedby={sub.description ? `tip-${sub.id}` : undefined}
+                      >
+                        <span className="skill-dot" aria-hidden />
+                        <span className="skill-pill-label">{sub.label}</span>
+                        {sub.description ? (
+                          <span className="skill-tooltip" role="tooltip" id={`tip-${sub.id}`}>
+                            <strong>{sub.label}</strong>
+                            <em>{sub.description}</em>
+                          </span>
+                        ) : null}
+                      </span>
+
+                      <span className="skill-pill-actions">
+                        <button
+                          type="button"
+                          className="link-btn"
+                          onClick={() => {
+                            setSubDraft({
+                              label: sub.label,
+                              level: sub.level,
+                              description: sub.description
+                            });
+                            setSubDraftFor(null);
+                            setEditingSub({ groupId: group.id, subId: sub.id });
+                          }}
+                        >
+                          Edit<span className="sr-only"> {sub.label}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="link-btn link-btn--danger"
+                          onClick={() => removeSubSkill(group.id, sub.id)}
+                        >
+                          Remove<span className="sr-only"> {sub.label}</span>
+                        </button>
+                      </span>
+                    </li>
+                  )
+                )}
+
+                {group.subSkills.length === 0 && subDraftFor !== group.id ? (
+                  <li className="area-skill-empty">No sub-skills yet</li>
+                ) : null}
+              </ul>
+
+              {subDraftFor === group.id
+                ? subSkillForm(
+                    () => addSubSkill(group.id),
+                    () => setSubDraftFor(null),
+                    "Add sub-skill"
+                  )
+                : (
+                  <button
+                    type="button"
+                    className="link-btn area-add-skill"
+                    onClick={() => {
+                      setSubDraft(emptyDraft);
+                      setEditingSub(null);
+                      setSubDraftFor(group.id);
+                    }}
+                  >
+                    + Add sub-skill<span className="sr-only"> to {group.title}</span>
+                  </button>
+                )}
+
+              <div className="area-card-actions">
+                <button
+                  type="button"
+                  className="btn btn--sm"
+                  onClick={() => togglePublished(group.id)}
+                >
+                  {group.published ? "Unpublish" : "Publish"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--sm"
+                  onClick={() => {
+                    setGroupTitle(group.title);
+                    setAddingGroup(false);
+                    setEditingGroupId(group.id);
+                  }}
+                >
+                  Rename<span className="sr-only"> skill {group.title}</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--sm btn--danger"
+                  onClick={() => removeGroup(group.id)}
+                >
+                  Delete<span className="sr-only"> skill {group.title}</span>
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { skillsProfile, SCHOOL_LEVELS, type SchoolLevel } from "@/lib/data/portalConfig";
+import { SCHOOL_LEVELS, type SchoolLevel } from "@/lib/data/portalConfig";
 import { SectionFilterBar } from "@/components/shared/SectionFilterBar";
-import { ListEditor } from "@/components/shared/ListEditor";
+import { SkillsProfileEditor } from "@/components/portal-config/SkillsProfileEditor";
 
 export default function SkillsProfilePage() {
   const [level, setLevel] = useState<SchoolLevel>("HS");
-  const items = skillsProfile[level];
 
   return (
     <>
@@ -32,23 +31,7 @@ export default function SkillsProfilePage() {
         ]}
       />
 
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
-          <h2>Skills profile</h2>
-          <span className="config-status-summary">
-            {items.filter((item) => item.status?.label === "Published").length} of {items.length}{" "}
-            published
-          </span>
-        </div>
-
-        <ListEditor
-          key={level}
-          items={items}
-          addLabel="Add skill"
-          emptyTitle="No skills configured yet"
-          emptyMessage="Add the first skill for this school level."
-        />
-      </div>
+      <SkillsProfileEditor level={level} />
     </>
   );
 }

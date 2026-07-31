@@ -1,5 +1,3 @@
-import type { ListEditorItem } from "@/components/shared/ListEditor";
-
 // TODO: replace with the real Admin DB portal-configuration contract.
 //
 // Scope note: the committed scope names HS and KG only. ES/MS are deliberately
@@ -138,37 +136,221 @@ export const developmentAreas: Record<SchoolLevel, DevelopmentArea[]> = {
   ]
 };
 
-export const skillsProfile: Record<string, ListEditorItem[]> = {
+/**
+ * Skills profile is also two levels, but unlike development areas the colour
+ * belongs to the sub-skill rather than the group: each sub-skill is rated
+ * High / Middle / Elementary and the pill takes its colour from that rating.
+ * Groups are plain white cards.
+ */
+export type SkillLevel = "high" | "middle" | "elementary";
+
+export const SKILL_LEVELS: { value: SkillLevel; label: string }[] = [
+  { value: "high", label: "High Skill" },
+  { value: "middle", label: "Middle Skill" },
+  { value: "elementary", label: "Elementary Skill" }
+];
+
+export type SubSkill = {
+  id: string;
+  label: string;
+  level: SkillLevel;
+  /** Shown on hover/focus of the pill. */
+  description: string;
+};
+
+export type SkillGroup = {
+  id: string;
+  title: string;
+  published: boolean;
+  subSkills: SubSkill[];
+};
+
+export const skillsProfile: Record<SchoolLevel, SkillGroup[]> = {
   HS: [
     {
-      id: "sk-hs-1",
-      title: "Mathematics — Problem solving",
-      detail: "Multi-step problems with justification.",
-      status: { tone: "ok", label: "Published" },
-      meta: "Mathematics · Grades 9–12"
+      id: "sg-resilience",
+      title: "Resilience",
+      published: true,
+      subSkills: [
+        {
+          id: "ss-1",
+          label: "Perseverance",
+          level: "high",
+          description: "Keeps working at a problem after early attempts fail."
+        },
+        {
+          id: "ss-2",
+          label: "Flexibility",
+          level: "middle",
+          description:
+            "Accepts change, learns from mistakes, and stays positive in the face of setbacks."
+        },
+        {
+          id: "ss-3",
+          label: "Adaptability",
+          level: "elementary",
+          description: "Adjusts approach when circumstances or expectations shift."
+        }
+      ]
     },
     {
-      id: "sk-hs-2",
-      title: "Science — Experimental design",
-      detail: "Hypothesis, controls, and analysis of results.",
-      status: { tone: "ok", label: "Published" },
-      meta: "Science · Grades 10–12"
+      id: "sg-communication",
+      title: "Effective Communication",
+      published: true,
+      subSkills: [
+        {
+          id: "ss-4",
+          label: "Reasoning",
+          level: "high",
+          description: "Builds a clear, evidenced argument others can follow."
+        },
+        {
+          id: "ss-5",
+          label: "Clarity",
+          level: "middle",
+          description: "Expresses ideas concisely in speech and writing."
+        },
+        {
+          id: "ss-6",
+          label: "Active Listening",
+          level: "elementary",
+          description: "Listens to understand before responding."
+        }
+      ]
     },
     {
-      id: "sk-hs-3",
-      title: "English — Source evaluation",
-      detail: "Assessing credibility and bias in sources.",
-      status: { tone: "neutral", label: "Draft" },
-      meta: "English · Grades 9–10"
+      id: "sg-community",
+      title: "Engaged Community Member",
+      published: true,
+      subSkills: [
+        {
+          id: "ss-7",
+          label: "Service",
+          level: "high",
+          description: "Contributes time and effort to the wider school community."
+        },
+        {
+          id: "ss-8",
+          label: "Empathy",
+          level: "middle",
+          description: "Recognises and responds to how others are feeling."
+        },
+        {
+          id: "ss-9",
+          label: "Respect",
+          level: "elementary",
+          description: "Treats peers and staff with consideration."
+        }
+      ]
+    },
+    {
+      id: "sg-lifelong",
+      title: "Lifelong Learner",
+      published: true,
+      subSkills: [
+        {
+          id: "ss-10",
+          label: "Initiative",
+          level: "high",
+          description: "Starts work without being prompted."
+        },
+        {
+          id: "ss-11",
+          label: "Collaboration",
+          level: "middle",
+          description: "Works productively with others toward a shared goal."
+        },
+        {
+          id: "ss-12",
+          label: "Curiosity",
+          level: "elementary",
+          description: "Asks questions and explores beyond what is required."
+        }
+      ]
+    },
+    {
+      id: "sg-emotional",
+      title: "Emotionally Intelligent",
+      published: true,
+      subSkills: [
+        {
+          id: "ss-13",
+          label: "Accountability",
+          level: "high",
+          description: "Owns outcomes, including mistakes."
+        },
+        {
+          id: "ss-14",
+          label: "Self-Regulation",
+          level: "middle",
+          description: "Manages impulses and emotions under pressure."
+        },
+        {
+          id: "ss-15",
+          label: "Self-Awareness",
+          level: "elementary",
+          description: "Recognises personal strengths and limits."
+        }
+      ]
+    },
+    {
+      id: "sg-critical",
+      title: "Critical Thinking",
+      published: true,
+      subSkills: [
+        {
+          id: "ss-16",
+          label: "Innovation",
+          level: "high",
+          description: "Generates original approaches to open-ended problems."
+        },
+        {
+          id: "ss-17",
+          label: "Analysis",
+          level: "middle",
+          description: "Breaks a problem into parts and evaluates each."
+        },
+        {
+          id: "ss-18",
+          label: "Reasoning",
+          level: "elementary",
+          description: "Draws conclusions that follow from the evidence."
+        }
+      ]
     }
   ],
   KG: [
     {
-      id: "sk-kg-1",
-      title: "Literacy — Letter recognition",
-      detail: "Recognizing and naming upper and lowercase letters.",
-      status: { tone: "ok", label: "Published" },
-      meta: "Literacy · Kindergarten"
+      id: "sg-kg-social",
+      title: "Social Readiness",
+      published: true,
+      subSkills: [
+        {
+          id: "ss-k1",
+          label: "Sharing",
+          level: "high",
+          description: "Shares materials and takes turns with peers."
+        },
+        {
+          id: "ss-k2",
+          label: "Following Routines",
+          level: "middle",
+          description: "Moves through the daily routine with light prompting."
+        }
+      ]
+    },
+    {
+      id: "sg-kg-motor",
+      title: "Fine Motor Skills",
+      published: false,
+      subSkills: [
+        {
+          id: "ss-k3",
+          label: "Pencil Grip",
+          level: "elementary",
+          description: "Holds a pencil with a developing tripod grip."
+        }
+      ]
     }
   ]
 };

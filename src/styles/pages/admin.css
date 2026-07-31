@@ -1076,6 +1076,170 @@
 .area-title.tone-violet { color: #5b21b6; }
 .area-title.tone-rose { color: #9c0f37; }
 
+/* Skills profile — group card with level-rated sub-skill pills */
+
+.skills-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+.skills-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.skill-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+  flex: 0 0 auto;
+  background: currentColor;
+}
+
+.skill-group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.skill-group-card {
+  background: #ffffff;
+  border: 1px solid #e2e2ea;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.skill-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  min-height: 26px;
+}
+
+.skill-group-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+.skill-pill-list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.skill-pill-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skill-pill {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.skill-pill-label {
+  overflow-wrap: anywhere;
+}
+
+.skill-pill-actions {
+  display: inline-flex;
+  gap: 8px;
+  flex: 0 0 auto;
+  opacity: 0;
+}
+
+.skill-pill-row:hover .skill-pill-actions,
+.skill-pill-row:focus-within .skill-pill-actions {
+  opacity: 1;
+}
+
+/* Level colours. Text is darkened from the faculty palette so 13px pill labels
+   clear 4.5:1 on their own tint; the dot inherits the same colour. */
+.skill-pill.level-high,
+.skills-legend-item.level-high { color: #047857; }
+.skill-pill.level-middle,
+.skills-legend-item.level-middle { color: #6d28d9; }
+.skill-pill.level-elementary,
+.skills-legend-item.level-elementary { color: #92400e; }
+
+.skill-pill.level-high { background: #d1fae5; }
+.skill-pill.level-middle { background: #f3e8ff; }
+.skill-pill.level-elementary { background: #fef3c7; }
+
+/* Tooltip carrying the sub-skill description. Shown on hover and on keyboard
+   focus, so it isn't mouse-only. */
+.skill-tooltip {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 8;
+  width: 240px;
+  background: #ffffff;
+  border: 1px solid #d1d5dc;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  padding: 10px 12px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* :focus rather than :focus-visible — the tooltip is the only place the
+   description appears, so it should show whenever the pill takes focus. */
+.skill-pill:hover .skill-tooltip,
+.skill-pill:focus .skill-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.skill-tooltip strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.skill-tooltip em {
+  display: block;
+  font-style: normal;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #414c5e;
+}
+
+.subskill-form {
+  background: #f8f8fb;
+  border: 1px solid #d9dae4;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: grid;
+  gap: 10px;
+}
+
 /* Area create/edit form */
 
 .area-form {

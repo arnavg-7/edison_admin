@@ -41,7 +41,12 @@ export const ROLE_LABELS: Record<Role, string> = {
 // access denial, and System Settings > User Management all read from this map —
 // there is deliberately no second admin-of-admin config (brief §2).
 export const SECTION_ACCESS: Record<SectionId, Role[]> = {
-  home: ["leadership", "portal_admin", "it_admin"],
+  // Leadership is deliberately excluded from Home. The brief lists Home as
+  // always visible, but Leadership's Home is defined as an immediate redirect
+  // to Reporting — a nav item that never renders its own content and leaves
+  // Reporting highlighted is confusing, so Reporting is their landing screen.
+  // "/" still redirects them there if reached directly.
+  home: ["portal_admin", "it_admin"],
   reporting: ["leadership"],
   "portal-configuration": ["portal_admin"],
   "academic-goals": ["portal_admin"],

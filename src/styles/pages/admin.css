@@ -222,6 +222,223 @@
   font-size: 15px;
 }
 
+/* Platform Pulse / metric tiles */
+
+.metric-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.metric-tile {
+  background: var(--admin-card);
+  border: 1px solid #c2c2cd;
+  border-radius: 20px;
+  padding: 20px 22px 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-tile-label {
+  margin: 0;
+  font-size: 14px;
+  color: var(--admin-subtle);
+}
+
+.metric-tile-value {
+  margin: 8px 0 0;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.metric-tile-trend {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--admin-subtle);
+}
+
+.metric-tile-trend.is-up { color: #059669; }
+.metric-tile-trend.is-down { color: #d97706; }
+
+.freshness-stamp {
+  margin-top: auto;
+  padding-top: 16px;
+  display: grid;
+  gap: 2px;
+}
+
+.freshness-stamp-main {
+  font-size: 12px;
+  color: #4b5565;
+}
+
+.freshness-stamp-cadence {
+  font-size: 11px;
+  color: #8a93a5;
+}
+
+/* Configuration status checklist */
+
+.config-status-summary {
+  font-size: 13px;
+  color: var(--admin-subtle);
+}
+
+.config-status-list {
+  display: grid;
+  gap: 10px;
+}
+
+.config-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.config-status-row:hover {
+  box-shadow: 0 4px 14px rgba(20, 40, 92, 0.08);
+}
+
+.config-status-module {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.config-status-detail {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--admin-subtle);
+}
+
+.config-status-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.config-status-count {
+  font-size: 12px;
+  color: var(--admin-subtle);
+}
+
+/* Home panels (IT admin) */
+
+.home-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.home-panel-grid--single {
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 16px;
+}
+
+.home-panel {
+  background: var(--admin-card);
+  border: 1px solid #c2c2cd;
+  border-radius: 24px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.home-panel-head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.home-panel-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.home-panel-stats dt {
+  font-size: 12px;
+  color: var(--admin-subtle);
+}
+
+.home-panel-stats dd {
+  margin: 6px 0 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.home-api-list {
+  display: grid;
+  gap: 10px;
+}
+
+.home-api-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.home-api-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.home-api-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--admin-subtle);
+}
+
+.home-role-counts {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--admin-subtle);
+}
+
+.home-panel-foot {
+  margin: 16px 0 0;
+  font-size: 12px;
+  color: #4b5565;
+}
+
+.home-panel-link {
+  margin-top: 14px;
+  align-self: flex-start;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--admin-accent);
+  text-decoration: none;
+}
+
+.home-panel-link:hover {
+  text-decoration: underline;
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;
@@ -293,7 +510,9 @@
     height: auto;
   }
 
-  .admin-metrics {
+  .admin-metrics,
+  .metric-strip,
+  .home-panel-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -303,7 +522,16 @@
     padding: 18px;
   }
 
-  .admin-metrics {
+  .admin-metrics,
+  .metric-strip,
+  .home-panel-grid,
+  .home-panel-stats {
     grid-template-columns: 1fr;
+  }
+
+  .config-status-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 }

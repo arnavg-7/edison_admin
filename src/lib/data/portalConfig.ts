@@ -39,44 +39,121 @@ export const layoutSettings: Record<SchoolLevel, LayoutSetting[]> = {
   ]
 };
 
-export const developmentAreas: Record<string, ListEditorItem[]> = {
+/**
+ * Development areas are two levels: an area is the coloured heading a student
+ * sees (Strengths, Room To Grow…) and it holds the individual skills listed
+ * under it.
+ *
+ * The faculty portal colours these cards by :nth-child, which silently
+ * reassigns colours when a card is added, removed or reordered. Here the tone
+ * is a property of the area, so it survives editing.
+ */
+export type DevAreaTone = "blue" | "green" | "cyan" | "orange" | "violet" | "rose";
+
+export type DevAreaIcon = "check" | "bolt" | "smile" | "target" | "book" | "star";
+
+export const DEV_AREA_TONES: { value: DevAreaTone; label: string }[] = [
+  { value: "blue", label: "Blue" },
+  { value: "green", label: "Green" },
+  { value: "cyan", label: "Cyan" },
+  { value: "orange", label: "Orange" },
+  { value: "violet", label: "Violet" },
+  { value: "rose", label: "Rose" }
+];
+
+export const DEV_AREA_ICONS: { value: DevAreaIcon; label: string }[] = [
+  { value: "check", label: "Check" },
+  { value: "bolt", label: "Bolt" },
+  { value: "smile", label: "Smile" },
+  { value: "target", label: "Target" },
+  { value: "book", label: "Book" },
+  { value: "star", label: "Star" }
+];
+
+export type DevSkill = {
+  id: string;
+  label: string;
+};
+
+export type DevelopmentArea = {
+  id: string;
+  title: string;
+  tone: DevAreaTone;
+  icon: DevAreaIcon;
+  published: boolean;
+  skills: DevSkill[];
+};
+
+export const developmentAreas: Record<SchoolLevel, DevelopmentArea[]> = {
   HS: [
     {
-      id: "da-hs-1",
-      title: "Critical thinking",
-      detail: "Analysis, evaluation, and reasoned argument across subjects.",
-      status: { tone: "ok", label: "Published" },
-      meta: "Grades 9–12"
+      id: "da-hs-strengths",
+      title: "Strengths",
+      tone: "blue",
+      icon: "check",
+      published: true,
+      skills: [
+        { id: "sk-1", label: "Analytical Thinker" },
+        { id: "sk-2", label: "Problem Solver" },
+        { id: "sk-3", label: "Detail-Oriented" }
+      ]
     },
     {
-      id: "da-hs-2",
-      title: "Collaboration",
-      detail: "Working effectively in teams toward a shared outcome.",
-      status: { tone: "ok", label: "Published" },
-      meta: "Grades 9–12"
+      id: "da-hs-grow",
+      title: "Room To Grow",
+      tone: "green",
+      icon: "bolt",
+      published: true,
+      skills: [
+        { id: "sk-4", label: "Speed in Tests" },
+        { id: "sk-5", label: "Word Problems" },
+        { id: "sk-6", label: "Time Management" }
+      ]
     },
     {
-      id: "da-hs-3",
-      title: "Digital literacy",
-      detail: "Responsible and effective use of digital tools.",
-      status: { tone: "neutral", label: "Draft" },
-      meta: "Grades 11–12"
+      id: "da-hs-interests",
+      title: "Interests",
+      tone: "cyan",
+      icon: "smile",
+      published: true,
+      skills: [
+        { id: "sk-7", label: "Mathematics" },
+        { id: "sk-8", label: "Physics" },
+        { id: "sk-9", label: "Chess" }
+      ]
+    },
+    {
+      id: "da-hs-goals",
+      title: "Future Goals",
+      tone: "orange",
+      icon: "target",
+      published: true,
+      skills: [
+        { id: "sk-10", label: "Engineering School" },
+        { id: "sk-11", label: "STEM Career" },
+        { id: "sk-12", label: "Research Internship" }
+      ]
     }
   ],
   KG: [
     {
-      id: "da-kg-1",
-      title: "Social readiness",
-      detail: "Sharing, turn-taking, and group participation.",
-      status: { tone: "ok", label: "Published" },
-      meta: "Kindergarten"
+      id: "da-kg-strengths",
+      title: "Strengths",
+      tone: "blue",
+      icon: "check",
+      published: true,
+      skills: [
+        { id: "sk-k1", label: "Shares Willingly" },
+        { id: "sk-k2", label: "Listens Well" }
+      ]
     },
     {
-      id: "da-kg-2",
-      title: "Fine motor skills",
-      detail: "Pencil grip, cutting, and manipulation tasks.",
-      status: { tone: "neutral", label: "Draft" },
-      meta: "Kindergarten"
+      id: "da-kg-grow",
+      title: "Room To Grow",
+      tone: "green",
+      icon: "bolt",
+      published: false,
+      skills: [{ id: "sk-k3", label: "Pencil Grip" }]
     }
   ]
 };

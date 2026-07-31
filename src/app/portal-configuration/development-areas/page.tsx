@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { developmentAreas, SCHOOL_LEVELS, type SchoolLevel } from "@/lib/data/portalConfig";
+import { SCHOOL_LEVELS, type SchoolLevel } from "@/lib/data/portalConfig";
 import { SectionFilterBar } from "@/components/shared/SectionFilterBar";
-import { ListEditor } from "@/components/shared/ListEditor";
+import { DevelopmentAreasEditor } from "@/components/portal-config/DevelopmentAreasEditor";
 
 export default function DevelopmentAreasPage() {
   const [level, setLevel] = useState<SchoolLevel>("HS");
-  const items = developmentAreas[level];
 
   return (
     <>
@@ -34,23 +33,7 @@ export default function DevelopmentAreasPage() {
         ]}
       />
 
-      <div className="admin-content-panel">
-        <div className="home-panel-head">
-          <h2>Development areas</h2>
-          <span className="config-status-summary">
-            {items.filter((item) => item.status?.label === "Published").length} of {items.length}{" "}
-            published
-          </span>
-        </div>
-
-        <ListEditor
-          key={level}
-          items={items}
-          addLabel="Add development area"
-          emptyTitle="No development areas yet"
-          emptyMessage="Add the first development area for this school level."
-        />
-      </div>
+      <DevelopmentAreasEditor level={level} />
     </>
   );
 }

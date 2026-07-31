@@ -1,52 +1,54 @@
 /**
- * The five Reporting & Analytics screens, surfaced as entry points on the
- * Leadership home. Kept in one place so the home cards and the section tab bar
- * can't drift apart.
+ * Reporting & Analytics tab set. Shared with anywhere else that needs to list
+ * the reports so the lists can't drift.
+ *
+ * TODO: v2 open item — the screen inventory asks whether drill-down still stops
+ * at class level now that Student & Faculty 360 exists. Student Progress and
+ * Faculty Class Performance are carried forward from v1 unchanged for now, with
+ * links out to 360 where a named person appears.
  */
 export type ReportEntry = {
   id: string;
   label: string;
   href: string;
   description: string;
-  /** What the card shows at a glance, so it isn't just a link. */
   highlight: string;
 };
 
 export const REPORT_ENTRIES: ReportEntry[] = [
   {
-    id: "core-metrics",
-    label: "Core Metrics",
+    id: "metrics",
+    label: "Metrics",
     href: "/reporting",
-    description:
-      "Attendance, goal completion and assignment completion, with trend and drill-down to class level.",
-    highlight: "3 district metrics"
-  },
-  {
-    id: "admin-dashboard",
-    label: "Admin Dashboard",
-    href: "/reporting/admin-dashboard",
-    description: "Platform health and usage: active logins, portal adoption by school, last sync per integration.",
-    highlight: "5 schools tracked"
+    description: "The full Salesforce-sourced metrics catalog.",
+    highlight: "15 metrics"
   },
   {
     id: "student-progress",
     label: "Student Progress",
     href: "/reporting/student-progress",
-    description: "Goal and attendance rollups per cohort. Stops at class level — no individual student profiles.",
-    highlight: "Rolls up to class"
+    description: "Goal and attendance rollups per cohort.",
+    highlight: "By cohort"
   },
   {
     id: "faculty-performance",
     label: "Faculty Class Performance",
     href: "/reporting/faculty-performance",
-    description: "Attendance, assignment completion, roster size and open alerts for each class.",
+    description: "Attendance, assignment completion and open alerts per class.",
     highlight: "Per class"
+  },
+  {
+    id: "platform-usage",
+    label: "Platform Usage",
+    href: "/reporting/admin-dashboard",
+    description: "Portal adoption by school and last successful sync per integration.",
+    highlight: "Adoption"
   },
   {
     id: "custom",
     label: "Custom Report Builder",
     href: "/reporting/custom",
-    description: "Build an ad hoc view over the two named reports and export it as CSV.",
+    description: "Build an ad hoc view over the named reports and export it.",
     highlight: "Export to CSV"
   }
 ];

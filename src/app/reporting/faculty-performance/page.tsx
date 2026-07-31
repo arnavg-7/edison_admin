@@ -2,6 +2,7 @@
 
 import { useReportFilters } from "@/lib/filters";
 import { facultyClassRows } from "@/lib/data/reporting";
+import { REPORTS } from "@/lib/data/salesforce";
 import { FreshnessStamp } from "@/components/shared/FreshnessStamp";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -20,7 +21,7 @@ export default function FacultyPerformancePage() {
         <div className="sf-panel-head">
           <h2>Faculty class performance</h2>
           <span className="sf-panel-note">
-            Rolls up to class level — no individual faculty profiles
+            Select a teacher to open their Faculty 360 profile
           </span>
         </div>
 
@@ -45,7 +46,14 @@ export default function FacultyPerformancePage() {
               {rows.map((row) => (
                 <tr key={row.id}>
                   <td>{row.className}</td>
-                  <td>{row.teacher}</td>
+                  <td>
+                    <a
+                      className="sf-bar-group-link"
+                      href={`/people/faculty/${row.teacher.toLowerCase().replace(/[^a-z]+/g, "-")}`}
+                    >
+                      {row.teacher}
+                    </a>
+                  </td>
                   <td>{row.avgAttendance.toFixed(1)}%</td>
                   <td>{row.assignmentCompletion.toFixed(1)}%</td>
                   <td>{row.rosterSize}</td>
@@ -62,19 +70,19 @@ export default function FacultyPerformancePage() {
 
         <div className="dual-stamp">
           <FreshnessStamp
-            asOf="2026-07-31T06:15:00-04:00"
-            source="genesis"
-            cadence="Attendance — once daily"
+            asOf={REPORTS.attendanceRate.asOf}
+            report={REPORTS.attendanceRate.name}
+            note="Attendance"
           />
           <FreshnessStamp
-            asOf="2026-07-31T12:47:00-04:00"
-            source="classroom"
-            cadence="Assignments — near real-time"
+            asOf={REPORTS.assignmentCompletion.asOf}
+            report={REPORTS.assignmentCompletion.name}
+            note="Assignments"
           />
           <FreshnessStamp
-            asOf="2026-07-31T13:02:00-04:00"
-            source="admin_db"
-            cadence="Alerts — immediate"
+            asOf={REPORTS.studentsStatus.asOf}
+            report={REPORTS.studentsStatus.name}
+            note="Open alerts"
           />
         </div>
       </div>

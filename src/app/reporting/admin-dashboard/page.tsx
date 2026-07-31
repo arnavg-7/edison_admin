@@ -1,8 +1,9 @@
 "use client";
 
 import { adoptionBySchool, lastSyncByIntegration } from "@/lib/data/reporting";
+import { REPORTS } from "@/lib/data/salesforce";
 import { FreshnessStamp } from "@/components/shared/FreshnessStamp";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, formatSalesforceStamp } from "@/lib/format";
 
 export default function AdminDashboardPage() {
   const totalLogins = adoptionBySchool.reduce((sum, row) => sum + row.activeLogins, 0);
@@ -45,19 +46,22 @@ export default function AdminDashboardPage() {
 
         {/* TODO: adoption and login counts need a real Admin DB usage contract. */}
         <FreshnessStamp
-          asOf="2026-07-31T13:02:00-04:00"
-          source="admin_db"
-          cadence="Immediate on write"
+          asOf={REPORTS.numberOfStudents.asOf}
+          report="Portal Adoption"
+          note="Usage rollup"
         />
       </div>
 
       <div className="sf-panel">
         <h2>Last successful sync per integration</h2>
+        {/* These are genuinely upstream sync times, not Salesforce report
+            refreshes, so they aren't rendered as report stamps — naming the
+            report here would misattribute them. */}
         <div className="sync-list">
           {lastSyncByIntegration.map((item) => (
             <div className="sync-row" key={item.integration}>
               <span className="sync-name">{item.integration}</span>
-              <FreshnessStamp asOf={item.asOf} source={item.source} />
+              <span className="sf-card-stamp">Last sync {formatSalesforceStamp(item.asOf)}</span>
             </div>
           ))}
         </div>

@@ -1,27 +1,30 @@
-import { formatDateTime } from "@/lib/format";
-import { SOURCE_LABELS, type DataSource } from "@/lib/data/types";
+import { formatSalesforceStamp } from "@/lib/format";
 
 /**
- * Per-metric "Data as of" stamp. Deliberately attached to individual metrics
- * and panels rather than rendered once per page — Genesis, Classroom and the
- * Admin DB update on different clocks, and a single shared timestamp would
- * misreport whichever source it didn't come from.
+ * Per-report "As of" stamp for non-card surfaces.
+ *
+ * v2 changed what this means. In v1 it named the upstream system (Genesis /
+ * Classroom / Admin DB) because Admin queried each directly. Admin now reads
+ * everything through Salesforce, so the stamp reflects when that Salesforce
+ * report last refreshed and names the report instead. Attributing a figure to
+ * Genesis here would claim a freshness Admin can no longer observe.
  */
 export function FreshnessStamp({
   asOf,
-  source,
-  cadence
+  report,
+  note
 }: {
   asOf: string;
-  source: DataSource;
-  cadence?: string;
+  /** Salesforce report name behind the figure. */
+  report: string;
+  note?: string;
 }) {
   return (
     <div className="freshness-stamp">
       <span className="freshness-stamp-main">
-        Data as of {formatDateTime(asOf)} · {SOURCE_LABELS[source]}
+        As of {formatSalesforceStamp(asOf)} · {report}
       </span>
-      {cadence ? <span className="freshness-stamp-cadence">{cadence}</span> : null}
+      {note ? <span className="freshness-stamp-cadence">{note}</span> : null}
     </div>
   );
 }

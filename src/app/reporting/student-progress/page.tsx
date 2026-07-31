@@ -2,6 +2,7 @@
 
 import { useReportFilters } from "@/lib/filters";
 import { studentProgressRows } from "@/lib/data/reporting";
+import { REPORTS } from "@/lib/data/salesforce";
 import { FreshnessStamp } from "@/components/shared/FreshnessStamp";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ScopeBreadcrumb } from "@/components/reporting/ScopeBreadcrumb";
@@ -19,7 +20,7 @@ export default function StudentProgressPage() {
         <div className="sf-panel-head">
           <h2>Student progress rollups</h2>
           <span className="sf-panel-note">
-            Rolls up to class level — no individual student profiles
+            Cohort rollups — open Student 360 from the Student Attendance report for individuals
           </span>
         </div>
 
@@ -55,14 +56,14 @@ export default function StudentProgressPage() {
 
         <div className="dual-stamp">
           <FreshnessStamp
-            asOf="2026-07-31T13:02:00-04:00"
-            source="admin_db"
-            cadence="Goals — immediate on status change"
+            asOf={REPORTS.goalCompletion.asOf}
+            report={REPORTS.goalCompletion.name}
+            note="Goal rollups"
           />
           <FreshnessStamp
-            asOf="2026-07-31T06:15:00-04:00"
-            source="genesis"
-            cadence="Attendance — once daily"
+            asOf={REPORTS.attendanceRate.asOf}
+            report={REPORTS.attendanceRate.name}
+            note="Attendance rollups"
           />
         </div>
       </div>

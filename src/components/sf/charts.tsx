@@ -65,7 +65,13 @@ function Ruler({ max }: { max: number }) {
 }
 
 export type BarRow = { label: string; value: number; colorIndex: number };
-export type BarGroup = { label: string; rows: BarRow[] };
+export type BarGroup = {
+  label: string;
+  rows: BarRow[];
+  /** When set, the group label links through — used by the individual-level
+      Student Attendance card to reach Student 360. */
+  href?: string;
+};
 
 /**
  * Grouped horizontal bars — the workhorse chart in the reference dashboards
@@ -97,7 +103,15 @@ export function GroupedBars({
         <div className="sf-bars">
           {groups.map((group) => (
             <div className="sf-bar-group" key={group.label}>
-              <div className="sf-bar-group-label">{group.label}</div>
+              <div className="sf-bar-group-label">
+                {group.href ? (
+                  <a className="sf-bar-group-link" href={group.href}>
+                    {group.label}
+                  </a>
+                ) : (
+                  group.label
+                )}
+              </div>
               <div className="sf-bar-rows">
                 {group.rows.map((row) => {
                   const pct = (row.value / top) * 100;

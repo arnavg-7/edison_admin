@@ -78,8 +78,8 @@ export default function ProgressTrackingPage() {
 
         <FreshnessStamp
           asOf={progressTracking.asOf}
-          source="admin_db"
-          cadence="Immediate on status change"
+          report="Goal Progress"
+          note="Immediate on status change"
         />
       </div>
     </>

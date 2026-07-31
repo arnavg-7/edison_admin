@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useReportFilters } from "@/lib/filters";
 import { facultyClassRows, studentProgressRows } from "@/lib/data/reporting";
+import { REPORTS } from "@/lib/data/salesforce";
 import { FreshnessStamp } from "@/components/shared/FreshnessStamp";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ScopeBreadcrumb } from "@/components/reporting/ScopeBreadcrumb";
@@ -157,9 +158,9 @@ export default function CustomReportPage() {
         )}
 
         <div className="dual-stamp">
-          <FreshnessStamp asOf="2026-07-31T06:15:00-04:00" source="genesis" cadence="Attendance" />
-          <FreshnessStamp asOf="2026-07-31T12:47:00-04:00" source="classroom" cadence="Assignments" />
-          <FreshnessStamp asOf="2026-07-31T13:02:00-04:00" source="admin_db" cadence="Goals & alerts" />
+          <FreshnessStamp asOf={REPORTS.attendanceRate.asOf} report={REPORTS.attendanceRate.name} note="Attendance" />
+          <FreshnessStamp asOf={REPORTS.assignmentCompletion.asOf} report={REPORTS.assignmentCompletion.name} note="Assignments" />
+          <FreshnessStamp asOf={REPORTS.goalCompletion.asOf} report={REPORTS.goalCompletion.name} note="Goals &amp; alerts" />
         </div>
       </div>
     </>

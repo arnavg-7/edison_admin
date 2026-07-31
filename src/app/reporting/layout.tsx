@@ -5,14 +5,10 @@ import { usePathname } from "next/navigation";
 import { SectionGuard } from "@/components/shell/SectionGuard";
 import { SectionTabs } from "@/components/shared/SectionTabs";
 import { GlobalFilterBar } from "@/components/shared/GlobalFilterBar";
+import { REPORT_ENTRIES } from "@/lib/data/reportIndex";
 
-const TABS = [
-  { label: "Core Metrics", href: "/reporting" },
-  { label: "Admin Dashboard", href: "/reporting/admin-dashboard" },
-  { label: "Student Progress", href: "/reporting/student-progress" },
-  { label: "Faculty Class Performance", href: "/reporting/faculty-performance" },
-  { label: "Custom Report Builder", href: "/reporting/custom" }
-];
+// Shared with the Leadership home cards so the two lists can't drift apart.
+const TABS = REPORT_ENTRIES.map(({ label, href }) => ({ label, href }));
 
 /** Class/Section only applies to the faculty report, per the screen inventory. */
 const SECTION_FILTER_ROUTES = ["/reporting/faculty-performance", "/reporting/custom"];

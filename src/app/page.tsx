@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useRole } from "@/lib/role/RoleContext";
 import { platformPulse } from "@/lib/data/metrics";
 import { configurationStatus } from "@/lib/data/configStatus";
@@ -10,27 +8,14 @@ import { ConfigStatusRow } from "@/components/shared/ConfigStatusRow";
 import { GenesisSummaryPanel } from "@/components/home/GenesisSummaryPanel";
 import { ApiSummaryPanel } from "@/components/home/ApiSummaryPanel";
 import { UserManagementTile } from "@/components/home/UserManagementTile";
+import { LeadershipHome } from "@/components/home/LeadershipHome";
 
-/**
- * One route, three renders resolved by role. Leadership has no Home of its own
- * — they land straight in Reporting & Analytics.
- */
+/** One route, three renders resolved by role. */
 export default function HomePage() {
   const { role } = useRole();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (role === "leadership") {
-      router.replace("/reporting");
-    }
-  }, [role, router]);
 
   if (role === "leadership") {
-    return (
-      <section className="admin-main">
-        <p className="admin-subtitle">Opening Reporting &amp; Analytics&hellip;</p>
-      </section>
-    );
+    return <LeadershipHome />;
   }
 
   if (role === "it_admin") {

@@ -21,16 +21,18 @@ These are settled. Changing them is a scope change, not filling a gap.
 | **Reporting drill-down stops at class level** | Confirmed. No individual student or faculty profile pages. |
 | **The Module filter on Development Areas / Skills Profile is inert** | Confirmed retained. The screen inventory specifies it, but each screen is its own single module, so there is nothing to switch between yet. Do not "fix" or remove it. |
 
-### Two UX deviations from the brief
+### UX deviation from the brief
 
-Both are commented at the source and easy to reverse:
+Commented at the source and easy to reverse:
 
-- **Leadership has no Home nav item.** The brief lists Home as always visible, but Leadership's
-  Home is defined as an immediate redirect to Reporting. A nav item that never renders its own
-  content — and leaves *Reporting* highlighted — reads as broken. `/` still redirects if reached
-  directly. See `src/lib/role/roles.ts`.
 - **IT admin landing on `/system-settings` redirects to User Management** rather than showing a
   permission message on Grade Levels, which is the Portal admin's default tab.
+
+Previously Leadership had no Home nav item, because the inventory defined their Home as an
+immediate redirect into Reporting. Leadership now has a real Home (`LeadershipHome`) — Platform
+Pulse plus entry-point cards for the five reports — so all three roles see Home, matching the
+brief. The report cards and the Reporting tab bar both read `REPORT_ENTRIES`, so adding a report
+updates both.
 
 ---
 

@@ -21,7 +21,7 @@ System Settings → User Management all read that one map.
 
 | Persona | Sees |
 |---|---|
-| District & School Leadership | Reporting & Analytics (read-only) |
+| District & School Leadership | Home (district overview), Reporting & Analytics (read-only) |
 | Portal/Program Administrator | Home, Portal Configuration, Academic Goals, Alerts, Resources, System Settings |
 | IT/Systems Administrator | Home, System Settings, Integrations |
 

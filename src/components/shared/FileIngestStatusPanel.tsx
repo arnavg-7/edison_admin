@@ -48,10 +48,10 @@ export function FileIngestStatusPanel() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>File</th>
-              <th>Rows</th>
-              <th>Status</th>
-              <th>Note</th>
+              <th scope="col">File</th>
+              <th scope="col">Rows</th>
+              <th scope="col">Status</th>
+              <th scope="col">Note</th>
             </tr>
           </thead>
           <tbody>
@@ -77,9 +77,9 @@ export function FileIngestStatusPanel() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>File</th>
-                <th>Error</th>
-                <th>Rows affected</th>
+                <th scope="col">File</th>
+                <th scope="col">Error</th>
+                <th scope="col">Rows affected</th>
               </tr>
             </thead>
             <tbody>

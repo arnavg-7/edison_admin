@@ -28,6 +28,7 @@ export function Sidebar() {
               <Link
                 key={section.id}
                 href={section.href}
+                aria-current={isActive ? "page" : undefined}
                 className={isActive ? "admin-nav-item active" : "admin-nav-item"}
               >
                 <span className="admin-nav-icon" aria-hidden>

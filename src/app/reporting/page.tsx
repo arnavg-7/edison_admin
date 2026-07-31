@@ -66,11 +66,11 @@ export default function CoreMetricsPage() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>{level}</th>
-                <th>Attendance</th>
-                <th>Assignments</th>
-                <th>Goals on track</th>
-                <th>Students</th>
+                <th scope="col">{level}</th>
+                <th scope="col">Attendance</th>
+                <th scope="col">Assignments</th>
+                <th scope="col">Goals on track</th>
+                <th scope="col">Students</th>
               </tr>
             </thead>
             <tbody>

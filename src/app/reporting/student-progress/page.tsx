@@ -32,11 +32,11 @@ export default function StudentProgressPage() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Cohort</th>
-                <th>Goals on track</th>
-                <th>Goals at risk</th>
-                <th>Avg. attendance</th>
-                <th>Students</th>
+                <th scope="col">Cohort</th>
+                <th scope="col">Goals on track</th>
+                <th scope="col">Goals at risk</th>
+                <th scope="col">Avg. attendance</th>
+                <th scope="col">Students</th>
               </tr>
             </thead>
             <tbody>

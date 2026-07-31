@@ -20,9 +20,9 @@ export default function AdminDashboardPage() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>School</th>
-              <th>Adoption</th>
-              <th>Active logins</th>
+              <th scope="col">School</th>
+              <th scope="col">Adoption</th>
+              <th scope="col">Active logins</th>
             </tr>
           </thead>
           <tbody>

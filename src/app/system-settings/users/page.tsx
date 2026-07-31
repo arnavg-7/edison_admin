@@ -62,9 +62,9 @@ export default function UserManagementPage() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Requested role</th>
-              <th>Requested</th>
+              <th scope="col">Name</th>
+              <th scope="col">Requested role</th>
+              <th scope="col">Requested</th>
             </tr>
           </thead>
           <tbody>
@@ -84,10 +84,10 @@ export default function UserManagementPage() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Last active</th>
+              <th scope="col">Name</th>
+              <th scope="col">Email</th>
+              <th scope="col">Role</th>
+              <th scope="col">Last active</th>
             </tr>
           </thead>
           <tbody>
@@ -126,9 +126,9 @@ export default function UserManagementPage() {
         <table className="admin-table permission-matrix">
           <thead>
             <tr>
-              <th>Section</th>
+              <th scope="col">Section</th>
               {ROLE_ORDER.map((role) => (
-                <th key={role}>{ROLE_LABELS[role]}</th>
+                <th scope="col" key={role}>{ROLE_LABELS[role]}</th>
               ))}
             </tr>
           </thead>

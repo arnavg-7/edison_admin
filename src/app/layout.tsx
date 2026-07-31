@@ -21,9 +21,14 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <RoleProvider>
+          <a className="skip-link" href="#main-content">
+            Skip to main content
+          </a>
           <div className="admin-shell">
             <Sidebar />
-            {children}
+            <div id="main-content" className="admin-content-root">
+              {children}
+            </div>
           </div>
         </RoleProvider>
       </body>

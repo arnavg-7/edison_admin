@@ -35,18 +35,18 @@ export default function AcademicCalendarPage() {
         <div className="home-panel-head">
           <h2>Academic calendar</h2>
           <span className="config-status-summary">
-            {`${rows.length} terms`} · drives the &ldquo;This Term&rdquo; reporting filter
+            {`${rows.length} terms · drives the “This Term” reporting filter`}
           </span>
         </div>
 
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Term</th>
-              <th>Start</th>
-              <th>End</th>
-              <th>Status</th>
-              <th />
+              <th scope="col">Term</th>
+              <th scope="col">Start</th>
+              <th scope="col">End</th>
+              <th scope="col">Status</th>
+              <th scope="col" />
             </tr>
           </thead>
           <tbody>

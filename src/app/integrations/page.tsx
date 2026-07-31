@@ -64,11 +64,11 @@ export default function GenesisIntegrationPage() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Arrived</th>
-              <th>Rows</th>
-              <th>Errors</th>
-              <th>Status</th>
+              <th scope="col">Date</th>
+              <th scope="col">Arrived</th>
+              <th scope="col">Rows</th>
+              <th scope="col">Errors</th>
+              <th scope="col">Status</th>
             </tr>
           </thead>
           <tbody>

@@ -4,8 +4,17 @@
   --admin-sidebar-border: #31385d;
   --admin-card: #efefef;
   --admin-text: #182235;
-  --admin-subtle: #637084;
   --admin-accent: #9849f2;
+
+  /* Text colours are darkened from the faculty palette to clear 4.5:1 against
+     all three surfaces this text lands on — the lavender page background, the
+     card grey, and white. The lavender is the tightest of the three and is easy
+     to miss, since subtitles sit directly on it. Most of this text is 12–14px,
+     so the large-text allowance doesn't apply. --admin-accent stays as the
+     brand fill colour; --admin-accent-text is the readable text variant. */
+  --admin-subtle: #4a5463;
+  --admin-muted: #5f6878;
+  --admin-accent-text: #7c3aed;
 }
 
 .admin-shell {
@@ -14,6 +23,38 @@
   grid-template-columns: 280px 1fr;
   background: var(--admin-bg);
   color: var(--admin-text);
+}
+
+/* Keyboard focus. The app defined none, so keyboard users had only the browser
+   default, which is close to invisible against the navy sidebar. */
+:focus-visible {
+  outline: 2px solid var(--admin-accent-text);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.admin-sidebar :focus-visible {
+  outline-color: #c4b5fd;
+}
+
+/* Skip link — the sidebar is 8 nav items plus a role switcher, which is a lot
+   to tab through on every page. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: #ffffff;
+  color: var(--admin-accent-text);
+  padding: 10px 16px;
+  border-radius: 0 0 10px 0;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  left: 0;
 }
 
 .admin-sidebar {
@@ -27,6 +68,9 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  /* Grid children default to min-content width; without this the longest nav
+     label pushes the sidebar wider than the viewport on small screens. */
+  min-width: 0;
 }
 
 .admin-profile {
@@ -66,7 +110,7 @@
 
 .admin-nav-item.active {
   background: #d5d4e9;
-  color: var(--admin-accent);
+  color: #6d28d9;
   font-weight: 700;
 }
 
@@ -120,7 +164,7 @@
   margin: 6px 0 0;
   font-size: 11px;
   line-height: 1.4;
-  color: #7d84ad;
+  color: #a8aecb;
 }
 
 .admin-logout {
@@ -151,11 +195,19 @@
   display: block;
 }
 
+.admin-content-root {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .admin-main {
   padding: 28px 32px;
   width: min(1740px, 100%);
   min-height: 100vh;
   box-sizing: border-box;
+  min-width: 0;
+  flex: 1;
 }
 
 .admin-main h1 {
@@ -259,8 +311,8 @@
   color: var(--admin-subtle);
 }
 
-.metric-tile-trend.is-up { color: #059669; }
-.metric-tile-trend.is-down { color: #d97706; }
+.metric-tile-trend.is-up { color: #047857; }
+.metric-tile-trend.is-down { color: #92400e; }
 
 .freshness-stamp {
   margin-top: auto;
@@ -271,12 +323,12 @@
 
 .freshness-stamp-main {
   font-size: 12px;
-  color: #4b5565;
+  color: #414c5e;
 }
 
 .freshness-stamp-cadence {
   font-size: 11px;
-  color: #8a93a5;
+  color: var(--admin-muted);
 }
 
 /* Configuration status checklist */
@@ -431,7 +483,7 @@
   align-self: flex-start;
   font-size: 13px;
   font-weight: 500;
-  color: var(--admin-accent);
+  color: var(--admin-accent-text);
   text-decoration: none;
 }
 
@@ -512,7 +564,7 @@
 
 .section-tab.active {
   background: #ffffff;
-  color: var(--admin-accent);
+  color: var(--admin-accent-text);
   box-shadow: 0 1px 3px rgba(20, 40, 92, 0.1);
 }
 
@@ -554,9 +606,13 @@
   font-family: inherit;
 }
 
-.filter-field select:disabled {
+/* Disabled controls are exempt from WCAG 1.4.3, but this one carries the only
+   instruction telling you to pick a school first, so it still has to be
+   readable. The option needs the colour too — it doesn't inherit it. */
+.filter-field select:disabled,
+.filter-field select:disabled option {
   background: #f1f1f5;
-  color: #98a2b3;
+  color: #4a5463;
 }
 
 .filter-note {
@@ -637,7 +693,7 @@
 .list-editor-item-meta {
   margin-top: 6px;
   font-size: 12px;
-  color: #8a93a5;
+  color: var(--admin-muted);
 }
 
 .list-editor-item-actions {
@@ -701,7 +757,7 @@
 }
 
 .scope-crumb-sep {
-  color: #a3a8bd;
+  color: #4f5a6b;
 }
 
 .scope-crumb-link {
@@ -709,7 +765,7 @@
   background: none;
   padding: 0;
   font: inherit;
-  color: var(--admin-accent);
+  color: var(--admin-accent-text);
   cursor: pointer;
 }
 
@@ -742,7 +798,7 @@
   background: none;
   padding: 0;
   font: inherit;
-  color: var(--admin-accent);
+  color: var(--admin-accent-text);
   font-weight: 500;
   cursor: pointer;
   text-align: left;
@@ -893,7 +949,7 @@
 }
 
 .setting-value.is-unset {
-  color: #a3a8bd;
+  color: #667085;
   font-style: italic;
 }
 
@@ -949,7 +1005,7 @@
 }
 
 .permission-none {
-  color: #b6b9c9;
+  color: #667085;
 }
 
 .audit-search {
@@ -1005,9 +1061,15 @@
   }
 }
 
+/* Wide tables scroll inside their own panel rather than widening the page. */
+.admin-content-panel {
+  overflow-x: auto;
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 520px;
 }
 
 .admin-table th {
@@ -1048,22 +1110,22 @@
 
 .admin-status--ok {
   background: #d1fae5;
-  color: #059669;
+  color: #047857;
 }
 
 .admin-status--warn {
   background: #fef3c7;
-  color: #d97706;
+  color: #92400e;
 }
 
 .admin-status--error {
   background: #fee2e2;
-  color: #dc2626;
+  color: #b91c1c;
 }
 
 .admin-status--neutral {
   background: #e8e6f2;
-  color: #6b7280;
+  color: #4b5563;
 }
 
 @media (max-width: 1024px) {
@@ -1071,9 +1133,63 @@
     grid-template-columns: 1fr;
   }
 
+  /* The sidebar becomes a compact top bar. Stacked vertically it filled the
+     whole first screen, so content started below the fold on every page. */
   .admin-sidebar {
     position: static;
     height: auto;
+    padding: 14px 16px;
+    gap: 12px;
+    border-right: none;
+    border-bottom: 1px solid #111731;
+  }
+
+  .admin-profile {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    text-align: left;
+    padding-bottom: 12px;
+  }
+
+  .admin-profile p {
+    margin: 0;
+  }
+
+  .admin-nav {
+    display: flex;
+    overflow-x: auto;
+    padding-top: 12px;
+    gap: 6px;
+    scrollbar-width: thin;
+  }
+
+  .admin-nav-item {
+    flex: 0 0 auto;
+    padding: 9px 12px;
+  }
+
+  .admin-sidebar-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .role-switcher {
+    border-top: none;
+    padding-top: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .role-switcher label,
+  .role-switcher-note {
+    display: none;
+  }
+
+  .admin-logout {
+    width: auto;
+    flex: 0 0 auto;
   }
 
   .admin-metrics,

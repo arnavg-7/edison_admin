@@ -42,10 +42,10 @@ export default function AuditLogPage() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>When</th>
-                <th>Who</th>
-                <th>Action</th>
-                <th>Target</th>
+                <th scope="col">When</th>
+                <th scope="col">Who</th>
+                <th scope="col">Action</th>
+                <th scope="col">Target</th>
               </tr>
             </thead>
             <tbody>

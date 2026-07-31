@@ -25,6 +25,7 @@ export function SectionTabs({ tabs }: { tabs: SectionTab[] }) {
           <Link
             key={tab.href}
             href={query ? `${tab.href}?${query}` : tab.href}
+            aria-current={isActive ? "page" : undefined}
             className={isActive ? "section-tab active" : "section-tab"}
           >
             {tab.label}

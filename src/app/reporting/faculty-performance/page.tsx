@@ -33,12 +33,12 @@ export default function FacultyPerformancePage() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Class</th>
-                <th>Teacher</th>
-                <th>Avg. attendance</th>
-                <th>Assignment completion</th>
-                <th>Roster</th>
-                <th>Open alerts</th>
+                <th scope="col">Class</th>
+                <th scope="col">Teacher</th>
+                <th scope="col">Avg. attendance</th>
+                <th scope="col">Assignment completion</th>
+                <th scope="col">Roster</th>
+                <th scope="col">Open alerts</th>
               </tr>
             </thead>
             <tbody>

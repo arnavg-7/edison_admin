@@ -31,10 +31,10 @@ export function SyncLogTable({
     <table className="admin-table">
       <thead>
         <tr>
-          <th>When</th>
-          {showSource ? <th>Source</th> : null}
-          <th>Level</th>
-          <th>Message</th>
+          <th scope="col">When</th>
+          {showSource ? <th scope="col">Source</th> : null}
+          <th scope="col">Level</th>
+          <th scope="col">Message</th>
         </tr>
       </thead>
       <tbody>

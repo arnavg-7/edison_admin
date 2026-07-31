@@ -140,7 +140,7 @@ export default function CustomReportPage() {
             <thead>
               <tr>
                 {activeColumns.map((column) => (
-                  <th key={column.key}>{column.label}</th>
+                  <th scope="col" key={column.key}>{column.label}</th>
                 ))}
               </tr>
             </thead>

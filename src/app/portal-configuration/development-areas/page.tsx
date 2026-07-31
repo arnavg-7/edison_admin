@@ -21,6 +21,10 @@ export default function DevelopmentAreasPage() {
             onChange: (value) => setLevel(value as SchoolLevel)
           },
           {
+            // Retained deliberately (confirmed 2026-07-31): the screen inventory
+            // specifies a Module filter here, but this screen is its own single
+            // module, so there is nothing to switch between yet. Keep it until
+            // more modules exist rather than removing a specified control.
             id: "module",
             label: "Module",
             value: "development-areas",

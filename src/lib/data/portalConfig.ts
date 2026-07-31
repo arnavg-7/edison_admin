@@ -8,6 +8,8 @@ import type { ListEditorItem } from "@/components/shared/ListEditor";
 
 export type SchoolLevel = "HS" | "KG";
 
+// Confirmed 2026-07-31: HS and KG only. ES/MS are deliberately absent rather
+// than pending, so adding them is a scope change, not a gap to fill in.
 export const SCHOOL_LEVELS: { value: SchoolLevel; label: string }[] = [
   { value: "HS", label: "High School" },
   { value: "KG", label: "Kindergarten" }

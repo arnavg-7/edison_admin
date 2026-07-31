@@ -21,6 +21,8 @@ export default function SkillsProfilePage() {
             onChange: (value) => setLevel(value as SchoolLevel)
           },
           {
+            // Retained deliberately (confirmed 2026-07-31) — see the matching
+            // note on the development-areas screen.
             id: "module",
             label: "Module",
             value: "skills-profile",

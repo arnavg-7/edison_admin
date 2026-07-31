@@ -18,7 +18,9 @@ export default function PortalConfigurationLayout({ children }: { children: Reac
       <section className="admin-main">
         <h1>Portal Configuration</h1>
         <p className="admin-subtitle">
-          Student and faculty portal layout, branding, and content configuration.
+          Student and faculty portal layout, branding, and content configuration. Configured for
+          high school and kindergarten only — elementary and middle school are out of scope for
+          this phase, not missing.
         </p>
 
         <Suspense fallback={null}>

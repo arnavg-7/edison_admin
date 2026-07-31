@@ -14,7 +14,8 @@ These are settled. Changing them is a scope change, not filling a gap.
 
 | Decision | Status |
 |---|---|
-| **Portal Configuration covers HS and KG only** | Confirmed. ES/MS have no layout, development-areas, or skills-profile screens. Stated on the Portal Configuration screen so the absence reads as intentional. |
+| **Portal Configuration covers HS and KG only** | Confirmed. ES/MS have no development-areas or skills-profile screens. Stated on the Portal Configuration screen so the absence reads as intentional. |
+| **HS/KG layout & branding editors removed** | Removed on request 2026-07-31. The screen inventory lists them under Portal Configuration, so re-adding them is a scope change, not a gap. Development Areas is now the section's landing screen. |
 | **Alerts & Notifications = alert rules + notification templates only** | Confirmed simple scope. No rules engine, escalation policies, or distribution config. |
 | **Resources & Content = CRUD over external links** | Confirmed simple scope. No categorization taxonomy, access control, or curriculum alignment. |
 | **Reporting drill-down stops at class level** | Confirmed. No individual student or faculty profile pages. |
@@ -64,9 +65,9 @@ placeholder whose shape was inferred from the brief and must be reconciled with 
 
 ## 4. Nothing persists
 
-All writes are React state. Adding a resource, editing a layout setting, toggling a dashboard
+All writes are React state. Adding a resource, creating a development area, toggling a dashboard
 component, or changing a user's role works for the session and is gone on refresh. `ListEditor`
-carries the main TODO. Wire to the Admin DB when its contract lands.
+and `DevelopmentAreasEditor` carry the main TODOs. Wire to the Admin DB when its contract lands.
 
 The role switcher in the sidebar stands in for authentication and should be removed once SSO
 exists.

@@ -3,8 +3,12 @@ import type { ListEditorItem } from "@/components/shared/ListEditor";
 // TODO: replace with the real Admin DB portal-configuration contract.
 //
 // Scope note: the committed scope names HS and KG only. ES/MS are deliberately
-// absent until the team confirms whether they need their own layout screens
+// absent until the team confirms whether they need their own screens
 // (brief §8 item 6).
+//
+// The HS/KG layout & branding editors were removed on request (2026-07-31).
+// The screen inventory lists them under Portal Configuration, so re-adding them
+// is a scope change rather than a gap to fill.
 
 export type SchoolLevel = "HS" | "KG";
 
@@ -14,30 +18,6 @@ export const SCHOOL_LEVELS: { value: SchoolLevel; label: string }[] = [
   { value: "HS", label: "High School" },
   { value: "KG", label: "Kindergarten" }
 ];
-
-export type LayoutSetting = {
-  id: string;
-  label: string;
-  value: string;
-  configured: boolean;
-};
-
-export const layoutSettings: Record<SchoolLevel, LayoutSetting[]> = {
-  HS: [
-    { id: "hs-theme", label: "Theme", value: "Edison Navy", configured: true },
-    { id: "hs-logo", label: "Logo", value: "edison-hs-crest.svg", configured: true },
-    { id: "hs-landing", label: "Landing widget order", value: "Schedule, Goals, Assignments", configured: true },
-    { id: "hs-banner", label: "Welcome banner", value: "Not set", configured: false },
-    { id: "hs-accent", label: "Accent color", value: "Not set", configured: false }
-  ],
-  KG: [
-    { id: "kg-theme", label: "Theme", value: "Bright Primary", configured: true },
-    { id: "kg-logo", label: "Logo", value: "Not set", configured: false },
-    { id: "kg-landing", label: "Landing widget order", value: "Not set", configured: false },
-    { id: "kg-banner", label: "Welcome banner", value: "Not set", configured: false },
-    { id: "kg-accent", label: "Accent color", value: "Not set", configured: false }
-  ]
-};
 
 /**
  * Development areas are two levels: an area is the coloured heading a student

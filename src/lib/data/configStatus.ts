@@ -16,9 +16,9 @@ export const configurationStatus: ConfigStatus[] = [
     id: "portal-configuration",
     module: "Portal Configuration",
     section: "portal-configuration",
-    configured: 3,
-    total: 5,
-    detail: "HS layout and branding published; KG layout still in draft"
+    configured: 2,
+    total: 3,
+    detail: "Development areas and skills profile published; faculty dashboard partly configured"
   },
   {
     id: "academic-goals",

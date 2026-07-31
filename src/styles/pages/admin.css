@@ -855,6 +855,81 @@
   cursor: not-allowed;
 }
 
+/* Settings rows (portal config, goals, system settings) */
+
+.filter-bar--page {
+  margin-top: 18px;
+}
+
+.setting-list {
+  display: grid;
+  gap: 10px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.setting-main {
+  min-width: 0;
+}
+
+.setting-label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.setting-value {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--admin-subtle);
+  line-height: 1.5;
+}
+
+.setting-value.is-unset {
+  color: #a3a8bd;
+  font-style: italic;
+}
+
+.setting-input {
+  margin-top: 6px;
+  width: min(340px, 100%);
+  border: 1px solid #d1d5dc;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.setting-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--admin-subtle);
+  cursor: pointer;
+}
+
+.toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--admin-accent);
+  cursor: pointer;
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;
@@ -946,7 +1021,8 @@
   }
 
   .config-status-row,
-  .list-editor-item {
+  .list-editor-item,
+  .setting-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import "../styles/pages/admin.css";
+import { RoleProvider } from "@/lib/role/RoleContext";
+import { Sidebar } from "@/components/shell/Sidebar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,13 +19,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0"
-        />
-      </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <RoleProvider>
+          <div className="admin-shell">
+            <Sidebar />
+            {children}
+          </div>
+        </RoleProvider>
+      </body>
     </html>
   );
 }

@@ -439,6 +439,250 @@
   text-decoration: underline;
 }
 
+/* Buttons */
+
+.btn {
+  border: 1px solid #c5c6d4;
+  background: #ffffff;
+  color: var(--admin-text);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btn:hover {
+  border-color: #a8aac0;
+}
+
+.btn--primary {
+  background: var(--admin-accent);
+  border-color: var(--admin-accent);
+  color: #ffffff;
+}
+
+.btn--primary:hover {
+  background: #8a37ea;
+  border-color: #8a37ea;
+}
+
+.btn--sm {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.btn--danger {
+  color: #dc2626;
+  border-color: #f0c7c7;
+}
+
+.btn--danger:hover {
+  border-color: #dc2626;
+}
+
+/* Section tabs */
+
+.section-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 18px;
+  padding: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 14px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.section-tab {
+  text-decoration: none;
+  color: var(--admin-subtle);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.section-tab:hover {
+  color: var(--admin-text);
+}
+
+.section-tab.active {
+  background: #ffffff;
+  color: var(--admin-accent);
+  box-shadow: 0 1px 3px rgba(20, 40, 92, 0.1);
+}
+
+/* Filter bars */
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px 18px;
+  background: var(--admin-card);
+  border: 1px solid #c2c2cd;
+  border-radius: 18px;
+}
+
+.filter-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.filter-field > span {
+  font-size: 12px;
+  color: var(--admin-subtle);
+}
+
+.filter-field select,
+.filter-field input {
+  height: 38px;
+  min-width: 170px;
+  border: 1px solid #d1d5dc;
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--admin-text);
+  padding: 0 12px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.filter-field select:disabled {
+  background: #f1f1f5;
+  color: #98a2b3;
+}
+
+.filter-note {
+  margin: 0;
+  flex-basis: 100%;
+  font-size: 12px;
+  color: var(--admin-subtle);
+}
+
+/* Empty states */
+
+.empty-state {
+  background: #ffffff;
+  border: 1px dashed #c5c6d4;
+  border-radius: 16px;
+  padding: 28px 24px;
+  text-align: center;
+}
+
+.empty-state--gap {
+  border-color: #e3c98f;
+  background: #fffbf0;
+}
+
+.empty-state h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.empty-state p {
+  margin: 8px auto 0;
+  max-width: 62ch;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--admin-subtle);
+}
+
+.empty-state-action {
+  margin-top: 14px;
+}
+
+/* List editor */
+
+.list-editor-head {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+.list-editor-items {
+  display: grid;
+  gap: 10px;
+}
+
+.list-editor-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.list-editor-item-title {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.list-editor-item-detail {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--admin-subtle);
+  line-height: 1.5;
+}
+
+.list-editor-item-meta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #8a93a5;
+}
+
+.list-editor-item-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.list-editor-form {
+  background: #ffffff;
+  border: 1px solid #d9dae4;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.list-editor-field {
+  display: grid;
+  gap: 6px;
+}
+
+.list-editor-field > span {
+  font-size: 12px;
+  color: var(--admin-subtle);
+}
+
+.list-editor-field input,
+.list-editor-field textarea {
+  border: 1px solid #d1d5dc;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--admin-text);
+  resize: vertical;
+}
+
+.list-editor-form-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;
@@ -529,9 +773,20 @@
     grid-template-columns: 1fr;
   }
 
-  .config-status-row {
+  .config-status-row,
+  .list-editor-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+
+  .filter-field select,
+  .filter-field input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .filter-field {
+    flex: 1 1 100%;
   }
 }

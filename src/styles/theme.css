@@ -1523,3 +1523,135 @@ body {
     align-items: stretch;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Student & Faculty 360
+   --------------------------------------------------------------------------- */
+
+.sf-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--sf-text-muted);
+  margin-bottom: 12px;
+}
+
+.sf-crumbs a {
+  color: var(--sf-link);
+  text-decoration: none;
+}
+
+.sf-crumbs a:hover {
+  text-decoration: underline;
+}
+
+.sf-profile-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.sf-profile-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.sf-profile-head-actions .sf-btn {
+  text-decoration: none;
+}
+
+/* Tabs rendered as buttons inside the profile */
+.sf-tabs button.sf-tab {
+  border: none;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sf-field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px 20px;
+  margin: 0;
+}
+
+.sf-field-grid dt {
+  font-size: 12px;
+  color: var(--sf-text-muted);
+}
+
+.sf-field-grid dd {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--sf-text);
+}
+
+.sf-note-form {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  margin-bottom: 14px;
+}
+
+.sf-note-form .sf-field {
+  width: 100%;
+  max-width: 620px;
+}
+
+.sf-note-form--inline .sf-field {
+  max-width: 380px;
+}
+
+.sf-note-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.sf-note {
+  background: var(--sf-plot);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-control);
+  padding: 12px 14px;
+}
+
+.sf-note p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--sf-text);
+}
+
+.sf-note-meta {
+  display: block;
+  margin-top: 7px;
+  font-size: 11px;
+  color: var(--sf-text-dim);
+}
+
+.sf-flag-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sf-flag-list li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--sf-plot);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-pill);
+  padding: 5px 10px 5px 6px;
+}

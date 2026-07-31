@@ -1,0 +1,127 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { people, type PersonKind } from "@/lib/data/people";
+import { schools } from "@/lib/data/schools";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { EmptyState } from "@/components/shared/EmptyState";
+
+/** Search and browse, then open an individual profile. */
+export default function PeopleSearchPage() {
+  const [query, setQuery] = useState("");
+  const [kind, setKind] = useState<PersonKind | "all">("all");
+  const [school, setSchool] = useState("all");
+
+  const results = useMemo(
+    () =>
+      people
+        .filter((person) => (kind === "all" ? true : person.kind === kind))
+        .filter((person) => (school === "all" ? true : person.school === school))
+        .filter((person) =>
+          query.trim() === ""
+            ? true
+            : `${person.name} ${person.group} ${person.school}`
+                .toLowerCase()
+                .includes(query.trim().toLowerCase())
+        ),
+    [query, kind, school]
+  );
+
+  const schoolNames = Array.from(new Set([...schools.map((s) => s.name), ...people.map((p) => p.school)]));
+
+  return (
+    <section className="sf-main">
+      <h1 className="sf-page-title">Student &amp; Faculty 360</h1>
+      <p className="sf-page-sub">
+        Individual profiles. Records owned by Salesforce are read-only here and link out to the
+        source; internal notes and flags are editable in Admin.
+      </p>
+
+      <div className="sf-filter-bar">
+        <label className="sf-field">
+          <span>Search</span>
+          <input
+            type="search"
+            value={query}
+            placeholder="Name, grade or school"
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </label>
+
+        <label className="sf-field">
+          <span>Type</span>
+          <select value={kind} onChange={(event) => setKind(event.target.value as PersonKind | "all")}>
+            <option value="all">Students and faculty</option>
+            <option value="student">Students</option>
+            <option value="faculty">Faculty</option>
+          </select>
+        </label>
+
+        <label className="sf-field">
+          <span>School</span>
+          <select value={school} onChange={(event) => setSchool(event.target.value)}>
+            <option value="all">All schools</option>
+            {schoolNames.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <p className="sf-filter-note">
+          {results.length} of {people.length} people
+          {/* The directory is a demo subset, not the district roster. */} · demo subset
+        </p>
+      </div>
+
+      <div className="sf-panel">
+        <div className="sf-panel-head">
+          <h2>Results</h2>
+          <span className="sf-panel-note">Select a name to open their 360 profile</span>
+        </div>
+
+        {results.length === 0 ? (
+          <EmptyState
+            title="No matching people"
+            message="Try a different name, or widen the type and school filters."
+          />
+        ) : (
+          <div className="sf-table-wrap">
+            <table className="sf-table">
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">School</th>
+                  <th scope="col">Grade / Department</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.map((person) => (
+                  <tr key={`${person.kind}-${person.id}`}>
+                    <td>
+                      <Link className="sf-bar-group-link" href={`/people/${person.kind}/${person.id}`}>
+                        {person.name}
+                      </Link>
+                    </td>
+                    <td>{person.kind === "student" ? "Student" : "Faculty"}</td>
+                    <td>{person.school}</td>
+                    <td>{person.group}</td>
+                    <td>
+                      <StatusBadge tone={person.status === "At Risk" ? "warn" : "ok"}>
+                        {person.status}
+                      </StatusBadge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}

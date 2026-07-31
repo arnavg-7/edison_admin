@@ -930,6 +930,48 @@
   cursor: pointer;
 }
 
+/* System settings */
+
+.inline-select {
+  height: 34px;
+  border: 1px solid #d1d5dc;
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--admin-text);
+  padding: 0 10px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.permission-matrix td:not(:first-child),
+.permission-matrix th:not(:first-child) {
+  text-align: center;
+}
+
+.permission-none {
+  color: #b6b9c9;
+}
+
+.audit-search {
+  margin-bottom: 16px;
+  max-width: 340px;
+}
+
+.audit-search input {
+  height: 38px;
+  border: 1px solid #d1d5dc;
+  border-radius: 10px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-family: inherit;
+  background: #ffffff;
+}
+
+.calendar-note {
+  margin-top: 16px;
+  margin-bottom: 0;
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;

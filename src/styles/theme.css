@@ -1655,3 +1655,8 @@ body {
   border-radius: var(--sf-radius-pill);
   padding: 5px 10px 5px 6px;
 }
+
+.sf-stat-row dd.sf-stat-small {
+  font-size: 14px;
+  font-weight: 500;
+}

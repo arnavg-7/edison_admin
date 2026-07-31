@@ -20,5 +20,5 @@ export const userSummary: UserSummary = {
   ],
   pendingProvisioning: 7,
   recentAccessChanges: 3,
-  asOf: "2026-07-31T13:02:00-04:00"
+  asOf: "2026-07-17T13:02:00-04:00"
 };

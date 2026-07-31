@@ -1,10 +1,10 @@
-# Edison Admin
+# Edison360 Admin
 
-Admin portal for Edison360, sibling app to [edison_faculty](https://github.com/arnavg-7/edison_faculty). Built with Next.js (App Router) + TypeScript.
+Super Admin portal for Edison 360, built to **Build Brief v2**. Next.js (App Router) + TypeScript.
 
-> **All data is mocked.** No Genesis, Classroom, Calendar, or Admin DB contract exists yet, and
-> nothing persists across a refresh. See [OPEN-ITEMS.md](OPEN-ITEMS.md) before trusting any number
-> on screen.
+> **All data is mocked.** There is no Salesforce connection, no Genesis/Classroom/Calendar client,
+> no Admin DB, and nothing persists across a refresh. Read [OPEN-ITEMS.md](OPEN-ITEMS.md) before
+> trusting any number on screen — several behaviours are deliberately stubbed pending answers.
 
 ## Development
 
@@ -13,36 +13,50 @@ npm install
 npm run dev
 ```
 
-## Roles
+## Architecture
 
-Three personas from the build brief, gated by a single permission map in
-`src/lib/role/roles.ts`. The sidebar, every section guard, and the permission matrix under
-System Settings → User Management all read that one map.
+**Single role.** Every user is a Super Admin and sees all ten sections. v1's three-persona gating
+was removed entirely rather than left inert.
 
-| Persona | Sees |
+**Salesforce is the unified source.** Genesis, Classroom and Calendar remain upstream feeds, but
+Admin reads reports through Salesforce. `src/lib/data/salesforce.ts` is the report registry: each
+report carries its own last-refresh time, so a lagging report shows a stale stamp rather than
+presenting old numbers as current. The API pattern is still unconfirmed — that module is the only
+place it needs to change.
+
+**Theme.** `src/styles/theme.css` is the token layer for the Salesforce Lightning Analytics dark
+theme, applied app-wide (nav, forms, tables, buttons — not just charts). Status colours are a fixed
+three-way scale so a colour means the same thing on every chart.
+
+## Sections
+
+| Section | Notes |
 |---|---|
-| District & School Leadership | Home (district overview), Reporting & Analytics (read-only) |
-| Portal/Program Administrator | Home, Portal Configuration, Academic Goals, Alerts, Resources, System Settings |
-| IT/Systems Administrator | Home, System Settings, Integrations |
-
-There is no authentication yet. The **role switcher in the sidebar footer** stands in for sign-in
-and should be removed once SSO lands.
+| Home | Curated card grid plus the Needs Attention count |
+| Needs Attention | Cross-system triage: at-risk, overdue alerts, sync failures, pending config |
+| Reporting & Analytics | 15-metric catalog, drill-down reports, custom builder |
+| Student & Faculty 360 | Individual profiles — read-only except internal notes and flags |
+| Portal Configuration | Development areas, skills profile, faculty dashboard (HS/KG only) |
+| Academic Goals | Templates, categories, progress tracking |
+| Alerts & Notifications | Alert rules, notification templates |
+| Resources & Content | External-link CRUD |
+| System Settings | Grade levels, subjects, calendar, announcements, users, audit log |
+| Integrations | Salesforce API health plus the Genesis / Classroom / Calendar feeds |
 
 ## Structure
 
 ```
 src/
-  app/                  route per section, tabs for sub-screens
-  components/shared/    cross-cutting: metric tiles, filter bars, empty states, list editor
-  components/shell/     sidebar, role switcher, section guard
-  lib/role/             permission model
-  lib/data/             mock data, one module per source
+  app/                  one route per section, tabs for sub-screens
+  components/sf/        metric card + chart primitives (bar, stacked, donut, funnel, stat)
+  components/shell/     sidebar, context bar, nav icons
+  components/shared/    filter bars, tabs, list editor, empty states, status badges
+  components/people/    360 profile shell
+  lib/nav.ts            the ten sections
+  lib/data/             mock data, one module per domain
 ```
-
-Every metric carries its own "Data as of" stamp rather than one page-wide timestamp — Genesis is
-a daily file, Classroom is near-real-time, and the Admin DB updates on write, so a shared
-timestamp would misreport at least two of the three.
 
 ## Deployment
 
-Configured for Netlify via `netlify.toml` (Next.js runtime plugin).
+Configured for Netlify via `netlify.toml` (Next.js runtime plugin). The live site is a **v1** build
+until this is redeployed.

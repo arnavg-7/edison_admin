@@ -4,13 +4,13 @@
 // absent until the team confirms whether they need their own screens
 // (brief §8 item 6).
 //
-// The HS/KG layout & branding editors were removed on request (2026-07-31).
+// The HS/KG layout & branding editors were removed on request (2026-07-17).
 // The screen inventory lists them under Portal Configuration, so re-adding them
 // is a scope change rather than a gap to fill.
 
 export type SchoolLevel = "HS" | "KG";
 
-// Confirmed 2026-07-31: HS and KG only. ES/MS are deliberately absent rather
+// Confirmed 2026-07-17: HS and KG only. ES/MS are deliberately absent rather
 // than pending, so adding them is a scope change, not a gap to fill in.
 export const SCHOOL_LEVELS: { value: SchoolLevel; label: string }[] = [
   { value: "HS", label: "High School" },

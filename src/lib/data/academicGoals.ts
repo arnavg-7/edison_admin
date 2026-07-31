@@ -70,5 +70,5 @@ export const progressTracking: ProgressTracking = {
   studentEnabled: false,
   activeGoals: 1422,
   updatedLast30Days: 968,
-  asOf: "2026-07-31T13:02:00-04:00"
+  asOf: "2026-07-17T13:02:00-04:00"
 };

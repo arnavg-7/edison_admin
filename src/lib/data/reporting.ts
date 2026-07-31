@@ -38,7 +38,7 @@ export function coreMetricsForScope(scope: Scope): Metric[] {
       label: "Attendance Rate",
       value: `${vary(92.4, scope, 6).toFixed(1)}%`,
       source: "genesis",
-      asOf: "2026-07-31T06:15:00-04:00",
+      asOf: "2026-07-17T06:15:00-04:00",
       cadence: "Once daily from Genesis file",
       trend: { direction: "down", delta: "0.6 pts vs. previous period" }
     },
@@ -47,7 +47,7 @@ export function coreMetricsForScope(scope: Scope): Metric[] {
       label: "Goal Completion",
       value: `${vary(68.1, scope, 9).toFixed(1)}%`,
       source: "admin_db",
-      asOf: "2026-07-31T13:02:00-04:00",
+      asOf: "2026-07-17T13:02:00-04:00",
       cadence: "Immediate on status change",
       trend: { direction: "up", delta: "2.3 pts vs. previous period" }
     },
@@ -56,7 +56,7 @@ export function coreMetricsForScope(scope: Scope): Metric[] {
       label: "Assignment Completion Rate",
       value: `${vary(84.7, scope, 7).toFixed(1)}%`,
       source: "classroom",
-      asOf: "2026-07-31T12:47:00-04:00",
+      asOf: "2026-07-17T12:47:00-04:00",
       cadence: "Near real-time from Classroom API",
       trend: { direction: "up", delta: "1.1 pts vs. previous period" }
     }
@@ -145,9 +145,9 @@ export const adoptionBySchool: AdoptionRow[] = schools.map((school, index) => ({
 }));
 
 export const lastSyncByIntegration = [
-  { integration: "Genesis (file ingest)", asOf: "2026-07-31T05:12:00-04:00", source: "genesis" as const },
-  { integration: "Google Classroom (API)", asOf: "2026-07-31T12:47:00-04:00", source: "classroom" as const },
-  { integration: "Google Calendar (API)", asOf: "2026-07-31T12:31:00-04:00", source: "calendar" as const }
+  { integration: "Genesis (file ingest)", asOf: "2026-07-17T05:12:00-04:00", source: "genesis" as const },
+  { integration: "Google Classroom (API)", asOf: "2026-07-17T12:47:00-04:00", source: "classroom" as const },
+  { integration: "Google Calendar (API)", asOf: "2026-07-17T12:31:00-04:00", source: "calendar" as const }
 ];
 
 /** Student progress rollups — stops at class level, no individual profiles. */

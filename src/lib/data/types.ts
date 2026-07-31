@@ -5,9 +5,10 @@
 // every shape below is a placeholder inferred from the Build Brief and must be
 // reconciled with the real contracts when they land.
 
-export type DataSource = "genesis" | "classroom" | "calendar" | "admin_db";
+export type DataSource = "salesforce" | "genesis" | "classroom" | "calendar" | "admin_db";
 
 export const SOURCE_LABELS: Record<DataSource, string> = {
+  salesforce: "Salesforce",
   genesis: "Genesis",
   classroom: "Google Classroom",
   calendar: "Google Calendar",

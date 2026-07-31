@@ -5,10 +5,11 @@ import { TIME_WINDOWS, syncLog, type TimeWindow } from "@/lib/data/integrations"
 import { SectionFilterBar } from "@/components/shared/SectionFilterBar";
 import { SyncLogTable } from "@/components/integrations/SyncLogTable";
 
-type SourceFilter = "all" | "genesis" | "classroom" | "calendar";
+type SourceFilter = "all" | "salesforce" | "genesis" | "classroom" | "calendar";
 
 const SOURCE_OPTIONS: { value: SourceFilter; label: string }[] = [
   { value: "all", label: "All sources" },
+  { value: "salesforce", label: "Salesforce API log" },
   { value: "genesis", label: "Genesis file history" },
   { value: "classroom", label: "Classroom API log" },
   { value: "calendar", label: "Calendar API log" }
@@ -21,7 +22,7 @@ const WINDOW_CUTOFF: Record<TimeWindow, number> = {
 };
 
 /** Fixed "now" so filtering is deterministic against the mock timestamps. */
-const NOW = new Date("2026-07-31T13:00:00-04:00").getTime();
+const NOW = new Date("2026-07-17T13:00:00-04:00").getTime();
 
 export default function SyncLogPage() {
   const [window, setWindow] = useState<TimeWindow>("7d");

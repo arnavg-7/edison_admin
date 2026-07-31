@@ -13,6 +13,18 @@ export const SERIES_VARS = [
 
 export type SeriesKey = { label: string; colorIndex: number };
 
+/**
+ * Series that are too light to carry white text. On a light theme the palette
+ * stays light on purpose, so instead of darkening every fill until it stops
+ * being light, labels drawn *on* these fills switch to dark ink.
+ */
+const LIGHT_SERIES = new Set([2, 4]);
+const INK_DARK = "#16203a";
+
+function inkFor(colorIndex: number): string {
+  return LIGHT_SERIES.has(colorIndex % SERIES_VARS.length) ? INK_DARK : "#ffffff";
+}
+
 export function Legend({ title, series }: { title: string; series: SeriesKey[] }) {
   return (
     <div className="sf-legend">
@@ -115,7 +127,6 @@ export function GroupedBars({
               <div className="sf-bar-rows">
                 {group.rows.map((row) => {
                   const pct = (row.value / top) * 100;
-                  const inside = pct > 12;
                   return (
                     <div className="sf-bar-row" key={`${group.label}-${row.label}`}>
                       {groupLabelIsCategory ? null : (
@@ -133,18 +144,16 @@ export function GroupedBars({
                           }}
                           role="img"
                           aria-label={`${group.label}, ${row.label}: ${formatNumber(row.value)}`}
+                        />
+                        {/* Value sits outside the fill: on a light palette an
+                            in-bar label can't clear contrast on every series. */}
+                        <span
+                          className="sf-bar-value-outside"
+                          style={{ left: `${Math.max(pct, 0.6)}%` }}
+                          aria-hidden
                         >
-                          {inside ? formatNumber(row.value) : null}
-                        </div>
-                        {!inside ? (
-                          <span
-                            className="sf-bar-value-outside"
-                            style={{ left: `${Math.max(pct, 0.6)}%` }}
-                            aria-hidden
-                          >
-                            {formatNumber(row.value)}
-                          </span>
-                        ) : null}
+                          {formatNumber(row.value)}
+                        </span>
                       </div>
                     </div>
                   );
@@ -199,7 +208,8 @@ export function StackedBars({
                         key={index}
                         style={{
                           width: `${pct}%`,
-                          background: SERIES_VARS[seg.colorIndex % SERIES_VARS.length]
+                          background: SERIES_VARS[seg.colorIndex % SERIES_VARS.length],
+                          color: inkFor(seg.colorIndex)
                         }}
                         role="img"
                         aria-label={`${row.label}, ${series[index]?.label ?? ""}: ${pct.toFixed(0)}%`}
@@ -347,7 +357,12 @@ export function Funnel({
                   fill={SERIES_VARS[stage.colorIndex % SERIES_VARS.length]}
                 />
                 {wTop > 60 ? (
-                  <text className="sf-funnel-label" x={width / 2} y={top + stageHeight / 2}>
+                  <text
+                    className="sf-funnel-label"
+                    x={width / 2}
+                    y={top + stageHeight / 2}
+                    fill={inkFor(stage.colorIndex)}
+                  >
                     {formatNumber(stage.value)}
                   </text>
                 ) : null}

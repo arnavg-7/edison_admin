@@ -1,59 +1,56 @@
 /**
- * Edison 360 Admin — Salesforce Lightning Analytics dark theme.
+ * Edison 360 Admin — light theme.
  *
- * Values read off the reference dashboard screenshots. This is the only place
- * colour is defined; screens compose from these tokens so the theme stays
- * consistent app-wide (nav, forms, tables, buttons — not just charts).
- *
- * Status colours are deliberately a fixed three-way scale reused across every
- * chart: sky = primary status (Present / Neutral / Faculty / Grade 10),
- * purple = the contrasting status (Absent / Unpleasant / Grade 9), lavender =
- * the partial/third status (Attended half a day / Pleasant / Grade 8). Keeping
- * one mapping means a colour means the same thing on every card.
+ * Structure and card anatomy follow the Salesforce Lightning Analytics
+ * reference; the palette is light. Colour is used sparingly: a purplish blue
+ * carries CTAs, links, active nav and focus, and the chart series carry data.
+ * Surfaces stay neutral so the accent means "act here" rather than decoration.
  */
 
 :root {
   /* Surfaces */
-  --sf-canvas: #060f2b;
-  --sf-card: #0d1b45;
-  --sf-card-border: #1c2a5e;
-  --sf-plot: #0a1538;
-  --sf-gridline: #1e2c5c;
-  --sf-raised: #16255a;
-  --sf-sidebar: #050c22;
+  --sf-canvas: #f4f5f9;
+  --sf-card: #ffffff;
+  --sf-card-border: #e2e5ee;
+  --sf-plot: #fafbfd;
+  --sf-gridline: #e6e9f2;
+  --sf-raised: #eef0f7;
+  --sf-sidebar: #ffffff;
 
-  /* Text */
-  --sf-text: #ffffff;
-  --sf-text-muted: #a8b6da;
-  --sf-text-dim: #7f8fba;
+  /* Text — all verified at or above 4.5:1 on canvas, card and plot */
+  --sf-text: #131a2b;
+  --sf-text-muted: #545d73;
+  --sf-text-dim: #667085;
 
-  /* The large single-number stats */
-  --sf-stat: #3f9c8a;
+  /* Big single-number stats. A data colour, not a CTA — kept deep so it reads
+     as a figure rather than something clickable. */
+  --sf-stat: #0f766e;
 
   /* Fixed status scale, consistent across all charts */
-  --sf-series-1: #5aa9e6;
-  /* Lifted from the reference #a855f7: in-bar value labels only reached
-     4.15:1 against it with dark ink and 3.96:1 with white, so neither passed.
-     #b370f8 keeps the purple reading while clearing 5.1:1. */
-  --sf-series-2: #b370f8;
-  --sf-series-3: #b9b4ee;
-  --sf-series-4: #2fb3a0;
-  --sf-series-5: #4b7fd4;
+  --sf-series-1: #3574c8;
+  /* Softened from #6f4ed6: it appeared in most charts and dominated the
+     page. #7a5ddb still clears 4.76:1 for the white labels drawn on it. */
+  --sf-series-2: #7a5ddb;
+  --sf-series-3: #9aa8d8;
+  --sf-series-4: #0f8f80;
+  --sf-series-5: #7d8bb0;
 
-  /* Interaction */
-  --sf-link: #7ab7f0;
-  --sf-focus: #9ec7f5;
-  --sf-accent: #5aa9e6;
+  /* The accent: purplish blue, used only where action is expected */
+  --sf-accent: #4f46e5;
+  --sf-accent-hover: #4338ca;
+  --sf-accent-soft: #eeecfd;
+  --sf-link: #4338ca;
+  --sf-focus: #4f46e5;
 
-  /* Feedback tones — dark-theme variants, light text on dark tint */
-  --sf-ok-bg: #0c3b30;
-  --sf-ok-text: #5fd6b6;
-  --sf-warn-bg: #43310c;
-  --sf-warn-text: #f0c05a;
-  --sf-error-bg: #45151b;
-  --sf-error-text: #f58a96;
-  --sf-neutral-bg: #1b2853;
-  --sf-neutral-text: #b6c3e4;
+  /* Feedback tones — light tints, dark ink */
+  --sf-ok-bg: #e3f5ee;
+  --sf-ok-text: #0b6b52;
+  --sf-warn-bg: #fdf0dc;
+  --sf-warn-text: #8a4b09;
+  --sf-error-bg: #fdeaec;
+  --sf-error-text: #b3202f;
+  --sf-neutral-bg: #eceef5;
+  --sf-neutral-text: #4a5468;
 
   /* Geometry */
   --sf-radius-card: 10px;
@@ -142,8 +139,8 @@ body {
 }
 
 .sf-nav-item.active {
-  background: var(--sf-raised);
-  color: var(--sf-text);
+  background: var(--sf-accent-soft);
+  color: var(--sf-accent-hover);
   font-weight: 600;
   box-shadow: inset 2px 0 0 var(--sf-accent);
 }
@@ -194,7 +191,7 @@ body {
   align-items: center;
   gap: 8px;
   padding: 9px 24px;
-  background: var(--sf-raised);
+  background: var(--sf-card);
   border-bottom: 1px solid var(--sf-card-border);
   font-size: 12px;
   color: var(--sf-text-muted);
@@ -324,8 +321,8 @@ body {
 /* Buttons */
 
 .sf-btn {
-  border: 1px solid var(--sf-card-border);
-  background: var(--sf-raised);
+  border: 1px solid #d3d8e5;
+  background: var(--sf-card);
   color: var(--sf-text);
   border-radius: var(--sf-radius-control);
   padding: 8px 14px;
@@ -342,13 +339,13 @@ body {
 .sf-btn--primary {
   background: var(--sf-accent);
   border-color: var(--sf-accent);
-  color: #05203a;
+  color: #ffffff;
   font-weight: 600;
 }
 
 .sf-btn--primary:hover {
-  background: #7ab7f0;
-  border-color: #7ab7f0;
+  background: var(--sf-accent-hover);
+  border-color: var(--sf-accent-hover);
 }
 
 .sf-btn--quiet {
@@ -372,8 +369,8 @@ body {
 
 .sf-btn--danger {
   color: var(--sf-error-text);
-  border-color: #5c2029;
-  background: transparent;
+  border-color: #f0c5ca;
+  background: var(--sf-card);
 }
 
 .sf-btn--danger:hover {
@@ -420,7 +417,7 @@ body {
 .sf-field select,
 .sf-field textarea,
 .sf-input {
-  background: var(--sf-plot);
+  background: var(--sf-card);
   border: 1px solid var(--sf-card-border);
   border-radius: var(--sf-radius-control);
   color: var(--sf-text);
@@ -448,8 +445,8 @@ body {
 
 .sf-field select:disabled,
 .sf-field select:disabled option {
-  color: var(--sf-text-dim);
-  background: #0a1230;
+  color: #5b6474;
+  background: var(--sf-raised);
 }
 
 .sf-filter-bar {
@@ -531,11 +528,11 @@ body {
   padding: 11px 12px;
   font-size: 13px;
   color: var(--sf-text);
-  border-bottom: 1px solid rgba(28, 42, 94, 0.6);
+  border-bottom: 1px solid var(--sf-card-border);
 }
 
 .sf-table tbody tr:hover td {
-  background: rgba(22, 37, 90, 0.5);
+  background: var(--sf-plot);
 }
 
 /* Status pills */
@@ -582,8 +579,8 @@ body {
 }
 
 .sf-empty--gap {
-  border-color: #4d3a12;
-  background: #1d1607;
+  border-color: #e6cfa0;
+  background: #fdf7ea;
 }
 
 /* ---------------------------------------------------------------------------
@@ -611,7 +608,7 @@ body {
   background: var(--sf-card);
   border: 1px solid var(--sf-card-border);
   border-radius: var(--sf-radius-card);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 1px 2px rgba(19, 26, 43, 0.06), 0 1px 3px rgba(19, 26, 43, 0.04);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -674,7 +671,7 @@ body {
   justify-content: space-between;
   gap: 12px;
   padding: 10px 16px 12px;
-  border-top: 1px solid rgba(28, 42, 94, 0.7);
+  border-top: 1px solid var(--sf-card-border);
   font-size: 11.5px;
 }
 
@@ -779,7 +776,7 @@ body {
   gap: 10px;
   align-items: center;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(28, 42, 94, 0.55);
+  border-bottom: 1px solid var(--sf-gridline);
 }
 
 .sf-bar-group:last-child {
@@ -828,11 +825,9 @@ body {
   justify-content: flex-end;
   padding-right: 5px;
   min-width: 2px;
-  /* Bars are mid-to-light fills, so in-bar labels use dark ink. Values that
-     fall outside the bar use .sf-bar-value-outside and stay light. */
-  color: #06203c;
+  color: #ffffff;
   font-size: 10.5px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .sf-bar-value-outside {
@@ -841,10 +836,11 @@ body {
   height: 100%;
   display: flex;
   align-items: center;
-  padding-left: 5px;
+  padding-left: 6px;
   font-size: 10.5px;
   font-weight: 600;
   color: var(--sf-text);
+  white-space: nowrap;
 }
 
 /* Stacked 100% bars */
@@ -873,11 +869,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Dark ink: these fills are the light end of the scale, so white labels only
-     reached 2.5:1 against them. */
-  color: #06203c;
+  color: #ffffff;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   min-width: 0;
 }
 
@@ -905,7 +899,7 @@ body {
 }
 
 .sf-donut-label {
-  fill: #06203c;
+  fill: #ffffff;
   font-size: 8px;
   font-weight: 600;
   text-anchor: middle;
@@ -921,7 +915,7 @@ body {
 }
 
 .sf-funnel-label {
-  fill: #06203c;
+  fill: #ffffff;
   font-size: 11px;
   font-weight: 600;
   text-anchor: middle;
@@ -993,7 +987,7 @@ body {
 .sf-attention-total {
   font-size: 52px;
   line-height: 1;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--sf-error-text);
 }
 
@@ -1201,7 +1195,7 @@ body {
   flex: 1;
   height: 8px;
   border-radius: var(--sf-radius-pill);
-  background: var(--sf-raised);
+  background: var(--sf-gridline);
   overflow: hidden;
   min-width: 80px;
 }
@@ -1225,6 +1219,7 @@ body {
   justify-content: space-between;
   gap: 14px;
   background: var(--sf-plot);
+  border: 1px solid var(--sf-card-border);
   border-radius: var(--sf-radius-control);
   padding: 11px 14px;
 }
@@ -1314,15 +1309,15 @@ body {
 }
 
 .empty-state--gap {
-  border-color: #6b4f16;
-  background: #241a06;
+  border-color: #e6cfa0;
+  background: #fdf7ea;
 }
 
 /* Generic buttons/links still referenced by carried-over screens */
 
 .btn {
-  border: 1px solid var(--sf-card-border);
-  background: var(--sf-raised);
+  border: 1px solid #d3d8e5;
+  background: var(--sf-card);
   color: var(--sf-text);
   border-radius: var(--sf-radius-control);
   padding: 7px 12px;
@@ -1333,9 +1328,9 @@ body {
 }
 
 .btn:hover { border-color: var(--sf-accent); }
-.btn--primary { background: var(--sf-accent); border-color: var(--sf-accent); color: #05203a; font-weight: 600; }
+.btn--primary { background: var(--sf-accent); border-color: var(--sf-accent); color: #ffffff; font-weight: 600; }
 .btn--sm { padding: 5px 9px; font-size: 11.5px; }
-.btn--danger { color: var(--sf-error-text); border-color: #5c2029; background: transparent; }
+.btn--danger { color: var(--sf-error-text); border-color: #f0c5ca; background: var(--sf-card); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .link-btn {
@@ -1415,7 +1410,8 @@ body {
    --------------------------------------------------------------------------- */
 
 .sf-callout {
-  border-left: 3px solid var(--sf-warn-text);
+  border-left: 3px solid #d99a2b;
+  background: #fdf9f0;
 }
 
 .sf-callout h2 {

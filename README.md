@@ -24,9 +24,12 @@ report carries its own last-refresh time, so a lagging report shows a stale stam
 presenting old numbers as current. The API pattern is still unconfirmed — that module is the only
 place it needs to change.
 
-**Theme.** `src/styles/theme.css` is the token layer for the Salesforce Lightning Analytics dark
-theme, applied app-wide (nav, forms, tables, buttons — not just charts). Status colours are a fixed
-three-way scale so a colour means the same thing on every chart.
+**Theme.** `src/styles/theme.css` is the token layer — a **light** theme that keeps the Salesforce
+Lightning Analytics card anatomy and layout, applied app-wide (nav, forms, tables, buttons, not just
+charts). Colour is deliberately restrained: a purplish blue (`--sf-accent`) carries CTAs, links,
+active nav and focus, and the chart series carry data. Surfaces stay neutral so the accent reads as
+"act here". Status colours are a fixed three-way scale, so a colour means the same thing on every
+chart.
 
 ## Sections
 

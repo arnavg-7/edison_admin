@@ -4,8 +4,10 @@ Everything in this app renders real screens over **mock data**. This file is the
 what is deliberate, what is a placeholder, and what needs input from outside the codebase.
 Individual `// TODO:` comments in the source point back here.
 
-Built to **Build Brief v2** — single Super Admin role, Salesforce Lightning Analytics dark theme,
-Salesforce as the unified data source, plus Needs Attention and Student & Faculty 360.
+Built to **Build Brief v2** — single Super Admin role, Salesforce as the unified data source, plus
+Needs Attention and Student & Faculty 360. The theme is **light**, on request: the Lightning
+Analytics card/anatomy structure is kept, but on light surfaces with a purplish blue reserved for
+CTAs, links, active nav and focus.
 
 Last reviewed: 2026-07-31
 
@@ -89,14 +91,18 @@ There is no authentication. The sidebar shows a fixed Super Admin context.
 
 ## 6. Accessibility
 
-Contrast was re-derived from scratch for the dark theme — every ratio validated during the v1 light
-theme became meaningless. Each screen is audited against computed backgrounds at the WCAG AA
-threshold (4.5:1 normal, 3:1 large). Notable adjustments:
+Contrast has been re-derived from scratch for each theme change (light -> dark -> light); ratios
+validated against one palette say nothing about the next. Each screen is audited against computed
+backgrounds at the WCAG AA threshold (4.5:1 normal, 3:1 large). Notable decisions in the light
+theme:
 
-- In-bar value labels use dark ink; white only reached 2.5:1 on the light end of the bar scale.
-- The reference purple `#a855f7` failed both ways (4.15:1 dark, 3.96:1 white) and was lifted to
-  `#b370f8`.
-- The awaiting-Genesis empty state kept a light amber tint under white text at 1.03:1.
+- **Bar value labels sit outside the fill.** No single ink colour cleared 4.5:1 on every series
+  while the palette stayed light, and darkening each fill until white worked would have defeated
+  the point of a light theme. Outside labels are dark text on the card, so they always pass.
+- Funnel and donut labels, which must sit on the fill, pick ink per series via a declared list of
+  light series rather than assuming white everywhere.
+- The violet series was softened from `#6f4ed6` to `#7a5ddb`; it appeared in most charts and
+  dominated the page.
 
 Keyboard focus rings, a skip link, `aria-current` on nav/tabs, and `scope="col"` on table headers
 are in place. Not covered: screen-reader testing with real AT.

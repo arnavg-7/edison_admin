@@ -257,8 +257,8 @@
 /* The awaiting-Genesis variant keeps its amber signal, but as a dark tint so
    the white body text stays readable. */
 .empty-state--gap {
-  border-color: #6b4f16;
-  background: #241a06;
+  border-color: #e6cfa0;
+  background: #fdf7ea;
 }
 
 /* List editor */
@@ -470,13 +470,15 @@
 /* v2: cards are dark like every other surface. The tone survives as the icon
    fill, the title colour and a left accent bar, so areas stay distinguishable
    without light islands on a dark canvas. */
-.area-card { background: var(--sf-plot); border-color: var(--sf-card-border); }
-.area-card.tone-blue { box-shadow: inset 3px 0 0 #5aa9e6; }
-.area-card.tone-green { box-shadow: inset 3px 0 0 #37b98f; }
-.area-card.tone-cyan { box-shadow: inset 3px 0 0 #37b3cf; }
-.area-card.tone-orange { box-shadow: inset 3px 0 0 #e08b3c; }
-.area-card.tone-violet { box-shadow: inset 3px 0 0 #a855f7; }
-.area-card.tone-rose { box-shadow: inset 3px 0 0 #ef5f8a; }
+/* Light theme: a soft tint plus a tone-coloured accent bar. Enough to tell the
+   areas apart without six saturated blocks competing with the page. */
+.area-card { background: var(--sf-card); border-color: var(--sf-card-border); }
+.area-card.tone-blue { background: #f2f7fd; box-shadow: inset 3px 0 0 #2f6fd0; }
+.area-card.tone-green { background: #f0faf5; box-shadow: inset 3px 0 0 #0b7a5e; }
+.area-card.tone-cyan { background: #f0f8fc; box-shadow: inset 3px 0 0 #0b6f88; }
+.area-card.tone-orange { background: #fdf6ef; box-shadow: inset 3px 0 0 #a55a11; }
+.area-card.tone-violet { background: #f6f3fe; box-shadow: inset 3px 0 0 #6f4ed6; }
+.area-card.tone-rose { background: #fdf2f5; box-shadow: inset 3px 0 0 #b02a4d; }
 
 .area-icon.tone-blue, .tone-swatch.tone-blue { background: #1d4ed8; }
 .area-icon.tone-green, .tone-swatch.tone-green { background: #047857; }
@@ -485,12 +487,12 @@
 .area-icon.tone-violet, .tone-swatch.tone-violet { background: #6d28d9; }
 .area-icon.tone-rose, .tone-swatch.tone-rose { background: #be1244; }
 
-.area-title.tone-blue { color: #8cc6f5; }
-.area-title.tone-green { color: #6ddcb4; }
-.area-title.tone-cyan { color: #74d3e8; }
-.area-title.tone-orange { color: #f2b071; }
-.area-title.tone-violet { color: #c79bfb; }
-.area-title.tone-rose { color: #f79ab6; }
+.area-title.tone-blue { color: #1c4f96; }
+.area-title.tone-green { color: #0a5c47; }
+.area-title.tone-cyan { color: #0a5266; }
+.area-title.tone-orange { color: #7c430d; }
+.area-title.tone-violet { color: #543ba8; }
+.area-title.tone-rose { color: #8d2140; }
 
 /* Leadership home — report entry cards */
 
@@ -602,15 +604,15 @@
 /* Level colours. Text is darkened from the faculty palette so 13px pill labels
    clear 4.5:1 on their own tint; the dot inherits the same colour. */
 .skill-pill.level-high,
-.skills-legend-item.level-high { color: #5fd6b6; }
+.skills-legend-item.level-high { color: #0b6b52; }
 .skill-pill.level-middle,
-.skills-legend-item.level-middle { color: #c79bfb; }
+.skills-legend-item.level-middle { color: #543ba8; }
 .skill-pill.level-elementary,
-.skills-legend-item.level-elementary { color: #f0c05a; }
+.skills-legend-item.level-elementary { color: #8a4b09; }
 
-.skill-pill.level-high { background: #0d3b31; }
-.skill-pill.level-middle { background: #2c1c52; }
-.skill-pill.level-elementary { background: #3d2c0c; }
+.skill-pill.level-high { background: #e3f5ee; }
+.skill-pill.level-middle { background: #f0ecfd; }
+.skill-pill.level-elementary { background: #fdf0dc; }
 
 /* Tooltip carrying the sub-skill description. Shown on hover and on keyboard
    focus, so it isn't mouse-only. */
@@ -843,7 +845,7 @@
     padding: 14px 16px;
     gap: 12px;
     border-right: none;
-    border-bottom: 1px solid #111731;
+    border-bottom: 1px solid var(--sf-card-border);
   }
 
   .admin-profile {

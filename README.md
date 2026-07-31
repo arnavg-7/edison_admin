@@ -31,13 +31,25 @@ active nav and focus, and the chart series carry data. Surfaces stay neutral so 
 "act here". Status colours are a fixed three-way scale, so a colour means the same thing on every
 chart.
 
+**Content comes from Edison's docs, not the reference screenshots.** The Salesforce Lightning
+screenshots were a *style* reference — card anatomy, layout, chart shapes. They are not a content
+source. Anything they showed that Edison's own briefs and inventory don't cover has been removed:
+**events** (Total Events Held, Event Participants, an events tab on the 360) and **well-being**
+(Well-Being Trend, the well-being at-risk rule). Neither appears in the scope docs and neither has a
+known source system. Re-adding either is a scope decision, not a gap to backfill.
+
+The 360 sections mirror what Edison's Student and Faculty portals actually cover: for students —
+grades and grade history, attendance and attendance history, goals (POAG), skills profile,
+development areas, classes and schedule, alert history; for faculty — assignment summary, classes
+and performance, attendance submission compliance, and student alerts they raised.
+
 ## Sections
 
 | Section | Notes |
 |---|---|
 | Home | Curated card grid plus the Needs Attention count |
 | Needs Attention | Cross-system triage: at-risk, overdue alerts, sync failures, pending config |
-| Reporting & Analytics | 15-metric catalog, drill-down reports, custom builder |
+| Reporting & Analytics | 12-metric catalog, drill-down reports, custom builder |
 | Student & Faculty 360 | Individual profiles — read-only except internal notes and flags |
 | Portal Configuration | Development areas, skills profile, faculty dashboard (HS/KG only) |
 | Academic Goals | Templates, categories, progress tracking |

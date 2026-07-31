@@ -9,9 +9,7 @@ import {
   GRADE_SERIES,
   RATIO_SERIES,
   STATUS_SERIES,
-  WELLBEING_SERIES,
   assignmentSubmissions,
-  eventParticipants,
   numberOfStudents,
   studentAttendance,
   studentAttendanceBySchool,
@@ -19,9 +17,7 @@ import {
   studentsByGrade,
   studentsStatus,
   teacherStudentRatio,
-  totalEventsHeld,
-  totalFaculty,
-  wellBeingTrend
+  totalFaculty
 } from "@/lib/data/dashboard";
 import type { BarGroup } from "@/components/sf/charts";
 
@@ -177,22 +173,7 @@ export default function MetricsCatalogPage() {
         />
       </MetricCard>
 
-      <MetricCard
-        title="Well-Being Trend"
-        report={REPORTS.wellBeingTrend.name}
-        asOf={REPORTS.wellBeingTrend.asOf}
-        span="sf-col-6"
-      >
-        <GroupedBars
-          groups={wellBeingTrend}
-          axisTitle="Record Count"
-          legendTitle="Logged Feeling"
-          series={WELLBEING_SERIES}
-        />
-        {/* Flagged per Portal Specs Step 5: well-being is a new data domain and
-            the backing Salesforce object/field is unconfirmed. */}
-        <p className="sf-card-hint">Source object for logged feeling not yet confirmed.</p>
-      </MetricCard>
+
 
       <MetricCard
         title="Assignment Submissions"
@@ -209,23 +190,7 @@ export default function MetricsCatalogPage() {
         />
       </MetricCard>
 
-      <MetricCard
-        title="Total Events Held"
-        report={REPORTS.totalEventsHeld.name}
-        asOf={REPORTS.totalEventsHeld.asOf}
-        span="sf-col-3"
-      >
-        <StatValue value={totalEventsHeld} label="Total Events Held" />
-      </MetricCard>
 
-      <MetricCard
-        title="Event Participants"
-        report={REPORTS.eventParticipants.name}
-        asOf={REPORTS.eventParticipants.asOf}
-        span="sf-col-3"
-      >
-        <StatValue value={eventParticipants} label="Event Participants" />
-      </MetricCard>
     </div>
   );
 }

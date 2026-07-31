@@ -1,7 +1,11 @@
 // TODO: replace with real sources. Categories map to: at-risk (derived from
-// Salesforce goals/attendance/well-being), overdue alerts (Alerts SLA field),
-// sync failures (Integrations failure states), pending config (unconfigured
-// items across Portal Config / Academic Goals / System Settings).
+// Salesforce attendance, goals, assignments and grades), overdue alerts (Alerts
+// SLA field), sync failures (Integrations failure states), pending config
+// (unconfigured items across Portal Config / Academic Goals / System Settings).
+//
+// At-risk signals use only data Edison actually holds. An earlier draft included
+// a well-being rule taken from the reference screenshots; well-being is not in
+// Edison's scope docs and has no source system, so it is not a signal here.
 
 export type AttentionCategory = "at-risk" | "overdue-alert" | "sync-failure" | "pending-config";
 
@@ -38,14 +42,15 @@ export type AttentionItem = {
 /**
  * TODO — PLACEHOLDER THRESHOLDS. The at-risk rules below are invented. Brief
  * §7 lists the real thresholds as an open item: how many consecutive absences
- * counts as chronic, how many missed checkpoints makes a goal off-track, and
- * how long a well-being trend must stay "Unpleasant". Do not treat the numbers
- * in these reasons as agreed logic.
+ * counts as chronic, how many missed checkpoints makes a goal off-track, and how
+ * many missing assignments matter. Do not treat the numbers in these reasons as
+ * agreed logic.
  */
 export const AT_RISK_PLACEHOLDER_RULES = [
   "Attendance: 3+ absences in the last 10 school days",
   "Goals: 2+ consecutive missed checkpoints",
-  "Well-being: 'Unpleasant' logged 3+ times in 14 days"
+  "Assignments: 3+ missing assignments in a single week",
+  "Grades: a drop of one full letter in any subject"
 ];
 
 export const attentionItems: AttentionItem[] = [
@@ -64,7 +69,7 @@ export const attentionItems: AttentionItem[] = [
     category: "at-risk",
     severity: "high",
     subject: "Nick Johnson · Grade 9 · Edison High School",
-    reason: "Well-being logged 'Unpleasant' 3 times in the last 14 days (placeholder rule)",
+    reason: "4 missing assignments in English Language Arts this week (placeholder rule: 3+ in a week)",
     flaggedAt: "2026-07-16T14:05:00-04:00",
     href: "/people/student/nick-johnson",
     resolveLabel: "Open student 360"

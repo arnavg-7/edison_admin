@@ -1656,3 +1656,77 @@ body {
   font-size: 14px;
   font-weight: 500;
 }
+
+/* 360 profile — grade/attendance history and skill groupings */
+
+.sf-subhead {
+  margin: 16px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.sf-history {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.sf-history-term {
+  background: var(--sf-plot);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-control);
+  padding: 12px 14px;
+}
+
+.sf-history-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.sf-history-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.sf-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.sf-history-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--sf-text-muted);
+}
+
+.sf-history-list strong {
+  color: var(--sf-text);
+}
+
+.sf-skill-groups {
+  display: grid;
+  gap: 10px;
+}
+
+.sf-skill-group:first-child .sf-subhead {
+  margin-top: 0;
+}
+
+.sf-chip-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

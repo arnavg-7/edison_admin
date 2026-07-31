@@ -1,27 +1,30 @@
 import Link from "next/link";
 import { MetricCard } from "@/components/sf/MetricCard";
 import { Donut, Funnel, StackedBars, StatValue } from "@/components/sf/charts";
+import { CoreMetricCard } from "@/components/sf/CoreMetricCard";
 import { REPORTS } from "@/lib/data/salesforce";
 import {
   RATIO_SERIES,
-  STATUS_SERIES,
-  eventParticipants,
+  coreMetrics,
   numberOfStudents,
   studentCountBySchool,
   studentsStatus,
   teacherStudentRatio,
-  totalEventsHeld,
   totalFaculty
 } from "@/lib/data/dashboard";
 import { attentionCountsByCategory, needsAttentionOpenCount } from "@/lib/data/needsAttention";
 import { ATTENTION_CATEGORIES } from "@/lib/data/needsAttention";
 
 /**
- * Super Admin landing dashboard. Curated top-level set per brief §5; the full
- * catalog lives in Reporting & Analytics.
+ * Super Admin landing dashboard. Curated top-level set; the full catalog lives
+ * in Reporting & Analytics.
  *
- * TODO: exact card set is an open item (brief §6 / open item 6). This is the
- * brief's own suggestion, not a confirmed selection.
+ * The brief's suggested set included Total Events Held and Event Participants.
+ * Those are screenshot-derived and outside Edison's scope docs, so the slots go
+ * to the three original core metrics instead — attendance, goals and assignment
+ * completion are the figures Edison actually tracks.
+ *
+ * TODO: exact card set is still an open item (brief §6 / open item 6).
  */
 export default function HomePage() {
   const counts = attentionCountsByCategory();
@@ -113,23 +116,35 @@ export default function HomePage() {
           />
         </MetricCard>
 
-        <MetricCard
-          title="Total Events Held"
-          report={REPORTS.totalEventsHeld.name}
-          asOf={REPORTS.totalEventsHeld.asOf}
-          span="sf-col-3"
-        >
-          <StatValue value={totalEventsHeld} label="Total Events Held" />
-        </MetricCard>
+        <CoreMetricCard
+          title="Attendance Rate"
+          report={REPORTS.attendanceRate.name}
+          asOf={REPORTS.attendanceRate.asOf}
+          value={coreMetrics[0].value}
+          delta={coreMetrics[0].trend.replace(/^[-+]/, "")}
+          direction="down"
+          series={[93.4, 92.8, 93.1, 92.2, 92.9, 92.5, 92.4]}
+        />
 
-        <MetricCard
-          title="Event Participants"
-          report={REPORTS.eventParticipants.name}
-          asOf={REPORTS.eventParticipants.asOf}
-          span="sf-col-3"
-        >
-          <StatValue value={eventParticipants} label="Event Participants" />
-        </MetricCard>
+        <CoreMetricCard
+          title="Goal Completion %"
+          report={REPORTS.goalCompletion.name}
+          asOf={REPORTS.goalCompletion.asOf}
+          value={coreMetrics[1].value}
+          delta={coreMetrics[1].trend.replace(/^[-+]/, "")}
+          direction="up"
+          series={[63.2, 64.1, 65.0, 65.4, 66.8, 67.2, 68.1]}
+        />
+
+        <CoreMetricCard
+          title="Assignment Completion Rate"
+          report={REPORTS.assignmentCompletion.name}
+          asOf={REPORTS.assignmentCompletion.asOf}
+          value={coreMetrics[2].value}
+          delta={coreMetrics[2].trend.replace(/^[-+]/, "")}
+          direction="up"
+          series={[82.1, 82.9, 83.4, 83.1, 84.0, 84.4, 84.7]}
+        />
       </div>
     </section>
   );

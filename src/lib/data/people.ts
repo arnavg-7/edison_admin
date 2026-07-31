@@ -1,20 +1,61 @@
 /**
- * Student & Faculty 360 — individual-level profiles. v2 reverses v1's
- * class-level ceiling.
+ * Student & Faculty 360 — individual-level profiles.
  *
- * TODO: every field is mocked. Personal details, enrollment, grades and
- * attendance are system-of-record fields owned by Salesforce/SIS, so they are
- * rendered read-only with a "View in Salesforce" link rather than an edit
- * control — editing them here would risk divergence from the source of truth.
+ * Content is grounded in Edison's own documented feature set, not the reference
+ * screenshots. The Salesforce dashboards were a *visual* reference only; the
+ * sections here mirror what the Student and Faculty portals actually cover:
+ * academics/grades, attendance, goals (POAG), skills profile, development
+ * areas, classes and schedule, and student alerts.
+ *
+ * Deliberately absent: events and well-being. Both came from the reference
+ * screenshots and are flagged in the Portal Specs as data domains not covered by
+ * Edison's scope docs, with no known source system.
+ *
+ * TODO: all values are mocked. Personal details, enrollment, grades and
+ * attendance are system-of-record fields owned by Salesforce/SIS and are
+ * rendered read-only with a "View in Salesforce" link — editing them here would
+ * risk divergence from the source of truth.
  *
  * TODO — the exact editable-field list is an open item (brief §8 / open item 9).
- * Only internal notes and flags are editable here. Do not widen that without
- * confirmation.
+ * Only internal notes and flags are editable. Do not widen without confirmation.
  */
 
 export type PersonKind = "student" | "faculty";
 
 export type ReadOnlyField = { label: string; value: string };
+
+/** Current-term grade per subject. */
+export type GradeRecord = {
+  subject: string;
+  teacher: string;
+  grade: string;
+  percent: number;
+  assignmentsComplete: number;
+  assignmentsSet: number;
+};
+
+/** One prior term, for grade history. */
+export type GradeHistoryTerm = {
+  term: string;
+  gpa: string;
+  subjects: { subject: string; grade: string }[];
+};
+
+export type AttendanceRecord = {
+  date: string;
+  status: "Present" | "Absent" | "Attended half a day";
+  classPeriod?: string;
+  note?: string;
+};
+
+export type AttendanceSummary = {
+  present: number;
+  absent: number;
+  halfDay: number;
+  rate: string;
+  /** Per-term history so a trend is visible, not just a single figure. */
+  byTerm: { term: string; rate: string; absences: number }[];
+};
 
 export type GoalRecord = {
   id: string;
@@ -23,6 +64,9 @@ export type GoalRecord = {
   status: "On track" | "At risk" | "Complete" | "Overdue";
   target: string;
   lastUpdated: string;
+  /** Checkpoint progress, since POAG goals are reviewed at intervals. */
+  checkpointsMet: number;
+  checkpointsTotal: number;
 };
 
 export type AlertRecord = {
@@ -30,26 +74,44 @@ export type AlertRecord = {
   rule: string;
   raised: string;
   status: "Open" | "Acknowledged" | "Resolved";
+  raisedBy?: string;
   overdue?: boolean;
 };
 
-export type AttendanceRecord = {
-  date: string;
-  status: "Present" | "Absent" | "Attended half a day";
-  note?: string;
+/** Skills profile — group with level-rated sub-skills, as configured in Portal Config. */
+export type SkillAssessment = {
+  group: string;
+  subSkills: { label: string; level: "High" | "Middle" | "Elementary" }[];
 };
 
-export type WellbeingRecord = {
-  date: string;
-  feeling: "Pleasant" | "Neutral" | "Unpleasant";
-  note?: string;
+/** Development areas — the coloured groupings students see in their portal. */
+export type DevelopmentAreaEntry = {
+  area: string;
+  skills: string[];
 };
 
-export type EventRecord = {
-  id: string;
-  name: string;
+export type ClassEnrolment = {
+  className: string;
+  teacher: string;
+  period: string;
+  room: string;
+};
+
+/** Faculty: whether attendance was submitted for each class, by day. */
+export type AttendanceComplianceRow = {
   date: string;
-  role: string;
+  submitted: number;
+  expected: number;
+  missing: string[];
+};
+
+/** Faculty: per-class performance rollup. */
+export type ClassPerformanceRow = {
+  className: string;
+  roster: number;
+  avgAttendance: string;
+  assignmentCompletion: string;
+  openAlerts: number;
 };
 
 export type InternalNote = {
@@ -71,11 +133,23 @@ export type Person = {
   status: "On Track" | "At Risk" | "Other";
   personal: ReadOnlyField[];
   academic: ReadOnlyField[];
-  goals: GoalRecord[];
+
+  // Student sections
+  grades?: GradeRecord[];
+  gradeHistory?: GradeHistoryTerm[];
+  attendance?: AttendanceRecord[];
+  attendanceSummary?: AttendanceSummary;
+  goals?: GoalRecord[];
+  skills?: SkillAssessment[];
+  developmentAreas?: DevelopmentAreaEntry[];
+  classes?: ClassEnrolment[];
+
+  // Faculty sections
+  teachingClasses?: ClassPerformanceRow[];
+  schedule?: ClassEnrolment[];
+  attendanceCompliance?: AttendanceComplianceRow[];
+
   alerts: AlertRecord[];
-  attendance: AttendanceRecord[];
-  wellbeing: WellbeingRecord[];
-  events: EventRecord[];
   notes: InternalNote[];
   flags: string[];
 };
@@ -107,16 +181,79 @@ export const people: Person[] = [
       { label: "Primary academic program", value: "Grade 10 — General" },
       { label: "Enrolled since", value: "02 Sep 2024" },
       { label: "Homeroom", value: "Awaiting Genesis data" },
-      { label: "Counselor", value: "K. Blekeski" }
+      { label: "Counselor", value: "K. Blekeski" },
+      { label: "Current GPA", value: "2.4" },
+      { label: "Credits earned", value: "18 of 24" }
+    ],
+    grades: [
+      { subject: "Algebra II", teacher: "K. Blekeski", grade: "D+", percent: 68, assignmentsComplete: 14, assignmentsSet: 22 },
+      { subject: "Biology", teacher: "P. Nair", grade: "C", percent: 74, assignmentsComplete: 18, assignmentsSet: 21 },
+      { subject: "English Language Arts", teacher: "A. Chen", grade: "B-", percent: 81, assignmentsComplete: 19, assignmentsSet: 20 },
+      { subject: "US History", teacher: "M. Alvarez", grade: "C+", percent: 78, assignmentsComplete: 16, assignmentsSet: 20 },
+      { subject: "Computer Science", teacher: "D. Osei", grade: "B", percent: 84, assignmentsComplete: 17, assignmentsSet: 18 }
+    ],
+    gradeHistory: [
+      {
+        term: "Term 3 2025–26",
+        gpa: "2.6",
+        subjects: [
+          { subject: "Algebra II", grade: "C-" },
+          { subject: "Biology", grade: "C+" },
+          { subject: "English Language Arts", grade: "B" },
+          { subject: "US History", grade: "C+" }
+        ]
+      },
+      {
+        term: "Term 2 2025–26",
+        gpa: "2.9",
+        subjects: [
+          { subject: "Algebra II", grade: "C" },
+          { subject: "Biology", grade: "B-" },
+          { subject: "English Language Arts", grade: "B+" },
+          { subject: "US History", grade: "B-" }
+        ]
+      },
+      {
+        term: "Term 1 2025–26",
+        gpa: "3.1",
+        subjects: [
+          { subject: "Algebra I", grade: "B" },
+          { subject: "Biology", grade: "B+" },
+          { subject: "English Language Arts", grade: "B+" },
+          { subject: "US History", grade: "B" }
+        ]
+      }
+    ],
+    attendanceSummary: {
+      present: 6,
+      absent: 18,
+      halfDay: 0,
+      rate: "25.0%",
+      byTerm: [
+        { term: "Term 4 2025–26", rate: "25.0%", absences: 18 },
+        { term: "Term 3 2025–26", rate: "78.0%", absences: 11 },
+        { term: "Term 2 2025–26", rate: "91.0%", absences: 5 },
+        { term: "Term 1 2025–26", rate: "96.0%", absences: 2 }
+      ]
+    },
+    attendance: [
+      { date: "17 Jul 2026", status: "Absent", classPeriod: "Full day" },
+      { date: "16 Jul 2026", status: "Absent", classPeriod: "Full day" },
+      { date: "15 Jul 2026", status: "Present", classPeriod: "Full day" },
+      { date: "14 Jul 2026", status: "Absent", classPeriod: "Full day", note: "Guardian notified" },
+      { date: "13 Jul 2026", status: "Absent", classPeriod: "Full day" },
+      { date: "10 Jul 2026", status: "Present", classPeriod: "Full day" }
     ],
     goals: [
       {
         id: "g-1",
-        title: "Raise algebra assessment average to 75%",
+        title: "Raise Algebra II assessment average to 75%",
         category: "Academic achievement",
         status: "At risk",
         target: "12 Aug 2026",
-        lastUpdated: "2026-07-02T10:20:00-04:00"
+        lastUpdated: "2026-07-02T10:20:00-04:00",
+        checkpointsMet: 1,
+        checkpointsTotal: 4
       },
       {
         id: "g-2",
@@ -124,29 +261,64 @@ export const people: Person[] = [
         category: "Attendance & engagement",
         status: "Overdue",
         target: "30 Jun 2026",
-        lastUpdated: "2026-06-28T09:05:00-04:00"
+        lastUpdated: "2026-06-28T09:05:00-04:00",
+        checkpointsMet: 0,
+        checkpointsTotal: 3
+      },
+      {
+        id: "g-3",
+        title: "Complete all Biology lab reports on time",
+        category: "Academic achievement",
+        status: "Complete",
+        target: "15 May 2026",
+        lastUpdated: "2026-05-14T15:40:00-04:00",
+        checkpointsMet: 3,
+        checkpointsTotal: 3
       }
     ],
+    skills: [
+      {
+        group: "Resilience",
+        subSkills: [
+          { label: "Perseverance", level: "Elementary" },
+          { label: "Flexibility", level: "Middle" },
+          { label: "Adaptability", level: "Middle" }
+        ]
+      },
+      {
+        group: "Critical Thinking",
+        subSkills: [
+          { label: "Analysis", level: "High" },
+          { label: "Reasoning", level: "Middle" },
+          { label: "Innovation", level: "Middle" }
+        ]
+      },
+      {
+        group: "Effective Communication",
+        subSkills: [
+          { label: "Clarity", level: "Middle" },
+          { label: "Active Listening", level: "Elementary" }
+        ]
+      }
+    ],
+    developmentAreas: [
+      { area: "Strengths", skills: ["Analytical Thinker", "Problem Solver", "Detail-Oriented"] },
+      { area: "Room To Grow", skills: ["Speed in Tests", "Time Management"] },
+      { area: "Interests", skills: ["Mathematics", "Computer Science"] },
+      { area: "Future Goals", skills: ["Engineering School", "STEM Career"] }
+    ],
+    classes: [
+      { className: "Algebra II · Section C", teacher: "K. Blekeski", period: "Period 1", room: "RM-204" },
+      { className: "Biology · Section B", teacher: "P. Nair", period: "Period 2", room: "RM-302" },
+      { className: "English Language Arts · Section A", teacher: "A. Chen", period: "Period 4", room: "RM-118" },
+      { className: "US History · Section A", teacher: "M. Alvarez", period: "Period 5", room: "RM-210" },
+      { className: "Computer Science · Section A", teacher: "D. Osei", period: "Period 7", room: "RM-115" }
+    ],
     alerts: [
-      { id: "a-1", rule: "Attendance below 80%", raised: "2026-07-15T06:00:00-04:00", status: "Open", overdue: true },
-      { id: "a-2", rule: "Goal overdue by 14 days", raised: "2026-07-14T06:00:00-04:00", status: "Open", overdue: true },
-      { id: "a-3", rule: "Three or more missing assignments", raised: "2026-06-20T06:00:00-04:00", status: "Resolved" }
-    ],
-    attendance: [
-      { date: "17 Jul 2026", status: "Absent" },
-      { date: "16 Jul 2026", status: "Absent" },
-      { date: "15 Jul 2026", status: "Present" },
-      { date: "14 Jul 2026", status: "Absent" },
-      { date: "11 Jul 2026", status: "Present" }
-    ],
-    wellbeing: [
-      { date: "16 Jul 2026", feeling: "Unpleasant" },
-      { date: "09 Jul 2026", feeling: "Unpleasant", note: "Logged after second period" },
-      { date: "01 Jul 2026", feeling: "Neutral" }
-    ],
-    events: [
-      { id: "e-1", name: "STEM Careers Evening", date: "12 Jun 2026", role: "Attendee" },
-      { id: "e-2", name: "Grade 10 Orientation", date: "04 Sep 2025", role: "Attendee" }
+      { id: "a-1", rule: "Attendance below 80%", raised: "2026-07-15T06:00:00-04:00", status: "Open", raisedBy: "K. Blekeski", overdue: true },
+      { id: "a-2", rule: "Goal overdue by 14 days", raised: "2026-07-14T06:00:00-04:00", status: "Open", raisedBy: "System", overdue: true },
+      { id: "a-3", rule: "Three or more missing assignments", raised: "2026-06-20T06:00:00-04:00", status: "Resolved", raisedBy: "K. Blekeski" },
+      { id: "a-4", rule: "Grade drop of one letter (Algebra II)", raised: "2026-06-05T06:00:00-04:00", status: "Acknowledged", raisedBy: "K. Blekeski" }
     ],
     notes: [
       {
@@ -177,36 +349,93 @@ export const people: Person[] = [
       { label: "Primary academic program", value: "Grade 9 — General" },
       { label: "Enrolled since", value: "03 Sep 2025" },
       { label: "Homeroom", value: "Awaiting Genesis data" },
-      { label: "Counselor", value: "A. Chen" }
+      { label: "Counselor", value: "A. Chen" },
+      { label: "Current GPA", value: "3.0" },
+      { label: "Credits earned", value: "6 of 24" }
+    ],
+    grades: [
+      { subject: "Algebra I", teacher: "K. Blekeski", grade: "B", percent: 85, assignmentsComplete: 20, assignmentsSet: 22 },
+      { subject: "Biology", teacher: "P. Nair", grade: "B-", percent: 80, assignmentsComplete: 18, assignmentsSet: 21 },
+      { subject: "English Language Arts", teacher: "A. Chen", grade: "C+", percent: 77, assignmentsComplete: 15, assignmentsSet: 20 }
+    ],
+    gradeHistory: [
+      {
+        term: "Term 3 2025–26",
+        gpa: "3.1",
+        subjects: [
+          { subject: "Algebra I", grade: "B+" },
+          { subject: "Biology", grade: "B" },
+          { subject: "English Language Arts", grade: "B-" }
+        ]
+      },
+      {
+        term: "Term 2 2025–26",
+        gpa: "3.2",
+        subjects: [
+          { subject: "Algebra I", grade: "B+" },
+          { subject: "Biology", grade: "B+" },
+          { subject: "English Language Arts", grade: "B-" }
+        ]
+      }
+    ],
+    attendanceSummary: {
+      present: 14,
+      absent: 3,
+      halfDay: 1,
+      rate: "82.4%",
+      byTerm: [
+        { term: "Term 4 2025–26", rate: "82.4%", absences: 3 },
+        { term: "Term 3 2025–26", rate: "88.0%", absences: 6 }
+      ]
+    },
+    attendance: [
+      { date: "17 Jul 2026", status: "Present", classPeriod: "Full day" },
+      { date: "16 Jul 2026", status: "Attended half a day", classPeriod: "AM only", note: "Medical appointment" },
+      { date: "15 Jul 2026", status: "Present", classPeriod: "Full day" },
+      { date: "14 Jul 2026", status: "Absent", classPeriod: "Full day" }
     ],
     goals: [
       {
-        id: "g-3",
+        id: "g-4",
         title: "Complete weekly reading log",
         category: "Lifelong learner",
         status: "On track",
         target: "20 Aug 2026",
-        lastUpdated: "2026-07-14T11:00:00-04:00"
+        lastUpdated: "2026-07-14T11:00:00-04:00",
+        checkpointsMet: 3,
+        checkpointsTotal: 4
       }
     ],
+    skills: [
+      {
+        group: "Lifelong Learner",
+        subSkills: [
+          { label: "Curiosity", level: "High" },
+          { label: "Initiative", level: "Middle" }
+        ]
+      },
+      {
+        group: "Engaged Community Member",
+        subSkills: [
+          { label: "Respect", level: "High" },
+          { label: "Empathy", level: "Middle" }
+        ]
+      }
+    ],
+    developmentAreas: [
+      { area: "Strengths", skills: ["Collaboration", "Curiosity"] },
+      { area: "Room To Grow", skills: ["Written Explanation"] }
+    ],
+    classes: [
+      { className: "Algebra I · Section A", teacher: "K. Blekeski", period: "Period 2", room: "RM-204" },
+      { className: "Biology · Section B", teacher: "P. Nair", period: "Period 3", room: "RM-302" },
+      { className: "English Language Arts · Section B", teacher: "A. Chen", period: "Period 6", room: "RM-118" }
+    ],
     alerts: [
-      { id: "a-4", rule: "Well-being trend — sustained Unpleasant", raised: "2026-07-16T14:05:00-04:00", status: "Acknowledged" }
+      { id: "a-5", rule: "Two or more missing assignments (ELA)", raised: "2026-07-16T06:00:00-04:00", status: "Acknowledged", raisedBy: "A. Chen" }
     ],
-    attendance: [
-      { date: "17 Jul 2026", status: "Present" },
-      { date: "16 Jul 2026", status: "Attended half a day" },
-      { date: "15 Jul 2026", status: "Present" },
-      { date: "14 Jul 2026", status: "Absent" }
-    ],
-    wellbeing: [
-      { date: "16 Jul 2026", feeling: "Unpleasant" },
-      { date: "14 Jul 2026", feeling: "Unpleasant" },
-      { date: "07 Jul 2026", feeling: "Unpleasant" },
-      { date: "30 Jun 2026", feeling: "Pleasant" }
-    ],
-    events: [{ id: "e-3", name: "Spring Showcase", date: "22 Apr 2026", role: "Participant" }],
     notes: [],
-    flags: ["Well-being follow-up"]
+    flags: ["Assignment follow-up"]
   },
   {
     id: "rk-sharma",
@@ -227,27 +456,74 @@ export const people: Person[] = [
       { label: "Primary academic program", value: "Grade 8 — General" },
       { label: "Enrolled since", value: "05 Sep 2023" },
       { label: "Homeroom", value: "Awaiting Genesis data" },
-      { label: "Counselor", value: "P. Nair" }
+      { label: "Counselor", value: "P. Nair" },
+      { label: "Current GPA", value: "2.8" },
+      { label: "Credits earned", value: "n/a — middle school" }
+    ],
+    grades: [
+      { subject: "Mathematics", teacher: "P. Nair", grade: "C+", percent: 78, assignmentsComplete: 12, assignmentsSet: 18 },
+      { subject: "Science", teacher: "P. Nair", grade: "C", percent: 73, assignmentsComplete: 11, assignmentsSet: 17 },
+      { subject: "English Language Arts", teacher: "A. Chen", grade: "B-", percent: 81, assignmentsComplete: 16, assignmentsSet: 18 }
+    ],
+    gradeHistory: [
+      {
+        term: "Term 3 2025–26",
+        gpa: "3.0",
+        subjects: [
+          { subject: "Mathematics", grade: "B-" },
+          { subject: "Science", grade: "B-" },
+          { subject: "English Language Arts", grade: "B" }
+        ]
+      }
+    ],
+    attendanceSummary: {
+      present: 2,
+      absent: 2,
+      halfDay: 0,
+      rate: "50.0%",
+      byTerm: [
+        { term: "Term 4 2025–26", rate: "50.0%", absences: 2 },
+        { term: "Term 3 2025–26", rate: "94.0%", absences: 3 }
+      ]
+    },
+    attendance: [
+      { date: "17 Jul 2026", status: "Present", classPeriod: "Full day" },
+      { date: "16 Jul 2026", status: "Absent", classPeriod: "Full day" },
+      { date: "15 Jul 2026", status: "Present", classPeriod: "Full day" },
+      { date: "14 Jul 2026", status: "Absent", classPeriod: "Full day" }
     ],
     goals: [
       {
-        id: "g-4",
+        id: "g-5",
         title: "Submit all science lab reports on time",
         category: "Academic achievement",
         status: "At risk",
         target: "05 Aug 2026",
-        lastUpdated: "2026-07-01T08:40:00-04:00"
+        lastUpdated: "2026-07-01T08:40:00-04:00",
+        checkpointsMet: 1,
+        checkpointsTotal: 3
       }
     ],
-    alerts: [],
-    attendance: [
-      { date: "17 Jul 2026", status: "Present" },
-      { date: "16 Jul 2026", status: "Absent" },
-      { date: "15 Jul 2026", status: "Present" },
-      { date: "14 Jul 2026", status: "Absent" }
+    skills: [
+      {
+        group: "Critical Thinking",
+        subSkills: [
+          { label: "Reasoning", level: "Middle" },
+          { label: "Analysis", level: "Elementary" }
+        ]
+      }
     ],
-    wellbeing: [{ date: "10 Jul 2026", feeling: "Neutral" }],
-    events: [],
+    developmentAreas: [
+      { area: "Strengths", skills: ["Mathematical Reasoning"] },
+      { area: "Room To Grow", skills: ["Meeting Deadlines"] }
+    ],
+    classes: [
+      { className: "Mathematics · Grade 8", teacher: "P. Nair", period: "Period 1", room: "RM-302" },
+      { className: "Science · Grade 8", teacher: "P. Nair", period: "Period 3", room: "RM-305" }
+    ],
+    alerts: [
+      { id: "a-6", rule: "Goal checkpoint missed", raised: "2026-07-15T06:00:00-04:00", status: "Open", raisedBy: "System" }
+    ],
     notes: [],
     flags: ["Missed goal checkpoints"]
   },
@@ -260,22 +536,35 @@ export const people: Person[] = [
     group: "Grade 10",
     status: "On Track",
     personal: [
-      { label: "Preferred name", value: "Mohd.Anas" },
+      { label: "Preferred name", value: "Anas" },
       { label: "Guardian contact", value: "guardian@example.org" },
-      { label: "Home language", value: "English" }
+      { label: "Home language", value: "Hindi" }
     ],
     academic: [
       { label: "Primary academic program", value: "Grade 10 — General" },
-      { label: "Homeroom", value: "Awaiting Genesis data" }
+      { label: "Homeroom", value: "Awaiting Genesis data" },
+      { label: "Current GPA", value: "3.4" }
+    ],
+    grades: [
+      { subject: "Algebra II", teacher: "K. Blekeski", grade: "B+", percent: 88, assignmentsComplete: 21, assignmentsSet: 22 }
+    ],
+    gradeHistory: [{ term: "Term 3 2025–26", gpa: "3.3", subjects: [{ subject: "Algebra II", grade: "B" }] }],
+    attendanceSummary: {
+      present: 1,
+      absent: 1,
+      halfDay: 0,
+      rate: "50.0%",
+      byTerm: [{ term: "Term 4 2025–26", rate: "50.0%", absences: 1 }]
+    },
+    attendance: [
+      { date: "17 Jul 2026", status: "Present", classPeriod: "Full day" },
+      { date: "16 Jul 2026", status: "Absent", classPeriod: "Full day" }
     ],
     goals: [],
+    skills: [],
+    developmentAreas: [],
+    classes: [{ className: "Algebra II · Section C", teacher: "K. Blekeski", period: "Period 1", room: "RM-204" }],
     alerts: [],
-    attendance: [
-      { date: "17 Jul 2026", status: "Present" },
-      { date: "30 Jun 2026", status: "Absent" }
-    ],
-    wellbeing: [],
-    events: [],
     notes: [],
     flags: []
   },
@@ -288,21 +577,32 @@ export const people: Person[] = [
     group: "Grade 9",
     status: "On Track",
     personal: [
-      { label: "Preferred name", value: "Naphisabet" },
+      { label: "Preferred name", value: "Naphi" },
       { label: "Guardian contact", value: "guardian@example.org" },
-      { label: "Home language", value: "English" }
+      { label: "Home language", value: "Khasi" }
     ],
     academic: [
       { label: "Primary academic program", value: "Grade 9 — General" },
-      { label: "Homeroom", value: "Awaiting Genesis data" }
+      { label: "Homeroom", value: "Awaiting Genesis data" },
+      { label: "Current GPA", value: "3.6" }
     ],
+    grades: [
+      { subject: "Algebra I", teacher: "K. Blekeski", grade: "A-", percent: 92, assignmentsComplete: 22, assignmentsSet: 22 }
+    ],
+    gradeHistory: [{ term: "Term 3 2025–26", gpa: "3.5", subjects: [{ subject: "Algebra I", grade: "A-" }] }],
+    attendanceSummary: {
+      present: 1,
+      absent: 0,
+      halfDay: 0,
+      rate: "100.0%",
+      byTerm: [{ term: "Term 4 2025–26", rate: "100.0%", absences: 0 }]
+    },
+    attendance: [{ date: "17 Jul 2026", status: "Present", classPeriod: "Full day" }],
     goals: [],
+    skills: [],
+    developmentAreas: [],
+    classes: [{ className: "Algebra I · Section A", teacher: "K. Blekeski", period: "Period 2", room: "RM-204" }],
     alerts: [],
-    attendance: [
-      { date: "17 Jul 2026", status: "Present" }
-    ],
-    wellbeing: [],
-    events: [],
     notes: [],
     flags: []
   },
@@ -321,16 +621,29 @@ export const people: Person[] = [
     ],
     academic: [
       { label: "Primary academic program", value: "Grade 8 — General" },
-      { label: "Homeroom", value: "Awaiting Genesis data" }
+      { label: "Homeroom", value: "Awaiting Genesis data" },
+      { label: "Current GPA", value: "3.1" }
+    ],
+    grades: [
+      { subject: "Mathematics", teacher: "P. Nair", grade: "B", percent: 84, assignmentsComplete: 16, assignmentsSet: 18 }
+    ],
+    gradeHistory: [{ term: "Term 3 2025–26", gpa: "3.0", subjects: [{ subject: "Mathematics", grade: "B-" }] }],
+    attendanceSummary: {
+      present: 1,
+      absent: 1,
+      halfDay: 0,
+      rate: "50.0%",
+      byTerm: [{ term: "Term 4 2025–26", rate: "50.0%", absences: 1 }]
+    },
+    attendance: [
+      { date: "17 Jul 2026", status: "Present", classPeriod: "Full day" },
+      { date: "16 Jul 2026", status: "Absent", classPeriod: "Full day" }
     ],
     goals: [],
+    skills: [],
+    developmentAreas: [],
+    classes: [{ className: "Mathematics · Grade 8", teacher: "P. Nair", period: "Period 1", room: "RM-302" }],
     alerts: [],
-    attendance: [
-      { date: "17 Jul 2026", status: "Present" },
-      { date: "30 Jun 2026", status: "Absent" }
-    ],
-    wellbeing: [],
-    events: [],
     notes: [],
     flags: []
   },
@@ -343,29 +656,79 @@ export const people: Person[] = [
     group: "Grade 10",
     status: "On Track",
     personal: [
-      { label: "Preferred name", value: "Robert" },
+      { label: "Preferred name", value: "Rob" },
       { label: "Guardian contact", value: "guardian@example.org" },
       { label: "Home language", value: "English" }
     ],
     academic: [
       { label: "Primary academic program", value: "Grade 10 — General" },
-      { label: "Homeroom", value: "Awaiting Genesis data" }
+      { label: "Homeroom", value: "Awaiting Genesis data" },
+      { label: "Current GPA", value: "3.5" }
     ],
-    goals: [],
-    alerts: [],
+    grades: [
+      { subject: "Computer Science", teacher: "D. Osei", grade: "A-", percent: 91, assignmentsComplete: 18, assignmentsSet: 18 },
+      { subject: "Algebra II", teacher: "K. Blekeski", grade: "B+", percent: 87, assignmentsComplete: 20, assignmentsSet: 22 }
+    ],
+    gradeHistory: [
+      {
+        term: "Term 3 2025–26",
+        gpa: "3.4",
+        subjects: [
+          { subject: "Computer Science", grade: "B+" },
+          { subject: "Algebra II", grade: "B" }
+        ]
+      }
+    ],
+    attendanceSummary: {
+      present: 6,
+      absent: 0,
+      halfDay: 0,
+      rate: "100.0%",
+      byTerm: [
+        { term: "Term 4 2025–26", rate: "100.0%", absences: 0 },
+        { term: "Term 3 2025–26", rate: "97.0%", absences: 2 }
+      ]
+    },
     attendance: [
-      { date: "17 Jul 2026", status: "Present" },
-      { date: "16 Jul 2026", status: "Present" },
-      { date: "15 Jul 2026", status: "Present" },
-      { date: "14 Jul 2026", status: "Present" },
-      { date: "13 Jul 2026", status: "Present" },
-      { date: "12 Jul 2026", status: "Present" }
+      { date: "17 Jul 2026", status: "Present", classPeriod: "Full day" },
+      { date: "16 Jul 2026", status: "Present", classPeriod: "Full day" },
+      { date: "15 Jul 2026", status: "Present", classPeriod: "Full day" }
     ],
-    wellbeing: [],
-    events: [],
+    goals: [
+      {
+        id: "g-6",
+        title: "Build a portfolio project in Computer Science",
+        category: "Post-secondary readiness",
+        status: "On track",
+        target: "30 Aug 2026",
+        lastUpdated: "2026-07-12T09:15:00-04:00",
+        checkpointsMet: 2,
+        checkpointsTotal: 3
+      }
+    ],
+    skills: [
+      {
+        group: "Critical Thinking",
+        subSkills: [
+          { label: "Innovation", level: "High" },
+          { label: "Analysis", level: "High" }
+        ]
+      }
+    ],
+    developmentAreas: [
+      { area: "Strengths", skills: ["Problem Solver", "Detail-Oriented"] },
+      { area: "Future Goals", skills: ["STEM Career"] }
+    ],
+    classes: [
+      { className: "Computer Science · Section A", teacher: "D. Osei", period: "Period 7", room: "RM-115" },
+      { className: "Algebra II · Section C", teacher: "K. Blekeski", period: "Period 1", room: "RM-204" }
+    ],
+    alerts: [],
     notes: [],
     flags: []
   },
+
+  // ---------------------------------------------------------------- faculty
   {
     id: "k-blekeski",
     kind: "faculty",
@@ -384,15 +747,31 @@ export const people: Person[] = [
       { label: "Department", value: "Mathematics" },
       { label: "Classes assigned", value: "7" },
       { label: "Total roster", value: "308 students" },
-      { label: "Joined", value: "18 Aug 2019" }
+      { label: "Joined", value: "18 Aug 2019" },
+      { label: "Subjects taught", value: "Algebra I, Algebra II, Calculus" }
     ],
-    goals: [],
+    teachingClasses: [
+      { className: "Algebra II · Section C", roster: 28, avgAttendance: "89.2%", assignmentCompletion: "87.2%", openAlerts: 2 },
+      { className: "Algebra I · Section A", roster: 29, avgAttendance: "96.1%", assignmentCompletion: "83.1%", openAlerts: 1 },
+      { className: "Calculus · Section A", roster: 22, avgAttendance: "94.8%", assignmentCompletion: "91.0%", openAlerts: 0 },
+      { className: "Algebra I · Section B", roster: 26, avgAttendance: "92.4%", assignmentCompletion: "85.5%", openAlerts: 0 }
+    ],
+    schedule: [
+      { className: "Algebra II · Section C", teacher: "—", period: "Period 1", room: "RM-204" },
+      { className: "Algebra I · Section A", teacher: "—", period: "Period 2", room: "RM-204" },
+      { className: "Calculus · Section A", teacher: "—", period: "Period 4", room: "RM-204" },
+      { className: "Algebra I · Section B", teacher: "—", period: "Period 6", room: "RM-206" }
+    ],
+    attendanceCompliance: [
+      { date: "17 Jul 2026", submitted: 3, expected: 4, missing: ["Algebra I · Section B"] },
+      { date: "16 Jul 2026", submitted: 4, expected: 4, missing: [] },
+      { date: "15 Jul 2026", submitted: 4, expected: 4, missing: [] },
+      { date: "14 Jul 2026", submitted: 2, expected: 4, missing: ["Calculus · Section A", "Algebra I · Section B"] }
+    ],
     alerts: [
-      { id: "a-5", rule: "Attendance below 80% (Calculus · Section A)", raised: "2026-07-15T06:00:00-04:00", status: "Open", overdue: true }
+      { id: "fa-1", rule: "Attendance below 80% — Michael Andrew (Algebra II · Section C)", raised: "2026-07-15T06:00:00-04:00", status: "Open", raisedBy: "System", overdue: true },
+      { id: "fa-2", rule: "Grade drop of one letter — Michael Andrew", raised: "2026-06-05T06:00:00-04:00", status: "Acknowledged", raisedBy: "K. Blekeski" }
     ],
-    attendance: [],
-    wellbeing: [],
-    events: [{ id: "e-4", name: "STEM Careers Evening", date: "12 Jun 2026", role: "Host" }],
     notes: [
       {
         id: "n-2",
@@ -409,7 +788,7 @@ export const people: Person[] = [
     name: "A. Chen",
     salesforceId: "003AX000004ZmF2YAM",
     school: "Edison Middle School",
-    group: "Art History",
+    group: "English Language Arts",
     status: "On Track",
     personal: [
       { label: "Staff ID", value: "123456912" },
@@ -418,16 +797,30 @@ export const people: Person[] = [
       { label: "Employment type", value: "Full time" }
     ],
     academic: [
-      { label: "Department", value: "Art History" },
+      { label: "Department", value: "English Language Arts" },
       { label: "Classes assigned", value: "3" },
       { label: "Total roster", value: "365 students" },
-      { label: "Joined", value: "12 Jan 2021" }
+      { label: "Joined", value: "12 Jan 2021" },
+      { label: "Subjects taught", value: "English Language Arts, Art History" }
     ],
-    goals: [],
-    alerts: [],
-    attendance: [],
-    wellbeing: [],
-    events: [{ id: "e-5", name: "Spring Showcase", date: "22 Apr 2026", role: "Organizer" }],
+    teachingClasses: [
+      { className: "English Language Arts · Section A", roster: 30, avgAttendance: "96.1%", assignmentCompletion: "87.7%", openAlerts: 1 },
+      { className: "English Language Arts · Section B", roster: 27, avgAttendance: "93.0%", assignmentCompletion: "82.4%", openAlerts: 1 },
+      { className: "Art History · Section A", roster: 12, avgAttendance: "95.5%", assignmentCompletion: "90.1%", openAlerts: 0 }
+    ],
+    schedule: [
+      { className: "English Language Arts · Section A", teacher: "—", period: "Period 4", room: "RM-118" },
+      { className: "English Language Arts · Section B", teacher: "—", period: "Period 6", room: "RM-118" },
+      { className: "Art History · Section A", teacher: "—", period: "Period 2", room: "RM-120" }
+    ],
+    attendanceCompliance: [
+      { date: "17 Jul 2026", submitted: 3, expected: 3, missing: [] },
+      { date: "16 Jul 2026", submitted: 3, expected: 3, missing: [] },
+      { date: "15 Jul 2026", submitted: 3, expected: 3, missing: [] }
+    ],
+    alerts: [
+      { id: "fa-3", rule: "Two or more missing assignments — Nick Johnson (ELA)", raised: "2026-07-16T06:00:00-04:00", status: "Acknowledged", raisedBy: "A. Chen" }
+    ],
     notes: [],
     flags: []
   },
@@ -437,7 +830,7 @@ export const people: Person[] = [
     name: "P. Nair",
     salesforceId: "003AX000004ZmF3YAM",
     school: "Lincoln Elementary",
-    group: "Biology",
+    group: "Science",
     status: "On Track",
     personal: [
       { label: "Staff ID", value: "123457001" },
@@ -446,18 +839,33 @@ export const people: Person[] = [
       { label: "Employment type", value: "Full time" }
     ],
     academic: [
-      { label: "Department", value: "Biology" },
+      { label: "Department", value: "Science" },
       { label: "Classes assigned", value: "5" },
       { label: "Total roster", value: "422 students" },
-      { label: "Joined", value: "09 Sep 2018" }
+      { label: "Joined", value: "09 Sep 2018" },
+      { label: "Subjects taught", value: "Biology, Science, Mathematics" }
     ],
-    goals: [],
+    teachingClasses: [
+      { className: "Biology · Section B", roster: 22, avgAttendance: "88.4%", assignmentCompletion: "90.6%", openAlerts: 2 },
+      { className: "Biology 2 · Class 4", roster: 42, avgAttendance: "76.0%", assignmentCompletion: "78.5%", openAlerts: 4 },
+      { className: "Science · Grade 8", roster: 24, avgAttendance: "91.2%", assignmentCompletion: "84.0%", openAlerts: 1 },
+      { className: "Mathematics · Grade 8", roster: 26, avgAttendance: "93.5%", assignmentCompletion: "86.7%", openAlerts: 0 }
+    ],
+    schedule: [
+      { className: "Mathematics · Grade 8", teacher: "—", period: "Period 1", room: "RM-302" },
+      { className: "Biology · Section B", teacher: "—", period: "Period 2", room: "RM-302" },
+      { className: "Science · Grade 8", teacher: "—", period: "Period 3", room: "RM-305" },
+      { className: "Biology 2 · Class 4", teacher: "—", period: "Period 5", room: "RM-305" }
+    ],
+    attendanceCompliance: [
+      { date: "17 Jul 2026", submitted: 4, expected: 4, missing: [] },
+      { date: "16 Jul 2026", submitted: 3, expected: 4, missing: ["Biology 2 · Class 4"] },
+      { date: "15 Jul 2026", submitted: 4, expected: 4, missing: [] }
+    ],
     alerts: [
-      { id: "a-6", rule: "Attendance below 80% (Biology 2 · Class 4)", raised: "2026-07-15T06:00:00-04:00", status: "Open", overdue: true }
+      { id: "fa-4", rule: "Attendance below 80% — Biology 2 · Class 4", raised: "2026-07-15T06:00:00-04:00", status: "Open", raisedBy: "System", overdue: true },
+      { id: "fa-5", rule: "Goal checkpoint missed — R.K. Sharma", raised: "2026-07-15T06:00:00-04:00", status: "Open", raisedBy: "System" }
     ],
-    attendance: [],
-    wellbeing: [],
-    events: [],
     notes: [],
     flags: []
   },
@@ -479,22 +887,31 @@ export const people: Person[] = [
       { label: "Department", value: "Computer Science" },
       { label: "Classes assigned", value: "4" },
       { label: "Total roster", value: "479 students" },
-      { label: "Joined", value: "14 Aug 2020" }
+      { label: "Joined", value: "14 Aug 2020" },
+      { label: "Subjects taught", value: "Computer Science, Data Science" }
     ],
-    goals: [],
+    teachingClasses: [
+      { className: "Computer Science · Section A", roster: 28, avgAttendance: "89.7%", assignmentCompletion: "78.5%", openAlerts: 0 },
+      { className: "Data Science · Class 7", roster: 32, avgAttendance: "90.4%", assignmentCompletion: "81.2%", openAlerts: 1 }
+    ],
+    schedule: [
+      { className: "Computer Science · Section A", teacher: "—", period: "Period 7", room: "RM-115" },
+      { className: "Data Science · Class 7", teacher: "—", period: "Period 8", room: "RM-115" }
+    ],
+    attendanceCompliance: [
+      { date: "17 Jul 2026", submitted: 0, expected: 2, missing: ["Computer Science · Section A", "Data Science · Class 7"] },
+      { date: "16 Jul 2026", submitted: 0, expected: 2, missing: ["Computer Science · Section A", "Data Science · Class 7"] }
+    ],
     alerts: [],
-    attendance: [],
-    wellbeing: [],
-    events: [],
     notes: [
       {
         id: "n-3",
-        body: "On leave until 18 Aug. K. Blekeski covering Algebra II Section C.",
+        body: "On leave until 18 Aug. K. Blekeski covering Algebra II Section C; cover still needed for Data Science.",
         author: "Priya Nair",
         at: "2026-07-09T10:30:00-04:00"
       }
     ],
-    flags: ["On leave"]
+    flags: ["On leave", "Cover required"]
   },
   {
     id: "m-alvarez",
@@ -514,13 +931,22 @@ export const people: Person[] = [
       { label: "Department", value: "Early Years" },
       { label: "Classes assigned", value: "2" },
       { label: "Total roster", value: "536 students" },
-      { label: "Joined", value: "03 Feb 2022" }
+      { label: "Joined", value: "03 Feb 2022" },
+      { label: "Subjects taught", value: "Early Years, US History" }
     ],
-    goals: [],
+    teachingClasses: [
+      { className: "US History · Section A", roster: 21, avgAttendance: "91.0%", assignmentCompletion: "81.4%", openAlerts: 0 },
+      { className: "Kindergarten · Room 4", roster: 18, avgAttendance: "95.2%", assignmentCompletion: "n/a", openAlerts: 0 }
+    ],
+    schedule: [
+      { className: "Kindergarten · Room 4", teacher: "—", period: "All day", room: "RM-004" },
+      { className: "US History · Section A", teacher: "—", period: "Period 5", room: "RM-210" }
+    ],
+    attendanceCompliance: [
+      { date: "17 Jul 2026", submitted: 2, expected: 2, missing: [] },
+      { date: "16 Jul 2026", submitted: 2, expected: 2, missing: [] }
+    ],
     alerts: [],
-    attendance: [],
-    wellbeing: [],
-    events: [],
     notes: [],
     flags: []
   }

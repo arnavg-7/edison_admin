@@ -86,10 +86,10 @@ export type BarGroup = {
 };
 
 /**
- * Grouped horizontal bars — the workhorse chart in the reference dashboards
- * (Student Attendance, Students By Grade, Well-Being Trend). Value labels sit
- * inside the bar when it's wide enough, outside when it isn't, so small values
- * stay readable.
+ * Grouped horizontal bars — the workhorse chart here (Student Attendance,
+ * Students By Grade). Value labels always sit outside the fill: on a light
+ * surface the pale end of the series palette can't carry white text, and
+ * outside-only keeps one label position rather than two.
  */
 export function GroupedBars({
   groups,

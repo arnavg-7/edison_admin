@@ -39,11 +39,8 @@ export const REPORTS = {
     name: "Student Attendance By School",
     asOf: "2026-07-17T12:12:00-04:00"
   },
-  wellBeingTrend: { name: "Well-Being Trend", asOf: "2026-07-17T12:12:00-04:00" },
   studentsStatus: { name: "Students' Status", asOf: "2026-07-17T12:12:00-04:00" },
   assignmentSubmissions: { name: "Assignment Submissions", asOf: "2026-07-17T12:12:00-04:00" },
-  totalEventsHeld: { name: "Total Events Held", asOf: "2026-07-17T12:12:00-04:00" },
-  eventParticipants: { name: "Fees And Participation", asOf: "2026-07-17T12:12:00-04:00" },
 
   // The three original core metrics, now Salesforce-sourced. Their timestamps
   // differ from the dashboard pull because the underlying reports refresh on

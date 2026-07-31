@@ -2,12 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  salesforceRecordUrl,
-  type InternalNote,
-  type Person,
-  type ReadOnlyField
-} from "@/lib/data/people";
+import { salesforceRecordUrl, type InternalNote, type Person, type ReadOnlyField } from "@/lib/data/people";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatSalesforceStamp } from "@/lib/format";
@@ -15,43 +10,47 @@ import { formatSalesforceStamp } from "@/lib/format";
 type TabId =
   | "personal"
   | "academic"
-  | "goals"
-  | "alerts"
+  | "grades"
   | "attendance"
-  | "wellbeing"
-  | "events"
+  | "goals"
+  | "skills"
+  | "development"
+  | "classes"
+  | "alerts"
   | "notes";
 
+/**
+ * Sections mirror what Edison's Student and Faculty portals actually cover.
+ * There is no events or well-being tab: both came from the reference
+ * screenshots rather than Edison's scope docs, and have no source system.
+ */
 const STUDENT_TABS: { id: TabId; label: string }[] = [
   { id: "personal", label: "Personal details" },
-  { id: "academic", label: "Enrollment & academic" },
+  { id: "academic", label: "Enrollment" },
+  { id: "grades", label: "Grades & history" },
+  { id: "attendance", label: "Attendance & history" },
   { id: "goals", label: "Goals" },
+  { id: "skills", label: "Skills profile" },
+  { id: "development", label: "Development areas" },
+  { id: "classes", label: "Classes & schedule" },
   { id: "alerts", label: "Alert history" },
-  { id: "attendance", label: "Attendance" },
-  { id: "wellbeing", label: "Well-being log" },
-  { id: "events", label: "Event participation" },
   { id: "notes", label: "Internal notes & flags" }
 ];
 
 const FACULTY_TABS: { id: TabId; label: string }[] = [
   { id: "personal", label: "Personal details" },
-  { id: "academic", label: "Class assignments" },
-  { id: "alerts", label: "Alert history" },
-  { id: "events", label: "Event participation" },
+  { id: "academic", label: "Assignment summary" },
+  { id: "classes", label: "Classes & performance" },
+  { id: "attendance", label: "Attendance submission" },
+  { id: "alerts", label: "Student alerts" },
   { id: "notes", label: "Internal notes & flags" }
 ];
 
-/**
- * Shared shell for both student and faculty profiles.
- *
- * Every tab except Internal notes & flags is read-only with a link out to the
- * Salesforce record. Personal details, enrollment, grades and attendance are
- * system-of-record fields; an edit control here would invite divergence from
- * the source of truth. The editable-field list beyond notes/flags is still
- * unconfirmed (brief open item 9), so nothing else is writable.
- */
+const LEVEL_TONE = { High: "ok", Middle: "neutral", Elementary: "warn" } as const;
+
 export function ProfileShell({ person }: { person: Person }) {
-  const tabs = person.kind === "student" ? STUDENT_TABS : FACULTY_TABS;
+  const isStudent = person.kind === "student";
+  const tabs = isStudent ? STUDENT_TABS : FACULTY_TABS;
   const [tab, setTab] = useState<TabId>("personal");
 
   const [notes, setNotes] = useState<InternalNote[]>(person.notes);
@@ -62,12 +61,7 @@ export function ProfileShell({ person }: { person: Person }) {
   const addNote = () => {
     if (!draft.trim()) return;
     setNotes((current) => [
-      {
-        id: `local-${Date.now()}`,
-        body: draft.trim(),
-        author: "Super Admin",
-        at: new Date().toISOString()
-      },
+      { id: `local-${Date.now()}`, body: draft.trim(), author: "Super Admin", at: new Date().toISOString() },
       ...current
     ]);
     setDraft("");
@@ -92,12 +86,11 @@ export function ProfileShell({ person }: { person: Person }) {
         <div>
           <h1 className="sf-page-title">{person.name}</h1>
           <p className="sf-page-sub">
-            {person.kind === "student" ? "Student" : "Faculty"} · {person.group} · {person.school}
+            {isStudent ? "Student" : "Faculty"} · {person.group} · {person.school}
           </p>
         </div>
-
         <div className="sf-profile-head-actions">
-          <StatusBadge tone={person.status === "At Risk" ? "warn" : "ok"}>
+          <StatusBadge tone={person.status === "At Risk" ? "warn" : person.status === "Other" ? "neutral" : "ok"}>
             {person.status}
           </StatusBadge>
           <a
@@ -126,253 +119,317 @@ export function ProfileShell({ person }: { person: Person }) {
       </nav>
 
       {tab === "personal" ? (
-        <ReadOnlyPanel
-          title="Personal details"
-          fields={person.personal}
-          salesforceId={person.salesforceId}
-        />
+        <ReadOnlyPanel title="Personal details" fields={person.personal} salesforceId={person.salesforceId} />
       ) : null}
 
       {tab === "academic" ? (
         <ReadOnlyPanel
-          title={person.kind === "student" ? "Enrollment & academic record" : "Class assignments"}
+          title={isStudent ? "Enrollment & academic record" : "Assignment summary"}
           fields={person.academic}
           salesforceId={person.salesforceId}
         />
       ) : null}
 
-      {tab === "goals" ? (
-        <div className="sf-panel">
-          <div className="sf-panel-head">
-            <h2>Goals</h2>
-            <span className="sf-panel-note">
-              Read-only · configured in Academic Goals
-            </span>
-          </div>
-          {person.goals.length === 0 ? (
-            <EmptyState title="No goals recorded" message="No active or historic goals for this person." />
+      {/* ---------------------------------------------------------- grades */}
+      {tab === "grades" ? (
+        <>
+          <Panel title="Current term grades" note="Read-only · owned by Salesforce">
+            {!person.grades?.length ? (
+              <EmptyState title="No grades recorded" message="No current-term grades for this student." />
+            ) : (
+              <Table
+                head={["Subject", "Teacher", "Grade", "Percent", "Assignments"]}
+                rows={person.grades.map((g) => [
+                  g.subject,
+                  g.teacher,
+                  <StatusBadge key="g" tone={g.percent >= 80 ? "ok" : g.percent >= 70 ? "warn" : "error"}>
+                    {g.grade}
+                  </StatusBadge>,
+                  `${g.percent}%`,
+                  `${g.assignmentsComplete} of ${g.assignmentsSet}`
+                ])}
+              />
+            )}
+          </Panel>
+
+          <Panel title="Grade history" note="Previous terms">
+            {!person.gradeHistory?.length ? (
+              <EmptyState title="No prior terms" message="No historic grades for this student yet." />
+            ) : (
+              <div className="sf-history">
+                {person.gradeHistory.map((term) => (
+                  <div className="sf-history-term" key={term.term}>
+                    <div className="sf-history-head">
+                      <span className="sf-history-title">{term.term}</span>
+                      <span className="sf-panel-note">GPA {term.gpa}</span>
+                    </div>
+                    <ul className="sf-history-list">
+                      {term.subjects.map((s) => (
+                        <li key={s.subject}>
+                          <span>{s.subject}</span>
+                          <strong>{s.grade}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
+        </>
+      ) : null}
+
+      {/* ------------------------------------------------------ attendance */}
+      {tab === "attendance" && isStudent ? (
+        <>
+          <Panel title="Attendance summary" note="Read-only · Genesis via Salesforce">
+            {!person.attendanceSummary ? (
+              <EmptyState title="No attendance data yet" message="No attendance records received." />
+            ) : (
+              <>
+                <div className="sf-stat-row">
+                  <div>
+                    <dt>Attendance rate</dt>
+                    <dd>{person.attendanceSummary.rate}</dd>
+                  </div>
+                  <div>
+                    <dt>Present</dt>
+                    <dd>{person.attendanceSummary.present}</dd>
+                  </div>
+                  <div>
+                    <dt>Absent</dt>
+                    <dd>{person.attendanceSummary.absent}</dd>
+                  </div>
+                  <div>
+                    <dt>Half day</dt>
+                    <dd>{person.attendanceSummary.halfDay}</dd>
+                  </div>
+                </div>
+
+                <h3 className="sf-subhead">By term</h3>
+                <Table
+                  head={["Term", "Rate", "Absences"]}
+                  rows={person.attendanceSummary.byTerm.map((t) => [t.term, t.rate, String(t.absences)])}
+                />
+              </>
+            )}
+          </Panel>
+
+          <Panel title="Attendance history" note="Most recent first">
+            {!person.attendance?.length ? (
+              <EmptyState title="No attendance data yet" message="No attendance records received." />
+            ) : (
+              <Table
+                head={["Date", "Status", "Period", "Note"]}
+                rows={person.attendance.map((a) => [
+                  a.date,
+                  <StatusBadge key="s" tone={a.status === "Present" ? "ok" : a.status === "Absent" ? "error" : "warn"}>
+                    {a.status}
+                  </StatusBadge>,
+                  a.classPeriod ?? "—",
+                  a.note ?? "—"
+                ])}
+              />
+            )}
+          </Panel>
+        </>
+      ) : null}
+
+      {/* ------------------------------- faculty attendance submission */}
+      {tab === "attendance" && !isStudent ? (
+        <Panel
+          title="Attendance submission"
+          note="Whether attendance was taken for each assigned class"
+        >
+          {!person.attendanceCompliance?.length ? (
+            <EmptyState title="No submission records" message="No attendance submission history." />
           ) : (
-            <div className="sf-table-wrap">
-              <table className="sf-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Goal</th>
-                    <th scope="col">Category</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Target</th>
-                    <th scope="col">Last updated</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {person.goals.map((goal) => (
-                    <tr key={goal.id}>
-                      <td>{goal.title}</td>
-                      <td>{goal.category}</td>
-                      <td>
-                        <StatusBadge
-                          tone={
-                            goal.status === "On track" || goal.status === "Complete"
-                              ? "ok"
-                              : goal.status === "Overdue"
-                                ? "error"
-                                : "warn"
-                          }
-                        >
-                          {goal.status}
-                        </StatusBadge>
-                      </td>
-                      <td>{goal.target}</td>
-                      <td>{formatSalesforceStamp(goal.lastUpdated)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              head={["Date", "Submitted", "Status", "Missing"]}
+              rows={person.attendanceCompliance.map((row) => [
+                row.date,
+                `${row.submitted} of ${row.expected}`,
+                <StatusBadge key="s" tone={row.submitted === row.expected ? "ok" : row.submitted === 0 ? "error" : "warn"}>
+                  {row.submitted === row.expected ? "Complete" : "Incomplete"}
+                </StatusBadge>,
+                row.missing.length ? row.missing.join(", ") : "—"
+              ])}
+            />
+          )}
+        </Panel>
+      ) : null}
+
+      {/* ----------------------------------------------------------- goals */}
+      {tab === "goals" ? (
+        <Panel title="Goals" note="Read-only · templates configured in Academic Goals">
+          {!person.goals?.length ? (
+            <EmptyState title="No goals recorded" message="No active or historic goals for this student." />
+          ) : (
+            <Table
+              head={["Goal", "Category", "Checkpoints", "Status", "Target", "Last updated"]}
+              rows={person.goals.map((g) => [
+                g.title,
+                g.category,
+                `${g.checkpointsMet} of ${g.checkpointsTotal}`,
+                <StatusBadge
+                  key="s"
+                  tone={
+                    g.status === "On track" || g.status === "Complete"
+                      ? "ok"
+                      : g.status === "Overdue"
+                        ? "error"
+                        : "warn"
+                  }
+                >
+                  {g.status}
+                </StatusBadge>,
+                g.target,
+                formatSalesforceStamp(g.lastUpdated)
+              ])}
+            />
           )}
           <Link className="sf-inline-link" href="/academic-goals">
             Open Academic Goals →
           </Link>
-        </div>
+        </Panel>
       ) : null}
 
-      {tab === "alerts" ? (
-        <div className="sf-panel">
-          <div className="sf-panel-head">
-            <h2>Alert history</h2>
-            <span className="sf-panel-note">Read-only · rules live in Alerts &amp; Notifications</span>
-          </div>
-          {person.alerts.length === 0 ? (
-            <EmptyState title="No alerts" message="No alerts have been raised for this person." />
+      {/* ---------------------------------------------------------- skills */}
+      {tab === "skills" ? (
+        <Panel title="Skills profile" note="Read-only · configured in Portal Configuration">
+          {!person.skills?.length ? (
+            <EmptyState title="No skills assessed" message="No skills profile recorded for this student." />
           ) : (
-            <div className="sf-table-wrap">
-              <table className="sf-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Rule</th>
-                    <th scope="col">Raised</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {person.alerts.map((alert) => (
-                    <tr key={alert.id}>
-                      <td>{alert.rule}</td>
-                      <td>{formatSalesforceStamp(alert.raised)}</td>
-                      <td>
-                        <StatusBadge
-                          tone={
-                            alert.status === "Resolved"
-                              ? "ok"
-                              : alert.overdue
-                                ? "error"
-                                : "warn"
-                          }
-                        >
-                          {alert.status}
-                          {alert.overdue ? " · past SLA" : ""}
+            <div className="sf-skill-groups">
+              {person.skills.map((group) => (
+                <div className="sf-skill-group" key={group.group}>
+                  <h3 className="sf-subhead">{group.group}</h3>
+                  <ul className="sf-chip-list">
+                    {group.subSkills.map((sub) => (
+                      <li key={sub.label}>
+                        <StatusBadge tone={LEVEL_TONE[sub.level]}>
+                          {sub.label} · {sub.level}
                         </StatusBadge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
+          )}
+          <Link className="sf-inline-link" href="/portal-configuration/skills-profile">
+            Open Skills Profile configuration →
+          </Link>
+        </Panel>
+      ) : null}
+
+      {/* ----------------------------------------------- development areas */}
+      {tab === "development" ? (
+        <Panel title="Development areas" note="Read-only · configured in Portal Configuration">
+          {!person.developmentAreas?.length ? (
+            <EmptyState title="No development areas" message="Nothing recorded for this student." />
+          ) : (
+            <div className="sf-skill-groups">
+              {person.developmentAreas.map((area) => (
+                <div className="sf-skill-group" key={area.area}>
+                  <h3 className="sf-subhead">{area.area}</h3>
+                  <ul className="sf-chip-list">
+                    {area.skills.map((skill) => (
+                      <li key={skill}>
+                        <span className="sf-status sf-status--neutral">{skill}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+          <Link className="sf-inline-link" href="/portal-configuration">
+            Open Development Areas configuration →
+          </Link>
+        </Panel>
+      ) : null}
+
+      {/* -------------------------------------------- classes / schedule */}
+      {tab === "classes" && isStudent ? (
+        <Panel title="Classes & schedule" note="Read-only · Genesis via Salesforce">
+          {!person.classes?.length ? (
+            <EmptyState title="No class enrolments" message="No classes recorded for this student." />
+          ) : (
+            <Table
+              head={["Class", "Teacher", "Period", "Room"]}
+              rows={person.classes.map((c) => [c.className, c.teacher, c.period, c.room])}
+            />
+          )}
+        </Panel>
+      ) : null}
+
+      {tab === "classes" && !isStudent ? (
+        <>
+          <Panel title="Classes & performance" note="Read-only · rolls up from Salesforce reports">
+            {!person.teachingClasses?.length ? (
+              <EmptyState title="No classes assigned" message="No teaching assignments recorded." />
+            ) : (
+              <Table
+                head={["Class", "Roster", "Avg. attendance", "Assignment completion", "Open alerts"]}
+                rows={person.teachingClasses.map((c) => [
+                  c.className,
+                  String(c.roster),
+                  c.avgAttendance,
+                  c.assignmentCompletion,
+                  <StatusBadge key="a" tone={c.openAlerts > 2 ? "warn" : "neutral"}>
+                    {c.openAlerts}
+                  </StatusBadge>
+                ])}
+              />
+            )}
+          </Panel>
+
+          <Panel title="Schedule" note="Assigned periods">
+            {!person.schedule?.length ? (
+              <EmptyState title="No schedule" message="No timetable recorded." />
+            ) : (
+              <Table
+                head={["Period", "Class", "Room"]}
+                rows={person.schedule.map((c) => [c.period, c.className, c.room])}
+              />
+            )}
+          </Panel>
+        </>
+      ) : null}
+
+      {/* ---------------------------------------------------------- alerts */}
+      {tab === "alerts" ? (
+        <Panel
+          title={isStudent ? "Alert history" : "Student alerts"}
+          note="Read-only · rules live in Alerts & Notifications"
+        >
+          {!person.alerts.length ? (
+            <EmptyState
+              title="No alerts"
+              message={isStudent ? "No alerts raised for this student." : "No alerts involving this teacher's students."}
+            />
+          ) : (
+            <Table
+              head={["Rule", "Raised", "Raised by", "Status"]}
+              rows={person.alerts.map((a) => [
+                a.rule,
+                formatSalesforceStamp(a.raised),
+                a.raisedBy ?? "—",
+                <StatusBadge key="s" tone={a.status === "Resolved" ? "ok" : a.overdue ? "error" : "warn"}>
+                  {a.status}
+                  {a.overdue ? " · past SLA" : ""}
+                </StatusBadge>
+              ])}
+            />
           )}
           <Link className="sf-inline-link" href="/alerts">
             Open Alerts &amp; Notifications →
           </Link>
-        </div>
+        </Panel>
       ) : null}
 
-      {tab === "attendance" ? (
-        <div className="sf-panel">
-          <div className="sf-panel-head">
-            <h2>Attendance</h2>
-            <span className="sf-panel-note">Read-only · sourced from Genesis via Salesforce</span>
-          </div>
-          {person.attendance.length === 0 ? (
-            <EmptyState
-              title="No attendance data yet"
-              message="No attendance records have been received for this person."
-            />
-          ) : (
-            <div className="sf-table-wrap">
-              <table className="sf-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Note</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {person.attendance.map((row) => (
-                    <tr key={row.date}>
-                      <td>{row.date}</td>
-                      <td>
-                        <StatusBadge
-                          tone={
-                            row.status === "Present"
-                              ? "ok"
-                              : row.status === "Absent"
-                                ? "error"
-                                : "warn"
-                          }
-                        >
-                          {row.status}
-                        </StatusBadge>
-                      </td>
-                      <td>{row.note ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      ) : null}
-
-      {tab === "wellbeing" ? (
-        <div className="sf-panel">
-          <div className="sf-panel-head">
-            <h2>Well-being log</h2>
-            <span className="sf-panel-note">Read-only</span>
-          </div>
-          {/* Flagged: well-being is a new data domain and its Salesforce object
-              is unconfirmed (Portal Specs Step 5). */}
-          <p className="sf-card-hint">Source object for logged feeling not yet confirmed.</p>
-          {person.wellbeing.length === 0 ? (
-            <EmptyState title="No well-being entries" message="Nothing logged for this person." />
-          ) : (
-            <div className="sf-table-wrap">
-              <table className="sf-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col">Logged feeling</th>
-                    <th scope="col">Note</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {person.wellbeing.map((row) => (
-                    <tr key={row.date}>
-                      <td>{row.date}</td>
-                      <td>
-                        <StatusBadge
-                          tone={
-                            row.feeling === "Pleasant"
-                              ? "ok"
-                              : row.feeling === "Neutral"
-                                ? "neutral"
-                                : "warn"
-                          }
-                        >
-                          {row.feeling}
-                        </StatusBadge>
-                      </td>
-                      <td>{row.note ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      ) : null}
-
-      {tab === "events" ? (
-        <div className="sf-panel">
-          <div className="sf-panel-head">
-            <h2>Event participation</h2>
-            <span className="sf-panel-note">Read-only</span>
-          </div>
-          {person.events.length === 0 ? (
-            <EmptyState title="No event participation" message="No events recorded for this person." />
-          ) : (
-            <div className="sf-table-wrap">
-              <table className="sf-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Event</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Role</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {person.events.map((event) => (
-                    <tr key={event.id}>
-                      <td>{event.name}</td>
-                      <td>{event.date}</td>
-                      <td>{event.role}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      ) : null}
-
+      {/* ----------------------------------------------------------- notes */}
       {tab === "notes" ? (
         <>
           <div className="sf-panel">
@@ -381,8 +438,8 @@ export function ProfileShell({ person }: { person: Person }) {
               <span className="sf-status sf-status--ok">Editable in Admin</span>
             </div>
             <p className="sf-card-hint">
-              Admin-native — not written back to Salesforce. TODO: local state only until the
-              Admin DB contract exists.
+              Admin-native — not written back to Salesforce. TODO: local state only until the Admin
+              DB contract exists.
             </p>
 
             <div className="sf-note-form">
@@ -462,6 +519,53 @@ export function ProfileShell({ person }: { person: Person }) {
         </>
       ) : null}
     </section>
+  );
+}
+
+function Panel({
+  title,
+  note,
+  children
+}: {
+  title: string;
+  note?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="sf-panel">
+      <div className="sf-panel-head">
+        <h2>{title}</h2>
+        {note ? <span className="sf-panel-note">{note}</span> : null}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Table({ head, rows }: { head: string[]; rows: React.ReactNode[][] }) {
+  return (
+    <div className="sf-table-wrap">
+      <table className="sf-table">
+        <thead>
+          <tr>
+            {head.map((h) => (
+              <th scope="col" key={h}>
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, index) => (
+            <tr key={index}>
+              {row.map((cell, cellIndex) => (
+                <td key={cellIndex}>{cell}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

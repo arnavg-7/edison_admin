@@ -1,8 +1,16 @@
 import type { BarGroup, DonutSlice, FunnelStage, StackRow } from "@/components/sf/charts";
 
 /**
- * Figures transcribed from the reference Salesforce dashboards so the build can
- * be compared against them directly.
+ * District metric figures.
+ *
+ * The reference Salesforce dashboards were a *visual* reference only. Metrics
+ * kept here all map onto data Edison actually has — enrollment and attendance
+ * from Genesis, assignments from Classroom, goals from the Admin DB.
+ *
+ * Deliberately removed: Total Events Held, Event Participants and Well-Being
+ * Trend. Those appeared only in the screenshots, are absent from Edison's scope
+ * docs, and have no source system — the Portal Specs flag them as new data
+ * domains. Re-adding them is a scope decision, not a gap to fill.
  *
  * TODO: every value here is display data, not a live Salesforce pull. Replace
  * with real report results once the API pattern is confirmed (brief open item 5).
@@ -10,8 +18,6 @@ import type { BarGroup, DonutSlice, FunnelStage, StackRow } from "@/components/s
 
 export const numberOfStudents = 1702;
 export const totalFaculty = 82;
-export const totalEventsHeld = 197;
-export const eventParticipants = 22760;
 
 /** Teacher-Student Ratio — stacked 100% bars per program. */
 export const teacherStudentRatio: StackRow[] = [
@@ -138,42 +144,6 @@ export const studentAttendanceBySchool: BarGroup[] = [
   }
 ];
 
-/**
- * Well-Being Trend — logged feeling over time.
- *
- * TODO: well-being is a new data domain. The Salesforce object and field
- * backing "logged feeling" are not confirmed (Portal Specs Step 5) — these
- * groupings mirror the reference screenshot rather than a known schema.
- */
-export const wellBeingTrend: BarGroup[] = [
-  {
-    label: "—",
-    rows: [
-      { label: "Neutral", value: 9, colorIndex: 0 },
-      { label: "Pleasant", value: 8, colorIndex: 2 },
-      { label: "Unpleasant", value: 16, colorIndex: 1 }
-    ]
-  },
-  {
-    label: "26/06/2025",
-    rows: [
-      { label: "Neutral", value: 7, colorIndex: 0 },
-      { label: "Pleasant", value: 6, colorIndex: 2 }
-    ]
-  },
-  {
-    label: "01/07/2025",
-    rows: [
-      { label: "Neutral", value: 6, colorIndex: 0 },
-      { label: "Pleasant", value: 6, colorIndex: 2 },
-      { label: "Unpleasant", value: 14, colorIndex: 1 }
-    ]
-  },
-  { label: "04/07/2025", rows: [{ label: "Neutral", value: 1, colorIndex: 0 }] },
-  { label: "08/07/2025", rows: [{ label: "Unpleasant", value: 1, colorIndex: 1 }] },
-  { label: "18/07/2025", rows: [{ label: "Neutral", value: 1, colorIndex: 0 }] }
-];
-
 export const studentsStatus: FunnelStage[] = [
   { label: "On Track", value: 1201, colorIndex: 0 },
   { label: "At Risk", value: 460, colorIndex: 2 },
@@ -202,12 +172,6 @@ export const ATTENDANCE_SERIES = [
   { label: "Present", colorIndex: 0 },
   { label: "Absent", colorIndex: 1 },
   { label: "Attended half a day", colorIndex: 2 }
-];
-
-export const WELLBEING_SERIES = [
-  { label: "Neutral", colorIndex: 0 },
-  { label: "Pleasant", colorIndex: 2 },
-  { label: "Unpleasant", colorIndex: 1 }
 ];
 
 export const GRADE_SERIES = [

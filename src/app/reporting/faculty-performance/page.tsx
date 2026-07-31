@@ -1,0 +1,83 @@
+"use client";
+
+import { useReportFilters } from "@/lib/filters";
+import { facultyClassRows } from "@/lib/data/reporting";
+import { FreshnessStamp } from "@/components/shared/FreshnessStamp";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ScopeBreadcrumb } from "@/components/reporting/ScopeBreadcrumb";
+
+export default function FacultyPerformancePage() {
+  const { filters } = useReportFilters();
+  const scope = { school: filters.school, grade: filters.grade, section: filters.section };
+  const rows = facultyClassRows(scope);
+
+  return (
+    <>
+      <ScopeBreadcrumb />
+
+      <div className="admin-content-panel">
+        <div className="home-panel-head">
+          <h2>Faculty class performance</h2>
+          <span className="config-status-summary">
+            Rolls up to class level — no individual faculty profiles
+          </span>
+        </div>
+
+        {rows.length === 0 ? (
+          <EmptyState
+            title="No classes in this scope"
+            message="Widen the filters above to see class performance."
+          />
+        ) : (
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th>Teacher</th>
+                <th>Avg. attendance</th>
+                <th>Assignment completion</th>
+                <th>Roster</th>
+                <th>Open alerts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id}>
+                  <td>{row.className}</td>
+                  <td>{row.teacher}</td>
+                  <td>{row.avgAttendance.toFixed(1)}%</td>
+                  <td>{row.assignmentCompletion.toFixed(1)}%</td>
+                  <td>{row.rosterSize}</td>
+                  <td>
+                    <StatusBadge tone={row.openAlerts > 2 ? "warn" : "neutral"}>
+                      {row.openAlerts}
+                    </StatusBadge>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        <div className="dual-stamp">
+          <FreshnessStamp
+            asOf="2026-07-31T06:15:00-04:00"
+            source="genesis"
+            cadence="Attendance — once daily"
+          />
+          <FreshnessStamp
+            asOf="2026-07-31T12:47:00-04:00"
+            source="classroom"
+            cadence="Assignments — near real-time"
+          />
+          <FreshnessStamp
+            asOf="2026-07-31T13:02:00-04:00"
+            source="admin_db"
+            cadence="Alerts — immediate"
+          />
+        </div>
+      </div>
+    </>
+  );
+}

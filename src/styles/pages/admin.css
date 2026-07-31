@@ -972,6 +972,39 @@
   margin-bottom: 0;
 }
 
+/* Integrations */
+
+.ingest-stats {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.ingest-stats .stat-small {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.api-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #d7d7e2;
+  font-size: 13px;
+  color: var(--admin-subtle);
+}
+
+.api-meta-row strong {
+  color: var(--admin-text);
+  font-weight: 500;
+}
+
+@media (max-width: 1200px) {
+  .ingest-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;

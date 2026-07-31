@@ -79,6 +79,70 @@ export type ApiSyncStatus = {
   recordsSynced: number;
 };
 
+export type TimeWindow = "24h" | "7d" | "30d";
+
+export const TIME_WINDOWS: { value: TimeWindow; label: string }[] = [
+  { value: "24h", label: "Last 24 hours" },
+  { value: "7d", label: "Last 7 days" },
+  { value: "30d", label: "Last 30 days" }
+];
+
+/**
+ * Genesis file history. One row per daily drop — a file-per-day shape, unlike
+ * the continuous API logs, which is why the two are kept as separate views.
+ */
+export type GenesisHistoryEntry = {
+  date: string;
+  arrivedAt: string | null;
+  status: StatusTone;
+  statusLabel: string;
+  rows: number;
+  errors: number;
+};
+
+export const genesisHistory: GenesisHistoryEntry[] = [
+  {
+    date: "2026-07-31",
+    arrivedAt: "2026-07-31T05:12:00-04:00",
+    status: "warn",
+    statusLabel: "Validation errors",
+    rows: 95188,
+    errors: 476
+  },
+  {
+    date: "2026-07-30",
+    arrivedAt: "2026-07-30T05:04:00-04:00",
+    status: "ok",
+    statusLabel: "Success",
+    rows: 95102,
+    errors: 0
+  },
+  {
+    date: "2026-07-29",
+    arrivedAt: null,
+    status: "error",
+    statusLabel: "File not received",
+    rows: 0,
+    errors: 0
+  },
+  {
+    date: "2026-07-28",
+    arrivedAt: "2026-07-28T05:09:00-04:00",
+    status: "ok",
+    statusLabel: "Success",
+    rows: 94980,
+    errors: 0
+  },
+  {
+    date: "2026-07-27",
+    arrivedAt: "2026-07-27T05:18:00-04:00",
+    status: "ok",
+    statusLabel: "Success",
+    rows: 94874,
+    errors: 0
+  }
+];
+
 export const apiSyncStatuses: ApiSyncStatus[] = [
   {
     id: "classroom",
@@ -101,5 +165,70 @@ export const apiSyncStatuses: ApiSyncStatus[] = [
     errorRate: "1.80%",
     rateLimit: "889 / 1,000 per min",
     recordsSynced: 9044
+  }
+];
+
+/**
+ * Combined sync/error log across both patterns. `source` is what the Source
+ * filter narrows on; file-ingest and API entries are interleaved here but stay
+ * separately filterable.
+ */
+export type SyncLogEntry = {
+  id: string;
+  at: string;
+  source: "genesis" | "classroom" | "calendar";
+  level: StatusTone;
+  message: string;
+};
+
+export const syncLog: SyncLogEntry[] = [
+  {
+    id: "sl-1",
+    at: "2026-07-31T12:47:00-04:00",
+    source: "classroom",
+    level: "ok",
+    message: "Sync completed — 38,412 records"
+  },
+  {
+    id: "sl-2",
+    at: "2026-07-31T12:31:00-04:00",
+    source: "calendar",
+    level: "warn",
+    message: "Sync completed with 163 retried requests (rate limit pressure)"
+  },
+  {
+    id: "sl-3",
+    at: "2026-07-31T11:58:00-04:00",
+    source: "calendar",
+    level: "error",
+    message: "429 Too Many Requests — backing off for 60s"
+  },
+  {
+    id: "sl-4",
+    at: "2026-07-31T05:12:00-04:00",
+    source: "genesis",
+    level: "warn",
+    message: "Daily file processed — 476 validation errors across 2 file types"
+  },
+  {
+    id: "sl-5",
+    at: "2026-07-31T05:00:00-04:00",
+    source: "genesis",
+    level: "ok",
+    message: "Daily file detected — beginning ingest"
+  },
+  {
+    id: "sl-6",
+    at: "2026-07-30T08:07:00-04:00",
+    source: "genesis",
+    level: "ok",
+    message: "Manual re-run of 2026-07-30 daily file completed"
+  },
+  {
+    id: "sl-7",
+    at: "2026-07-29T06:30:00-04:00",
+    source: "genesis",
+    level: "error",
+    message: "Daily file not received by 06:30 cutoff"
   }
 ];

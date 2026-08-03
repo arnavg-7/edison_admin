@@ -65,12 +65,6 @@ export function NavIcon({ name }: { name: SectionId }) {
           <path d="M10.3 19.5a2 2 0 0 0 3.4 0" />
         </svg>
       );
-    case "resources":
-      return (
-        <svg {...base}>
-          <path d="M3.5 6.5A2 2 0 0 1 5.5 4.5H10l1.8 2.6h6.7a2 2 0 0 1 2 2v9.4a2 2 0 0 1-2 2H5.5a2 2 0 0 1-2-2V6.5Z" />
-        </svg>
-      );
     case "system-settings":
       return (
         <svg {...base}>

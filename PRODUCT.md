@@ -30,9 +30,8 @@ report reads as stale rather than being silently presented as current.
 ## Operating Context
 
 - Morning check-in ritual on desktop; needs to orient fast, not reward long reading.
-- All ten sections: Home, Needs Attention, Reporting & Analytics, Student & Faculty 360, Portal
-  Configuration, Academic Goals, Alerts & Notifications, Resources & Content, System Settings,
-  Integrations.
+- All nine sections: Home, Needs Attention, Reporting & Analytics, Student & Faculty 360, Portal
+  Configuration, Academic Goals, Alerts & Notifications, System Settings, Integrations.
 - Needs Attention is the one cross-system triage queue: at-risk students, overdue alerts, sync
   failures, and pending configuration, worst-first.
 - Student & Faculty 360 profiles are read-only except internal notes/flags — do not widen this

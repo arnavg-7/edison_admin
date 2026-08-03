@@ -15,7 +15,6 @@ export type SectionId =
   | "skills-development"
   | "academic-goals"
   | "alerts"
-  | "resources"
   | "system-settings"
   | "integrations";
 
@@ -32,7 +31,6 @@ export const SECTIONS: Section[] = [
   { id: "skills-development", label: "Skills & Development", href: "/skills-development" },
   { id: "academic-goals", label: "Academic Goals", href: "/academic-goals" },
   { id: "alerts", label: "Alerts & Notifications", href: "/alerts" },
-  { id: "resources", label: "Resources & Content", href: "/resources" },
   { id: "system-settings", label: "System Settings", href: "/system-settings" },
   { id: "integrations", label: "Integrations", href: "/integrations" }
 ];

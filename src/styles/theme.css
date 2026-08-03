@@ -413,6 +413,17 @@ body {
   color: var(--sf-text-muted);
 }
 
+/** Two fields side by side, e.g. a From/To date pair. */
+.sf-field-row {
+  display: flex;
+  gap: 12px;
+}
+
+.sf-field-row .sf-field {
+  flex: 1;
+  min-width: 0;
+}
+
 .sf-field input,
 .sf-field select,
 .sf-field textarea,

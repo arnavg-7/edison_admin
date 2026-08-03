@@ -4,16 +4,9 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { RefreshIcon } from "@hugeicons/core-free-icons";
 import { formatSalesforceStamp } from "@/lib/format";
 
-/** "Goal Completion %" -> "goal-completion". Matches card titles 1:1 since
-    every MetricCard/CoreMetricCard on both Home and /reporting is keyed by
-    the same title string. */
-function cardSlug(title: string): string {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-}
-
 /**
  * The Salesforce-style metric card: title, refresh tool, body slot, then a
- * footer with the underlying report link and its own freshness stamp.
+ * footer carrying the figure's own freshness stamp.
  *
  * The stamp is per-card by design — it reflects when that Salesforce report
  * last refreshed, so a stale report shows a stale time rather than a wrong
@@ -21,7 +14,8 @@ function cardSlug(title: string): string {
  */
 export function MetricCard({
   title,
-  /** Salesforce report name, shown in the footer as "View Report (name)". */
+  /** Salesforce report this figure comes from; named in the stamp's tooltip so
+      the number stays traceable to its source. */
   report,
   asOf,
   span = "sf-col-4",
@@ -35,10 +29,8 @@ export function MetricCard({
   children: React.ReactNode;
   onRefresh?: () => void;
 }) {
-  const slug = cardSlug(title);
-
   return (
-    <section className={`sf-card ${span}`} id={slug}>
+    <section className={`sf-card ${span}`}>
       <div className="sf-card-head">
         <h2 className="sf-card-title">{title}</h2>
         <div className="sf-card-tools">
@@ -57,13 +49,9 @@ export function MetricCard({
       <div className="sf-card-body">{children}</div>
 
       <div className="sf-card-foot">
-        {/* TODO: destination unconfirmed — brief open item 7. Deep-links to this
-            card's own place in the in-app Metrics catalog; may need to point at
-            Salesforce directly instead. */}
-        <a className="sf-card-report" href={`/reporting#${slug}`} title={`View Report (${report})`}>
-          View Report ({report})
-        </a>
-        <span className="sf-card-stamp">As of {formatSalesforceStamp(asOf)}</span>
+        <span className="sf-card-stamp" title={`Source report: ${report}`}>
+          As of {formatSalesforceStamp(asOf)}
+        </span>
       </div>
     </section>
   );

@@ -3,15 +3,14 @@
 import { useEffect, useState } from "react";
 import {
   SKILL_LEVELS,
-  skillsProfile,
-  type SchoolLevel,
+  skillsProfileFor,
   type SkillGroup,
   type SkillLevel
-} from "@/lib/data/portalConfig";
+} from "@/lib/data/skillsDevelopment";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 
-// TODO: local state only — persist through the Admin DB portal-configuration
+// TODO: local state only — persist through the Admin DB skills-and-development
 // contract when it exists.
 
 let seq = 0;
@@ -21,12 +20,13 @@ type SubSkillDraft = { label: string; level: SkillLevel; description: string };
 
 const emptyDraft: SubSkillDraft = { label: "", level: "high", description: "" };
 
-export function SkillsProfileEditor({ level }: { level: SchoolLevel }) {
-  const [groups, setGroups] = useState<SkillGroup[]>(skillsProfile[level]);
+export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; grade: string }) {
+  const [groups, setGroups] = useState<SkillGroup[]>(() => skillsProfileFor(schoolId, grade));
 
+  // Each grade is its own dataset, so changing scope swaps the whole list out.
   useEffect(() => {
-    setGroups(skillsProfile[level]);
-  }, [level]);
+    setGroups(skillsProfileFor(schoolId, grade));
+  }, [schoolId, grade]);
 
   const [addingGroup, setAddingGroup] = useState(false);
   const [groupTitle, setGroupTitle] = useState("");

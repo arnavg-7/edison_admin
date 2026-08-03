@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { salesforceRecordUrl, type InternalNote, type Person, type ReadOnlyField } from "@/lib/data/people";
+import { gradeConfigHref } from "@/lib/data/skillsDevelopment";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatSalesforceStamp } from "@/lib/format";
@@ -296,7 +297,7 @@ export function ProfileShell({ person }: { person: Person }) {
 
       {/* ---------------------------------------------------------- skills */}
       {tab === "skills" ? (
-        <Panel title="Skills profile" note="Read-only · configured in Portal Configuration">
+        <Panel title="Skills profile" note="Read-only · configured in Skills & Development">
           {!person.skills?.length ? (
             <EmptyState title="No skills assessed" message="No skills profile recorded for this student." />
           ) : (
@@ -317,15 +318,15 @@ export function ProfileShell({ person }: { person: Person }) {
               ))}
             </div>
           )}
-          <Link className="sf-inline-link" href="/portal-configuration/skills-profile">
-            Open Skills Profile configuration →
+          <Link className="sf-inline-link" href={gradeConfigHref(person.school, person.group)}>
+            Configure skills for {person.group} →
           </Link>
         </Panel>
       ) : null}
 
       {/* ----------------------------------------------- development areas */}
       {tab === "development" ? (
-        <Panel title="Development areas" note="Read-only · configured in Portal Configuration">
+        <Panel title="Development areas" note="Read-only · configured in Skills & Development">
           {!person.developmentAreas?.length ? (
             <EmptyState title="No development areas" message="Nothing recorded for this student." />
           ) : (
@@ -344,8 +345,8 @@ export function ProfileShell({ person }: { person: Person }) {
               ))}
             </div>
           )}
-          <Link className="sf-inline-link" href="/portal-configuration">
-            Open Development Areas configuration →
+          <Link className="sf-inline-link" href={gradeConfigHref(person.school, person.group)}>
+            Configure development areas for {person.group} →
           </Link>
         </Panel>
       ) : null}

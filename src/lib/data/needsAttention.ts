@@ -148,11 +148,11 @@ export const attentionItems: AttentionItem[] = [
     id: "na-9",
     category: "pending-config",
     severity: "medium",
-    subject: "KG development areas — Room To Grow unpublished",
+    subject: "Kindergarten development areas — Room To Grow unpublished",
     reason: "Draft area with 1 skill has not been published to the student portal",
     flaggedAt: "2026-07-12T10:00:00-04:00",
-    href: "/portal-configuration",
-    resolveLabel: "Open Portal Configuration"
+    href: "/skills-development/edison-kg/K",
+    resolveLabel: "Open Kindergarten configuration"
   },
   {
     id: "na-10",

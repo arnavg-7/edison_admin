@@ -51,7 +51,7 @@ and performance, attendance submission compliance, and student alerts they raise
 | Needs Attention | Cross-system triage: at-risk, overdue alerts, sync failures, pending config |
 | Reporting & Analytics | 12-metric catalog, drill-down reports, custom builder |
 | Student & Faculty 360 | Individual profiles — read-only except internal notes and flags |
-| Portal Configuration | Development areas, skills profile, faculty dashboard (HS/KG only) |
+| Skills & Development | School → grade drill-down, then per-grade development areas and skills profile |
 | Academic Goals | Templates, categories, progress tracking |
 | Alerts & Notifications | Alert rules, notification templates |
 | Resources & Content | External-link CRUD |

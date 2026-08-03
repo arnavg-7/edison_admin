@@ -41,7 +41,7 @@ export function NavIcon({ name }: { name: SectionId }) {
           <path d="M18.5 14.4c1.8.7 3 2.2 3 4.1" />
         </svg>
       );
-    case "portal-configuration":
+    case "skills-development":
       return (
         <svg {...base}>
           <path d="M4 6h16M4 12h16M4 18h16" />

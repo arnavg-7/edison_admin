@@ -34,12 +34,14 @@ Last reviewed: 2026-07-31
 | Decision | Status |
 |---|---|
 | **Single Super Admin role** | v2. All ten sections visible to everyone; no persona gating. The v1 permission model (`SECTION_ACCESS`, `SectionGuard`, `RoleSwitcher`) was deleted, not left inert. |
-| **Portal Configuration covers HS and KG only** | ES/MS deliberately absent. Stated on the screen so it reads as intentional. |
+| **Portal Configuration renamed to Skills & Development** | Renamed 2026-08-03, and restructured from level tabs to a school → grade drill-down. Content is now per-grade, not per school level. |
+| **Skills & Development seeds HS and KG only** | Unchanged from the original HS/KG scope. All five Genesis schools appear in the picker, but ES/MS grades open empty and say so on the screen. The editors still work there — adding content is a scope extension. |
 | **HS/KG layout & branding editors removed** | Removed on request 2026-07-31. Named in the v1 inventory, so restoring them is a scope change. |
+| **Faculty Dashboard component toggles removed** | Removed on request 2026-08-03, resolving the earlier ambiguous "remove the Schedule strip" note — the whole screen went, not just that one row. Named in the inventory, so restoring it is a scope change. |
 | **Alerts & Resources built to simple scope** | Alert rules + notification templates; CRUD over external links. No rules engine, escalation, categorization or access control. |
 | **System Settings merged** | One tab set — grade levels, subjects, calendar, announcements, users, audit log. |
 | **Reporting goes to individual level** | v2 reverses v1's class ceiling. Student Attendance links to Student 360, faculty names to Faculty 360. The v1 "no individual profiles" labels were removed as false. |
-| **The Module filter on two Portal Config screens is inert** | Specified by the inventory but each screen is its own module. Do not "fix" or remove it. |
+| **The Module filter is gone** | It was an inert single-option control on the two former Portal Config screens. The school/grade drill-down replaced the filter bar those screens carried, so it went with them. |
 
 ### Still unanswered from the inventory
 

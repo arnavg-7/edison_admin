@@ -11,7 +11,7 @@ export type SectionFilterConfig = {
 };
 
 /**
- * Page-level filters (Portal Configuration, Integrations). Local state rather
+ * Page-level filters (Integrations). Local state rather
  * than URL-persisted — only the Reporting global bar needs to survive
  * drill-down and sharing.
  */

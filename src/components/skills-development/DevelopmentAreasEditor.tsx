@@ -4,29 +4,36 @@ import { useEffect, useState } from "react";
 import {
   DEV_AREA_ICONS,
   DEV_AREA_TONES,
-  developmentAreas,
+  developmentAreasFor,
   type DevAreaIcon as IconName,
   type DevAreaTone,
-  type DevelopmentArea,
-  type SchoolLevel
-} from "@/lib/data/portalConfig";
+  type DevelopmentArea
+} from "@/lib/data/skillsDevelopment";
 import { DevAreaIcon } from "./DevAreaIcon";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 
-// TODO: local state only — persist through the Admin DB portal-configuration
+// TODO: local state only — persist through the Admin DB skills-and-development
 // contract when it exists.
 
 let seq = 0;
 const nextId = (prefix: string) => `${prefix}-local-${Date.now()}-${seq++}`;
 
-export function DevelopmentAreasEditor({ level }: { level: SchoolLevel }) {
-  const [areas, setAreas] = useState<DevelopmentArea[]>(developmentAreas[level]);
+export function DevelopmentAreasEditor({
+  schoolId,
+  grade
+}: {
+  schoolId: string;
+  grade: string;
+}) {
+  const [areas, setAreas] = useState<DevelopmentArea[]>(() =>
+    developmentAreasFor(schoolId, grade)
+  );
 
-  // The School Level filter swaps the whole dataset out.
+  // Each grade is its own dataset, so changing scope swaps the whole list out.
   useEffect(() => {
-    setAreas(developmentAreas[level]);
-  }, [level]);
+    setAreas(developmentAreasFor(schoolId, grade));
+  }, [schoolId, grade]);
 
   const [addingArea, setAddingArea] = useState(false);
   const [areaDraft, setAreaDraft] = useState<{

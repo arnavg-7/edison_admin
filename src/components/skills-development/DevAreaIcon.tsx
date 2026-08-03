@@ -1,4 +1,4 @@
-import type { DevAreaIcon as IconName } from "@/lib/data/portalConfig";
+import type { DevAreaIcon as IconName } from "@/lib/data/skillsDevelopment";
 
 export function DevAreaIcon({ name }: { name: IconName }) {
   const common = {

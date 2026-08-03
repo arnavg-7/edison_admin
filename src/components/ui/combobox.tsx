@@ -14,7 +14,22 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowDown01Icon, Cancel01Icon, Tick02Icon } from "@hugeicons/core-free-icons"
 
-const Combobox = ComboboxPrimitive.Root
+/**
+ * Defaults `autoComplete` to "none" (static list, not filtered against the
+ * input's text) rather than Base UI's own "list" default. Almost every
+ * Combobox in this app stands in for a plain select over a small fixed set of
+ * options — with the default "list" behaviour, opening one whose value is
+ * already set filters the popup down to just the single item matching that
+ * exact text, hiding every other option. Genuine search-as-you-type pickers
+ * (e.g. choosing one student out of hundreds) opt back in explicitly with
+ * `autoComplete="list"`.
+ */
+function Combobox<Value, Multiple extends boolean | undefined = false>({
+  autoComplete = "none",
+  ...props
+}: ComboboxPrimitive.Root.Props<Value, Multiple>) {
+  return <ComboboxPrimitive.Root autoComplete={autoComplete} {...props} />
+}
 
 function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
   return <ComboboxPrimitive.Value data-slot="combobox-value" {...props} />

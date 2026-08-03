@@ -97,6 +97,7 @@ export function CreateAlertModal({
           value={studentOptions.find((option) => option.value === studentId) ?? null}
           onValueChange={(option) => setStudentId(option?.value ?? "")}
           isItemEqualToValue={isOptionEqual}
+          autoComplete="list"
         >
           <ComboboxInput placeholder="Select a student" />
           <ComboboxContent>

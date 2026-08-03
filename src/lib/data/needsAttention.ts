@@ -1,7 +1,7 @@
 // TODO: replace with real sources. Categories map to: at-risk (derived from
 // Salesforce attendance, goals, assignments and grades), overdue alerts (Alerts
-// SLA field), sync failures (Integrations failure states), pending config
-// (unconfigured items across Portal Config / Academic Goals / System Settings).
+// SLA field), pending config (unconfigured items across Portal Config /
+// Academic Goals / System Settings).
 //
 // At-risk signals use only data Edison actually holds. An earlier draft included
 // a well-being rule taken from the reference screenshots; well-being is not in
@@ -9,14 +9,13 @@
 
 import type { StatusTone } from "./types";
 
-export type AttentionCategory = "at-risk" | "overdue-alert" | "sync-failure" | "pending-config";
+export type AttentionCategory = "at-risk" | "overdue-alert" | "pending-config";
 
 export type AttentionSeverity = "critical" | "high" | "medium";
 
 export const ATTENTION_CATEGORIES: { value: AttentionCategory; label: string }[] = [
   { value: "at-risk", label: "At risk" },
   { value: "overdue-alert", label: "Overdue alerts" },
-  { value: "sync-failure", label: "Sync failures" },
   { value: "pending-config", label: "Pending config" }
 ];
 
@@ -117,36 +116,6 @@ export const attentionItems: AttentionItem[] = [
     resolveLabel: "Review alert rules"
   },
   {
-    id: "na-6",
-    category: "sync-failure",
-    severity: "critical",
-    subject: "Genesis daily file — not received",
-    reason: "No file delivered by the 06:30 cutoff on 29 Jun; attendance figures are stale",
-    flaggedAt: "2026-07-17T06:30:00-04:00",
-    href: "/integrations",
-    resolveLabel: "Open Genesis ingest"
-  },
-  {
-    id: "na-7",
-    category: "sync-failure",
-    severity: "high",
-    subject: "Google Calendar API — elevated error rate",
-    reason: "1.80% error rate with rate-limit pressure at 889 of 1,000 requests per minute",
-    flaggedAt: "2026-07-17T11:58:00-04:00",
-    href: "/integrations/calendar",
-    resolveLabel: "Open Calendar sync"
-  },
-  {
-    id: "na-8",
-    category: "sync-failure",
-    severity: "medium",
-    subject: "Homeroom mapping — awaiting Genesis data",
-    reason: "Homeroom courses present for 1 of 4 schools, 0 enrollments in any school",
-    flaggedAt: "2026-07-10T05:12:00-04:00",
-    href: "/integrations",
-    resolveLabel: "Open Genesis ingest"
-  },
-  {
     id: "na-10",
     category: "pending-config",
     severity: "medium",
@@ -191,7 +160,7 @@ export function attentionCountsByCategory(): Record<AttentionCategory, number> {
       }
       return acc;
     },
-    { "at-risk": 0, "overdue-alert": 0, "sync-failure": 0, "pending-config": 0 } as Record<
+    { "at-risk": 0, "overdue-alert": 0, "pending-config": 0 } as Record<
       AttentionCategory,
       number
     >

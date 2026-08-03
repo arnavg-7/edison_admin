@@ -4,43 +4,61 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ADMIN_ROLE_LABEL, SECTIONS } from "@/lib/nav";
 import { NavIcon } from "./NavIcon";
+import {
+  Sidebar as SidebarPrimitive,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem
+} from "@/components/ui/sidebar";
 
 export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="sf-sidebar">
-      <div className="sf-brand">
-        <div className="sf-brand-name">Edison360 Admin</div>
-        <div className="sf-brand-role">{ADMIN_ROLE_LABEL}</div>
-      </div>
+    <SidebarPrimitive collapsible="icon">
+      <SidebarHeader>
+        <div className="sf-brand">
+          <div className="sf-brand-name group-data-[collapsible=icon]:hidden">Edison360 Admin</div>
+          <div className="sf-brand-role group-data-[collapsible=icon]:hidden">{ADMIN_ROLE_LABEL}</div>
+        </div>
+      </SidebarHeader>
 
-      <nav className="sf-nav" aria-label="Sections">
-        {SECTIONS.map((section) => {
-          const isActive =
-            section.href === "/" ? pathname === "/" : pathname.startsWith(section.href);
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {SECTIONS.map((section) => {
+                const isActive =
+                  section.href === "/" ? pathname === "/" : pathname.startsWith(section.href);
 
-          return (
-            <Link
-              key={section.id}
-              href={section.href}
-              aria-current={isActive ? "page" : undefined}
-              className={isActive ? "sf-nav-item active" : "sf-nav-item"}
-            >
-              <span className="sf-nav-icon" aria-hidden>
-                <NavIcon name={section.id} />
-              </span>
-              <span>{section.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+                return (
+                  <SidebarMenuItem key={section.id}>
+                    <SidebarMenuButton
+                      isActive={isActive}
+                      tooltip={section.label}
+                      render={<Link href={section.href} aria-current={isActive ? "page" : undefined} />}
+                    >
+                      <NavIcon name={section.id} />
+                      <span>{section.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
 
-      <div className="sf-sidebar-foot">
+      <SidebarFooter>
         <button className="sf-btn sf-btn--quiet sf-btn--block" type="button">
-          Log out
+          <span className="group-data-[collapsible=icon]:hidden">Log out</span>
         </button>
-      </div>
-    </aside>
+      </SidebarFooter>
+    </SidebarPrimitive>
   );
 }

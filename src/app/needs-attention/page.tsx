@@ -14,14 +14,7 @@ import {
 import { formatSalesforceStamp } from "@/lib/format";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList
-} from "@/components/ui/combobox";
+import { Combobox } from "@/components/shared/Combobox";
 
 const SEVERITY_RANK: Record<AttentionSeverity, number> = { critical: 0, high: 1, medium: 2 };
 
@@ -31,8 +24,6 @@ const CATEGORY_LABEL: Record<AttentionCategory, string> = ATTENTION_CATEGORIES.r
 );
 
 type ComboOption<T extends string> = { value: T; label: string };
-
-const isOptionEqual = <T extends string>(a: ComboOption<T>, b: ComboOption<T>) => a.value === b.value;
 
 const CATEGORY_OPTIONS: ComboOption<AttentionCategory | "all">[] = [
   { value: "all", label: "All categories" },
@@ -87,45 +78,21 @@ export default function NeedsAttentionPage() {
         <label className="sf-field">
           <span>Category</span>
           <Combobox
-            items={CATEGORY_OPTIONS}
-            value={CATEGORY_OPTIONS.find((option) => option.value === category) ?? null}
-            onValueChange={(option) => setCategory(option?.value ?? "all")}
-            isItemEqualToValue={isOptionEqual}
-          >
-            <ComboboxInput placeholder="All categories" />
-            <ComboboxContent>
-              <ComboboxEmpty>No matches</ComboboxEmpty>
-              <ComboboxList>
-                {(option: ComboOption<AttentionCategory | "all">) => (
-                  <ComboboxItem key={option.value} value={option}>
-                    {option.label}
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+            options={CATEGORY_OPTIONS}
+            value={category}
+            onChange={setCategory}
+            placeholder="All categories"
+          />
         </label>
 
         <label className="sf-field">
           <span>Severity</span>
           <Combobox
-            items={SEVERITY_OPTIONS}
-            value={SEVERITY_OPTIONS.find((option) => option.value === severity) ?? null}
-            onValueChange={(option) => setSeverity(option?.value ?? "all")}
-            isItemEqualToValue={isOptionEqual}
-          >
-            <ComboboxInput placeholder="All severities" />
-            <ComboboxContent>
-              <ComboboxEmpty>No matches</ComboboxEmpty>
-              <ComboboxList>
-                {(option: ComboOption<AttentionSeverity | "all">) => (
-                  <ComboboxItem key={option.value} value={option}>
-                    {option.label}
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+            options={SEVERITY_OPTIONS}
+            value={severity}
+            onChange={setSeverity}
+            placeholder="All severities"
+          />
         </label>
 
         <p className="sf-filter-note">

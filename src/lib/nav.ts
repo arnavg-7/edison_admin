@@ -16,8 +16,8 @@ export type SectionId =
   | "skills-development"
   | "academic-goals"
   | "alerts"
-  | "system-settings"
-  | "integrations";
+  | "user-management"
+  | "system-settings";
 
 export type Section = {
   id: SectionId;
@@ -28,12 +28,12 @@ export type Section = {
 export const SECTIONS: Section[] = [
   { id: "home", label: "Home", href: "/" },
   { id: "reporting", label: "Reporting & Analytics", href: "/reporting" },
-  { id: "people-360", label: "User Management", href: "/people" },
+  { id: "people-360", label: "Student & Faculty 360", href: "/people" },
   { id: "skills-development", label: "Skills & Development", href: "/skills-development" },
   { id: "academic-goals", label: "Academic Goals", href: "/academic-goals" },
   { id: "alerts", label: "Alerts & Notifications", href: "/alerts" },
-  { id: "system-settings", label: "System Settings", href: "/system-settings" },
-  { id: "integrations", label: "Integrations", href: "/integrations" }
+  { id: "user-management", label: "User Management", href: "/user-management" },
+  { id: "system-settings", label: "System Settings", href: "/system-settings" }
 ];
 
 export const ADMIN_ROLE_LABEL = "Super Admin";

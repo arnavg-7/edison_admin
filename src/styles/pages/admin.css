@@ -762,39 +762,6 @@
   background: var(--sf-plot);
 }
 
-/* Integrations */
-
-.ingest-stats {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.ingest-stats .stat-small {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.api-meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid var(--sf-card-border);
-  font-size: 13px;
-  color: var(--admin-subtle);
-}
-
-.api-meta-row strong {
-  color: var(--admin-text);
-  font-weight: 500;
-}
-
-@media (max-width: 1200px) {
-  .ingest-stats {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
 /* Wide tables scroll inside their own panel rather than widening the page. */
 .admin-content-panel {
   overflow-x: auto;

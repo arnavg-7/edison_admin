@@ -10,14 +10,7 @@ import {
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList
-} from "@/components/ui/combobox";
+import { Combobox } from "@/components/shared/Combobox";
 
 const isLevelOptionEqual = (a: (typeof SKILL_LEVELS)[number], b: (typeof SKILL_LEVELS)[number]) =>
   a.value === b.value;
@@ -155,23 +148,11 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
       <label className="sf-field">
         <span>Level</span>
         <Combobox
-          items={SKILL_LEVELS}
-          value={SKILL_LEVELS.find((option) => option.value === subDraft.level) ?? null}
-          onValueChange={(option) => setSubDraft({ ...subDraft, level: (option?.value ?? "high") as SkillLevel })}
-          isItemEqualToValue={isLevelOptionEqual}
-        >
-          <ComboboxInput placeholder="Select a level" />
-          <ComboboxContent>
-            <ComboboxEmpty>No matches</ComboboxEmpty>
-            <ComboboxList>
-              {(option: (typeof SKILL_LEVELS)[number]) => (
-                <ComboboxItem key={option.value} value={option}>
-                  {option.label}
-                </ComboboxItem>
-              )}
-            </ComboboxList>
-          </ComboboxContent>
-        </Combobox>
+          options={SKILL_LEVELS}
+          value={subDraft.level}
+          onChange={(next) => setSubDraft({ ...subDraft, level: next as SkillLevel })}
+          placeholder="Select a level"
+        />
       </label>
 
       <label className="sf-field">

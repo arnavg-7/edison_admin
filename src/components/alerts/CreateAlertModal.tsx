@@ -7,22 +7,13 @@ import { peopleOfKind } from "@/lib/data/people";
 import { schools } from "@/lib/data/schools";
 import { Modal } from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList
-} from "@/components/ui/combobox";
+import { Combobox } from "@/components/shared/Combobox";
 import { ADMIN_ROLE_LABEL } from "@/lib/nav";
 
 const CATEGORIES = ["Attendance", "Missing work", "Goal overdue", "Grade drop", "Behavior"];
 const SEVERITIES: AlertSeverity[] = ["high", "medium", "low"];
 
 type ComboOption = { value: string; label: string };
-
-const isOptionEqual = (a: ComboOption, b: ComboOption) => a.value === b.value;
 
 const students = peopleOfKind("student");
 const faculty = taggableFaculty();
@@ -93,69 +84,32 @@ export function CreateAlertModal({
       <label className="sf-field">
         <span>Student</span>
         <Combobox
-          items={studentOptions}
-          value={studentOptions.find((option) => option.value === studentId) ?? null}
-          onValueChange={(option) => setStudentId(option?.value ?? "")}
-          isItemEqualToValue={isOptionEqual}
-          autoComplete="list"
-        >
-          <ComboboxInput placeholder="Select a student" />
-          <ComboboxContent>
-            <ComboboxEmpty>No matches</ComboboxEmpty>
-            <ComboboxList>
-              {(option: ComboOption) => (
-                <ComboboxItem key={option.value} value={option}>
-                  {option.label}
-                </ComboboxItem>
-              )}
-            </ComboboxList>
-          </ComboboxContent>
-        </Combobox>
+          options={studentOptions}
+          value={studentId}
+          onChange={setStudentId}
+          placeholder="Select a student"
+        />
       </label>
 
       <div className="sf-field-row">
         <label className="sf-field">
           <span>Category</span>
           <Combobox
-            items={categoryOptions}
-            value={categoryOptions.find((option) => option.value === category) ?? null}
-            onValueChange={(option) => setCategory(option?.value ?? category)}
-            isItemEqualToValue={isOptionEqual}
-          >
-            <ComboboxInput placeholder="Select a category" />
-            <ComboboxContent>
-              <ComboboxEmpty>No matches</ComboboxEmpty>
-              <ComboboxList>
-                {(option: ComboOption) => (
-                  <ComboboxItem key={option.value} value={option}>
-                    {option.label}
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+            options={categoryOptions}
+            value={category}
+            onChange={setCategory}
+            placeholder="Select a category"
+          />
         </label>
 
         <label className="sf-field">
           <span>Severity</span>
           <Combobox
-            items={severityOptions}
-            value={severityOptions.find((option) => option.value === severity) ?? null}
-            onValueChange={(option) => setSeverity((option?.value ?? "medium") as AlertSeverity)}
-            isItemEqualToValue={isOptionEqual}
-          >
-            <ComboboxInput placeholder="Select a severity" />
-            <ComboboxContent>
-              <ComboboxEmpty>No matches</ComboboxEmpty>
-              <ComboboxList>
-                {(option: ComboOption) => (
-                  <ComboboxItem key={option.value} value={option}>
-                    {option.label}
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+            options={severityOptions}
+            value={severity}
+            onChange={(next) => setSeverity(next as AlertSeverity)}
+            placeholder="Select a severity"
+          />
         </label>
       </div>
 

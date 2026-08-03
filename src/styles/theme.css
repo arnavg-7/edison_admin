@@ -34,6 +34,11 @@
   --sf-series-3: #9aa8d8;
   --sf-series-4: #0f8f80;
   --sf-series-5: #7d8bb0;
+  /* Over-threshold fill for charts that flag a breach (e.g. schools above the
+     teacher-student target). --sf-warn-text is ink for pills on a tint and goes
+     muddy as a large fill, so this is the app's existing amber (admin.css
+     .tone-orange) promoted to a token. Warn meaning, chart-legible weight. */
+  --sf-series-warn: #b45309;
 
   /* The accent: purplish blue, used only where action is expected */
   --sf-accent: #4f46e5;
@@ -55,6 +60,9 @@
   /* Geometry */
   --sf-radius-card: 10px;
   --sf-radius-control: 6px;
+  /* Every CTA, both .sf-btn and the shadcn Button. Keep in sync with the
+     `rounded-xl` (12px) in components/ui/button.tsx. */
+  --sf-radius-cta: 12px;
   --sf-radius-pill: 999px;
 }
 
@@ -72,27 +80,19 @@ body {
   border-radius: 3px;
 }
 
-/* Shell */
-
-.sf-shell {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 244px 1fr;
-  background: var(--sf-canvas);
+/**
+ * shadcn's InputGroup draws its own focus ring on the wrapper (border-ring +
+ * ring-[3px]) whenever the control inside is focused. The global outline above
+ * would stack a second, 3px-radius box inside that pill-shaped ring — reading
+ * as a doubled border. The group's ring is the focus indicator here.
+ */
+[data-slot="input-group-control"]:focus-visible {
+  outline: none;
 }
 
-.sf-sidebar {
-  background: var(--sf-sidebar);
-  border-right: 1px solid var(--sf-card-border);
-  padding: 18px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  min-width: 0;
-}
+/* Shell — the sidebar chrome itself (frame, nav item look, off-canvas
+   behaviour, collapse) is the shadcn Sidebar component now; this is just the
+   brand block rendered inside its header, which stays this app's own. */
 
 .sf-brand {
   padding: 4px 8px 16px;
@@ -112,68 +112,6 @@ body {
   color: var(--sf-text-dim);
   text-transform: uppercase;
   letter-spacing: 0.09em;
-}
-
-.sf-nav {
-  display: grid;
-  gap: 2px;
-  overflow-y: auto;
-  min-height: 0;
-}
-
-.sf-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 10px;
-  border-radius: var(--sf-radius-control);
-  color: var(--sf-text-muted);
-  text-decoration: none;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.sf-nav-item:hover {
-  background: var(--sf-raised);
-  color: var(--sf-text);
-}
-
-.sf-nav-item.active {
-  background: var(--sf-accent-soft);
-  color: var(--sf-accent-hover);
-  font-weight: 600;
-}
-
-.sf-nav-icon {
-  width: 16px;
-  height: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  opacity: 0.9;
-}
-
-.sf-nav-icon svg {
-  width: 16px;
-  height: 16px;
-  display: block;
-}
-
-.sf-nav-count {
-  margin-left: auto;
-  background: var(--sf-error-bg);
-  color: var(--sf-error-text);
-  border-radius: var(--sf-radius-pill);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 1px 7px;
-}
-
-.sf-sidebar-foot {
-  margin-top: auto;
-  padding-top: 14px;
-  border-top: 1px solid var(--sf-card-border);
 }
 
 /* Main region + the Salesforce-style context strip above the canvas */
@@ -241,6 +179,12 @@ body {
   flex: 0 0 auto;
 }
 
+/* Section sub-nav (Alerts, Reporting, System Settings) always follows a
+   title + subtitle; give it room to breathe instead of hugging the copy. */
+.sf-section-tabs {
+  margin: 18px 0 20px;
+}
+
 .sf-skip-link {
   position: absolute;
   left: -9999px;
@@ -272,31 +216,9 @@ body {
   border: 0;
 }
 
+/* The sidebar's own responsive behaviour (a below-768px Sheet) comes from
+   the shadcn Sidebar component now; only the canvas padding is still ours. */
 @media (max-width: 1024px) {
-  .sf-shell {
-    grid-template-columns: 1fr;
-  }
-
-  .sf-sidebar {
-    position: static;
-    height: auto;
-    flex-direction: column;
-  }
-
-  .sf-nav {
-    display: flex;
-    overflow-x: auto;
-    gap: 4px;
-  }
-
-  .sf-nav-item {
-    flex: 0 0 auto;
-  }
-
-  .sf-sidebar-foot {
-    margin-top: 0;
-  }
-
   .sf-main {
     padding: 16px;
   }
@@ -340,11 +262,12 @@ body {
 
 /* Buttons */
 
+/* 12px, same as the shadcn Button, so every CTA reads as one control family. */
 .sf-btn {
   border: 1px solid #d3d8e5;
   background: var(--sf-card);
   color: var(--sf-text);
-  border-radius: var(--sf-radius-control);
+  border-radius: var(--sf-radius-cta);
   padding: 8px 14px;
   font-size: 13px;
   font-weight: 500;
@@ -446,6 +369,83 @@ body {
   min-width: 0;
 }
 
+/* Roles as a checkbox group — an account can hold more than one at once, so
+   this is never a single-select dropdown. */
+.sf-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sf-checkbox-group legend {
+  font-size: 12px;
+  color: var(--sf-text-muted);
+  padding: 0;
+  margin-bottom: 3px;
+}
+
+.sf-checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--sf-text);
+}
+
+/* One chip per role held, e.g. in the admin users table. */
+.sf-role-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sf-role-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--sf-radius-pill);
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--sf-neutral-bg);
+  color: var(--sf-neutral-text);
+}
+
+/* A single on/off control with its own label + helper text, e.g.
+   Active/Inactive or the 2FA/SSO governance toggle. */
+.sf-switch-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-control);
+  background: var(--sf-plot);
+}
+
+.sf-switch-field > span:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sf-switch-field strong {
+  font-size: 13.5px;
+  color: var(--sf-text);
+}
+
+.sf-edit-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
 .sf-field input,
 .sf-field textarea,
 .sf-input {
@@ -475,9 +475,105 @@ body {
   font-size: 13px;
 }
 
-/* Selects are the shadcn NativeSelect component now — it owns its own
-   appearance, chevron and disabled state, so it deliberately isn't styled
-   here alongside plain inputs/textareas. */
+/* ---------------------------------------------------------------------------
+   Combobox — the app's one dropdown control. Deliberately shares the border,
+   radius, padding and type of a plain .sf-field input so a filter bar mixing
+   text fields and dropdowns reads as one row of matching controls.
+   --------------------------------------------------------------------------- */
+
+.sf-combobox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  background: var(--sf-card);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-control);
+  color: var(--sf-text);
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 20px;
+  font-family: inherit;
+  min-height: 36px;
+  min-width: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sf-combobox:hover:not(:disabled) {
+  border-color: var(--sf-accent);
+}
+
+.sf-combobox:disabled {
+  cursor: not-allowed;
+  background: var(--sf-raised);
+  color: var(--sf-text-dim);
+}
+
+.sf-combobox[aria-expanded="true"] {
+  border-color: var(--sf-accent);
+}
+
+.sf-combobox-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.sf-combobox-value.is-placeholder {
+  color: var(--sf-text-dim);
+}
+
+.sf-combobox-caret {
+  flex: 0 0 auto;
+  color: var(--sf-text-muted);
+}
+
+.sf-combobox:disabled .sf-combobox-caret {
+  color: var(--sf-text-dim);
+}
+
+/* Portaled to <body>, so it owns its own surface rather than inheriting one. */
+.sf-combobox-popup {
+  overflow-y: auto;
+  background: var(--sf-card);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-control);
+  box-shadow: 0 10px 30px rgba(19, 26, 43, 0.14), 0 2px 6px rgba(19, 26, 43, 0.08);
+  padding: 4px;
+}
+
+.sf-combobox-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--sf-text);
+  cursor: pointer;
+}
+
+/* Pointer and keyboard share one highlight, so there's never two "current" rows. */
+.sf-combobox-option.is-active {
+  background: var(--sf-accent-soft);
+  color: var(--sf-accent-hover);
+}
+
+.sf-combobox-option[aria-selected="true"] {
+  font-weight: 600;
+}
+
+.sf-combobox-empty {
+  margin: 0;
+  padding: 8px 9px;
+  font-size: 12px;
+  color: var(--sf-text-muted);
+}
 
 .sf-field input::placeholder,
 .sf-field textarea::placeholder,
@@ -547,6 +643,141 @@ body {
 
 .sf-table tbody tr:hover td {
   background: var(--sf-plot);
+}
+
+.sf-pagination {
+  margin-top: 16px;
+}
+
+/* ---------------------------------------------------------------------------
+   Expandable table rows — a school row that opens its grades in place.
+   --------------------------------------------------------------------------- */
+
+.sf-row-expander {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sf-row-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--sf-card-border);
+  border-radius: 4px;
+  background: var(--sf-card);
+  color: var(--sf-text-muted);
+  cursor: pointer;
+  /* Rotates to point down when open, so the caret itself signals state. */
+  transition: transform 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.sf-row-toggle:hover {
+  border-color: var(--sf-accent);
+  color: var(--sf-accent);
+}
+
+.sf-row-toggle.is-open {
+  transform: rotate(90deg);
+  border-color: var(--sf-accent);
+  color: var(--sf-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-row-toggle {
+    transition: none;
+  }
+}
+
+/**
+ * The expanded panel reads as a recess under its parent row, not a sibling.
+ * No horizontal padding: the nested table spans the full row width, and the
+ * recessed background plus the parent's rotated caret carry the nesting instead
+ * of an indent that would leave the sub-table short of the layout.
+ */
+.sf-subrow > td {
+  padding: 0 0 12px;
+  background: var(--sf-plot);
+}
+
+.sf-subrow:hover > td {
+  background: var(--sf-plot);
+}
+
+.sf-subtable {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--sf-card);
+  border-top: 1px solid var(--sf-card-border);
+  border-bottom: 1px solid var(--sf-card-border);
+}
+
+/**
+ * Shared column grid for an expandable school table and its nested grade table.
+ *
+ * The two have different column counts (a school row has 5, a grade row 6), so
+ * they can't align boundary-for-boundary. Pinning the first and last columns to
+ * the same widths on both lines up the two things that need to read as one
+ * column: the name on the left and Status on the right. The middle columns
+ * divide whatever is left, which `table-layout: fixed` does evenly.
+ */
+.sf-table--expandable,
+.sf-subtable {
+  table-layout: fixed;
+}
+
+.sf-table--expandable > thead th:first-child,
+.sf-subtable > thead th:first-child {
+  width: 30%;
+}
+
+/* Status is second-to-last now that Actions trails it; both are pinned so the
+   pill and the button line up between a school row and its grade rows. */
+.sf-table--expandable > thead th:nth-last-child(2),
+.sf-subtable > thead th:nth-last-child(2) {
+  width: 18%;
+}
+
+.sf-table--expandable > thead th:last-child,
+.sf-subtable > thead th:last-child {
+  width: 12%;
+}
+
+/* 12px inline padding matches .sf-table's cells, so the nested first column
+   lines up with the parent table's first column instead of floating. */
+/* Type and cell padding deliberately match .sf-table: a nested row is the same
+   kind of data as its parent, so shrinking it would imply lesser importance. */
+.sf-subtable th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sf-text-muted);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--sf-card-border);
+  white-space: nowrap;
+}
+
+.sf-subtable td {
+  padding: 11px 12px;
+  font-size: 13px;
+  color: var(--sf-text);
+  border-bottom: 1px solid var(--sf-card-border);
+}
+
+.sf-subtable tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.sf-subrow-empty {
+  margin: 0;
+  padding: 10px 0;
+  font-size: 12px;
+  color: var(--sf-text-muted);
 }
 
 /* Status pills */
@@ -1725,6 +1956,30 @@ body {
   text-decoration: underline;
 }
 
+/* An explicit "back" affordance beside the name heading on detail pages
+   (e.g. a student/faculty 360 profile) reached by drilling into a list. */
+.sf-page-title--with-back {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sf-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--sf-radius-pill);
+  color: var(--sf-text-muted);
+  flex: 0 0 auto;
+}
+
+.sf-back-btn:hover {
+  background: var(--sf-raised);
+  color: var(--sf-text);
+}
+
 .sf-profile-head {
   display: flex;
   flex-wrap: wrap;
@@ -1908,4 +2163,24 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/** Inline View/Edit-style action links in a table cell, e.g. the People directory. */
+.sf-row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sf-row-actions .sf-btn {
+  text-decoration: none;
+}
+
+/* Table-row View/Edit actions read as cramped at the base .sf-btn--sm size;
+   widen just this case rather than every small button app-wide. */
+.sf-table .sf-row-actions .sf-btn {
+  min-width: 76px;
+  padding: 7px 16px;
+  text-align: center;
+  justify-content: center;
 }

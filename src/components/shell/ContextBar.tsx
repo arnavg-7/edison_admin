@@ -1,6 +1,7 @@
 import { ADMIN_ROLE_LABEL } from "@/lib/nav";
 import { formatSalesforceStamp } from "@/lib/format";
 import { SALESFORCE_LAST_REFRESH } from "@/lib/data/salesforce";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 /**
  * The strip above the canvas, mirroring the reference dashboards' context line:
@@ -9,6 +10,7 @@ import { SALESFORCE_LAST_REFRESH } from "@/lib/data/salesforce";
 export function ContextBar() {
   return (
     <div className="sf-context-bar">
+      <SidebarTrigger className="-ml-1" />
       <span>As of {formatSalesforceStamp(SALESFORCE_LAST_REFRESH)}</span>
       <span className="sf-context-sep">·</span>
       <span>Viewing as {ADMIN_ROLE_LABEL}</span>

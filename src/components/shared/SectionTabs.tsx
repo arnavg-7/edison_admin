@@ -25,7 +25,7 @@ export function SectionTabs({ tabs }: { tabs: SectionTab[] }) {
   const activeHref = tabs.find((tab) => tab.href === pathname)?.href ?? null;
 
   return (
-    <Tabs value={activeHref}>
+    <Tabs value={activeHref} className="sf-section-tabs">
       <TabsList variant="line" aria-label="Section navigation">
         {tabs.map((tab) => (
           <TabsTrigger

@@ -3,24 +3,24 @@ import type { IconSvgElement } from "@hugeicons/react";
 import {
   ChartBarLineIcon,
   Home01Icon,
-  Link04Icon,
+  Mortarboard02Icon,
   Notification01Icon,
   PreferenceHorizontalIcon,
   Settings02Icon,
   Target01Icon,
-  UserGroupIcon
+  UserSettings01Icon
 } from "@hugeicons/core-free-icons";
 import type { SectionId } from "@/lib/nav";
 
 const ICONS: Record<SectionId, IconSvgElement> = {
   home: Home01Icon,
   reporting: ChartBarLineIcon,
-  "people-360": UserGroupIcon,
+  "people-360": Mortarboard02Icon,
   "skills-development": PreferenceHorizontalIcon,
   "academic-goals": Target01Icon,
   alerts: Notification01Icon,
-  "system-settings": Settings02Icon,
-  integrations: Link04Icon
+  "user-management": UserSettings01Icon,
+  "system-settings": Settings02Icon
 };
 
 export function NavIcon({ name }: { name: SectionId }) {

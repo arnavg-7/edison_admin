@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import type { GradeScope } from "@/lib/data/skillsDevelopment";
 import { DevelopmentAreasEditor } from "./DevelopmentAreasEditor";
 import { SkillsProfileEditor } from "./SkillsProfileEditor";
@@ -29,7 +31,14 @@ export function GradeScopeEditor({ scope }: { scope: GradeScope }) {
       </nav>
 
       <div className="sf-scope-head">
-        <h2>
+        <h2 className="sf-page-title--with-back">
+          <Link
+            href={`/skills-development/${scope.schoolId}`}
+            className="sf-back-btn"
+            aria-label={`Back to ${scope.schoolName} grades`}
+          >
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={2} />
+          </Link>
           {gradeLabel} · {scope.schoolName}
         </h2>
         <p className="sf-page-sub">

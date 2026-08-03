@@ -104,14 +104,16 @@ button {
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Matched to the app's own sidebar/accent (theme.css --sf-sidebar etc.) so
+     the shadcn Sidebar reads as the same surface, not the starter's grey. */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #131a2b;
+  --sidebar-primary: #4f46e5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eeecfd;
+  --sidebar-accent-foreground: #4338ca;
+  --sidebar-border: #e2e5ee;
+  --sidebar-ring: #4f46e5;
 }
 
 .dark {

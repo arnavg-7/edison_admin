@@ -1,26 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { studentAlerts, type StudentAlert } from "@/lib/data/alerts";
 import { schools, gradeLabel } from "@/lib/data/schools";
 import { AlertCard } from "./AlertCard";
 import { AlertDetailsModal } from "./AlertDetailsModal";
 import { CreateAlertModal } from "./CreateAlertModal";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Button } from "@/components/ui/button";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList
-} from "@/components/ui/combobox";
+import { Combobox } from "@/components/shared/Combobox";
 import { ADMIN_ROLE_LABEL } from "@/lib/nav";
 
 type ComboOption = { value: string; label: string };
-
-const isOptionEqual = (a: ComboOption, b: ComboOption) => a.value === b.value;
 
 function sortGrades(grades: string[]): string[] {
   return [...new Set(grades)].sort((a, b) => {
@@ -35,12 +26,16 @@ const ALL_GRADES = sortGrades(schools.flatMap((school) => school.grades));
 const ALL = "all";
 
 export function AlertsBoard() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isCreating = searchParams.get("create") === "1";
+  const closeCreate = () => router.replace("/alerts");
+
   const [alerts, setAlerts] = useState<StudentAlert[]>(studentAlerts);
   const [schoolId, setSchoolId] = useState(ALL);
   const [grade, setGrade] = useState(ALL);
   const [search, setSearch] = useState("");
   const [selectedAlertId, setSelectedAlertId] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
 
   const gradeOptions = schoolId !== ALL
     ? sortGrades(schools.find((school) => school.id === schoolId)?.grades ?? [])
@@ -105,51 +100,25 @@ export function AlertsBoard() {
         <label className="sf-field">
           <span>School</span>
           <Combobox
-            items={schoolComboOptions}
-            value={schoolComboOptions.find((option) => option.value === schoolId) ?? null}
-            onValueChange={(option) => {
-              setSchoolId(option?.value ?? ALL);
+            options={schoolComboOptions}
+            value={schoolId}
+            onChange={(next) => {
+              setSchoolId(next);
               setGrade(ALL);
             }}
-            isItemEqualToValue={isOptionEqual}
-          >
-            <ComboboxInput placeholder="All schools" />
-            <ComboboxContent>
-              <ComboboxEmpty>No matches</ComboboxEmpty>
-              <ComboboxList>
-                {(option: ComboOption) => (
-                  <ComboboxItem key={option.value} value={option}>
-                    {option.label}
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+            placeholder="All schools"
+          />
         </label>
 
         <label className="sf-field">
           <span>Grade</span>
           <Combobox
-            items={gradeComboOptions}
-            value={gradeComboOptions.find((option) => option.value === grade) ?? null}
-            onValueChange={(option) => setGrade(option?.value ?? ALL)}
-            isItemEqualToValue={isOptionEqual}
-          >
-            <ComboboxInput placeholder="All grades" />
-            <ComboboxContent>
-              <ComboboxEmpty>No matches</ComboboxEmpty>
-              <ComboboxList>
-                {(option: ComboOption) => (
-                  <ComboboxItem key={option.value} value={option}>
-                    {option.label}
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+            options={gradeComboOptions}
+            value={grade}
+            onChange={setGrade}
+            placeholder="All grades"
+          />
         </label>
-
-        <Button onClick={() => setIsCreating(true)}>Create Alert</Button>
       </div>
 
       <div className="sf-panel">
@@ -184,7 +153,7 @@ export function AlertsBoard() {
 
       {isCreating ? (
         <CreateAlertModal
-          onClose={() => setIsCreating(false)}
+          onClose={closeCreate}
           onCreate={(alert) => setAlerts((current) => [alert, ...current])}
         />
       ) : null}

@@ -1,59 +1,104 @@
 import Link from "next/link";
 import { schools } from "@/lib/data/schools";
-import { isSchoolInScope, schoolConfigSummary } from "@/lib/data/skillsDevelopment";
+import { gradeConfigSummary, isSchoolInScope, schoolConfigSummary } from "@/lib/data/skillsDevelopment";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import {
+  ExpandableSchoolTable,
+  GradeDetailTable,
+  type SchoolTableRow
+} from "@/components/shared/ExpandableSchoolTable";
 
 /**
  * Step one of school → grade → content. All five Genesis schools are listed,
  * but only the two inside the committed scope carry seeded content; the rest
  * say so on their card rather than looking broken.
+ *
+ * Each row expands to its grades in place, so "what still needs configuring"
+ * is answerable without opening every school in turn.
  */
 export default function SchoolPickerPage() {
+  const rows: SchoolTableRow[] = schools.map((school) => {
+    const summary = schoolConfigSummary(school.id);
+    const inScope = isSchoolInScope(school.id);
+
+    return {
+      id: school.id,
+      name: school.name,
+      href: `/skills-development/${school.id}`,
+      cells: [
+        school.level,
+        summary.grades,
+        summary.configuredGrades,
+        inScope ? (
+          <StatusBadge key="status" tone="ok">
+            Configured
+          </StatusBadge>
+        ) : (
+          <StatusBadge key="status" tone="neutral">
+            Out of scope
+          </StatusBadge>
+        )
+        // A school itself holds nothing editable — its grades do — so there is
+        // no separate row action here. The school name link (and row expander)
+        // already open the grade list.
+      ],
+      detail: (
+        <GradeDetailTable
+          head={["Grade", "Areas", "Skills", "Skill groups", "Sub-skills", "Status", "Actions"]}
+          rows={school.grades.map((grade) => {
+            const gradeSummary = gradeConfigSummary(school.id, grade);
+            return {
+              key: grade,
+              cells: [
+                <Link
+                  key="grade"
+                  className="sf-bar-group-link"
+                  href={`/skills-development/${school.id}/${grade}`}
+                >
+                  Grade {grade}
+                </Link>,
+                gradeSummary.areas,
+                gradeSummary.skills,
+                gradeSummary.groups,
+                gradeSummary.subSkills,
+                gradeSummary.configured ? (
+                  <StatusBadge key="status" tone="ok">
+                    {gradeSummary.published} published
+                  </StatusBadge>
+                ) : (
+                  <StatusBadge key="status" tone="neutral">
+                    Not configured
+                  </StatusBadge>
+                ),
+                // The grade page is where the editors live, so this is the real
+                // edit entry point.
+                <div className="sf-row-actions" key="actions">
+                  <Link
+                    className="sf-btn sf-btn--sm sf-btn--primary"
+                    href={`/skills-development/${school.id}/${grade}`}
+                  >
+                    Edit
+                  </Link>
+                </div>
+              ]
+            };
+          })}
+        />
+      )
+    };
+  });
+
   return (
     <div className="sf-panel">
       <div className="sf-panel-head">
         <h2>Schools</h2>
-        <span className="sf-panel-note">Pick a school, then a grade</span>
+        <span className="sf-panel-note">Expand a school, or open it to pick a grade</span>
       </div>
 
-      <div className="sf-table-wrap">
-        <table className="sf-table">
-          <thead>
-            <tr>
-              <th scope="col">School</th>
-              <th scope="col">Level</th>
-              <th scope="col">Grades</th>
-              <th scope="col">Configured</th>
-              <th scope="col">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {schools.map((school) => {
-              const summary = schoolConfigSummary(school.id);
-              const inScope = isSchoolInScope(school.id);
-              return (
-                <tr key={school.id}>
-                  <td>
-                    <Link className="sf-bar-group-link" href={`/skills-development/${school.id}`}>
-                      {school.name}
-                    </Link>
-                  </td>
-                  <td>{school.level}</td>
-                  <td>{summary.grades}</td>
-                  <td>{summary.configuredGrades}</td>
-                  <td>
-                    {inScope ? (
-                      <StatusBadge tone="ok">Configured</StatusBadge>
-                    ) : (
-                      <StatusBadge tone="neutral">Out of scope</StatusBadge>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <ExpandableSchoolTable
+        head={["School", "Level", "Grades", "Configured", "Status"]}
+        rows={rows}
+      />
 
       <p className="sf-panel-foot">
         Elementary and middle school are outside the committed scope (brief §8 item 6), so their

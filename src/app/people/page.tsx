@@ -1,34 +1,56 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  PROFILE_STATUS_TONE,
-  deriveProfileStatus,
-  type Person,
-  type PersonKind
-} from "@/lib/data/people";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Download01Icon } from "@hugeicons/core-free-icons";
+import { type Person, type PersonKind } from "@/lib/data/people";
 import { SCHOOL_LEVELS, gradeLabel, schools, type SchoolLevel } from "@/lib/data/schools";
 import { useUsers } from "@/lib/users-store";
+import { formatDateTime } from "@/lib/format";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { AddUserModal } from "@/components/people/AddUserModal";
 import { Button } from "@/components/ui/button";
+import { Combobox, type ComboboxOption } from "@/components/shared/Combobox";
 import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList
-} from "@/components/ui/combobox";
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious
+} from "@/components/ui/pagination";
 
 const schoolByName = new Map(schools.map((school) => [school.name, school]));
 
-type ComboOption = { value: string; label: string };
+function toCsvValue(value: string): string {
+  return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+}
 
-const isOptionEqual = (a: ComboOption, b: ComboOption) => a.value === b.value;
+/** Exports exactly what's on screen — the current search/filter results, not the whole roster. */
+function downloadResultsCsv(results: Person[]) {
+  const header = ["Name", "Type", "School", "Grade / Department", "Status", "Last Login"];
+  const rows = results.map((person) => [
+    person.name,
+    person.kind === "student" ? "Student" : "Faculty",
+    person.school,
+    person.group,
+    person.active ? "Active" : "Inactive",
+    person.lastLogin ? formatDateTime(person.lastLogin) : ""
+  ]);
+  const csv = [header, ...rows].map((row) => row.map(toCsvValue).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "student-faculty-360.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+type ComboOption = ComboboxOption;
 
 const KIND_OPTIONS: ComboOption[] = [
   { value: "all", label: "Students and faculty" },
@@ -41,6 +63,8 @@ const LEVEL_OPTIONS: ComboOption[] = [
   ...SCHOOL_LEVELS.map((option) => ({ value: option.value, label: option.label }))
 ];
 
+const PAGE_SIZE = 10;
+
 /** Search and browse, then open an individual profile. */
 export default function PeopleSearchPage() {
   const router = useRouter();
@@ -52,6 +76,7 @@ export default function PeopleSearchPage() {
   const [school, setSchool] = useState("all");
   const [grade, setGrade] = useState("all");
   const [isAddingUser, setIsAddingUser] = useState(false);
+  const [page, setPage] = useState(1);
 
   /** Create, then open the new profile so the admin can finish filling it in. */
   const handleCreate = (person: Person) => {
@@ -109,14 +134,24 @@ export default function PeopleSearchPage() {
     [allPeople, query, kind, level, school, grade]
   );
 
+  // A new filter/search can shrink the result set past the page the admin was
+  // on, so every change starts back at page 1 rather than showing an empty page.
+  useEffect(() => {
+    setPage(1);
+  }, [query, kind, level, school, grade]);
+
+  const pageCount = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pagedResults = results.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   return (
     <section className="sf-main">
       <div className="sf-page-head">
         <div>
-          <h1 className="sf-page-title">User Management</h1>
+          <h1 className="sf-page-title">Student &amp; Faculty 360</h1>
           <p className="sf-page-sub">
-            Individual profiles. Admin owns these records outright, so every section is editable
-            here.
+            Individual profiles. Admin can edit personal details, goals, skills profile, development
+            areas and alert history; enrollment, grades, attendance and classes are read-only.
           </p>
         </div>
 
@@ -124,7 +159,7 @@ export default function PeopleSearchPage() {
       </div>
 
       <div className="sf-filter-bar">
-        <label className="sf-field">
+        <label className="sf-field sf-field--search">
           <span>Search</span>
           <input
             type="search"
@@ -137,90 +172,42 @@ export default function PeopleSearchPage() {
         <label className="sf-field">
           <span>Type</span>
           <Combobox
-            items={KIND_OPTIONS}
-            value={KIND_OPTIONS.find((option) => option.value === kind) ?? null}
-            onValueChange={(option) => setKind((option?.value ?? "all") as PersonKind | "all")}
-            isItemEqualToValue={isOptionEqual}
-          >
-            <ComboboxInput placeholder="All types" />
-            <ComboboxContent>
-              <ComboboxEmpty>No matches</ComboboxEmpty>
-              <ComboboxList>
-                {(option: ComboOption) => (
-                  <ComboboxItem key={option.value} value={option}>
-                    {option.label}
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+            options={KIND_OPTIONS}
+            value={kind}
+            onChange={(next) => setKind(next as PersonKind | "all")}
+            placeholder="All types"
+          />
         </label>
 
         <label className="sf-field">
           <span>Grade Level</span>
           <Combobox
-            items={LEVEL_OPTIONS}
-            value={LEVEL_OPTIONS.find((option) => option.value === level) ?? null}
-            onValueChange={(option) => setLevelAndReset((option?.value ?? "all") as SchoolLevel | "all")}
-            isItemEqualToValue={isOptionEqual}
-          >
-            <ComboboxInput placeholder="All grade levels" />
-            <ComboboxContent>
-              <ComboboxEmpty>No matches</ComboboxEmpty>
-              <ComboboxList>
-                {(option: ComboOption) => (
-                  <ComboboxItem key={option.value} value={option}>
-                    {option.label}
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+            options={LEVEL_OPTIONS}
+            value={level}
+            onChange={(next) => setLevelAndReset(next as SchoolLevel | "all")}
+            placeholder="All grade levels"
+          />
         </label>
 
         <label className="sf-field">
           <span>School</span>
           <Combobox
-            items={schoolOptions}
-            value={schoolOptions.find((option) => option.value === school) ?? null}
-            onValueChange={(option) => setSchoolAndReset(option?.value ?? "all")}
-            isItemEqualToValue={isOptionEqual}
-          >
-            <ComboboxInput placeholder="All schools" />
-            <ComboboxContent>
-              <ComboboxEmpty>No matches</ComboboxEmpty>
-              <ComboboxList>
-                {(option: ComboOption) => (
-                  <ComboboxItem key={option.value} value={option}>
-                    {option.label}
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+            options={schoolOptions}
+            value={school}
+            onChange={setSchoolAndReset}
+            placeholder="All schools"
+          />
         </label>
 
         <label className="sf-field">
           <span>Grade</span>
           <Combobox
-            items={gradeOptions}
-            value={gradeOptions.find((option) => option.value === grade) ?? null}
-            onValueChange={(option) => setGrade(option?.value ?? "all")}
-            isItemEqualToValue={isOptionEqual}
+            options={gradeOptions}
+            value={grade}
+            onChange={setGrade}
+            placeholder="All grades"
             disabled={school === "all"}
-          >
-            <ComboboxInput placeholder="All grades" disabled={school === "all"} />
-            <ComboboxContent>
-              <ComboboxEmpty>No matches</ComboboxEmpty>
-              <ComboboxList>
-                {(option: ComboOption) => (
-                  <ComboboxItem key={option.value} value={option}>
-                    {option.label}
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+          />
         </label>
 
         <p className="sf-filter-note">
@@ -232,7 +219,20 @@ export default function PeopleSearchPage() {
       <div className="sf-panel">
         <div className="sf-panel-head">
           <h2>Results</h2>
-          <span className="sf-panel-note">Select a name to open their 360 profile</span>
+          <div className="sf-row-actions">
+            <span className="sf-panel-note">Select a name to open their 360 profile</span>
+            {/* Full CTA size, but `outline` rather than the solid accent: the
+                page's primary action is Add User in the header, and two solid
+                accent buttons on one screen would compete for it. */}
+            <Button
+              variant="outline"
+              onClick={() => downloadResultsCsv(results)}
+              disabled={results.length === 0}
+            >
+              <HugeiconsIcon icon={Download01Icon} strokeWidth={2} data-icon="inline-start" />
+              Download CSV
+            </Button>
+          </div>
         </div>
 
         {results.length === 0 ? (
@@ -249,17 +249,19 @@ export default function PeopleSearchPage() {
                   <th scope="col">Type</th>
                   <th scope="col">School</th>
                   <th scope="col">Grade / Department</th>
-                  <th scope="col">Profile status</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Last Login</th>
+                  <th scope="col">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {results.map((person) => {
-                  const profileStatus = deriveProfileStatus(person);
+                {pagedResults.map((person) => {
+                  const href = `/people/${person.kind}/${person.id}`;
 
                   return (
                     <tr key={`${person.kind}-${person.id}`}>
                       <td>
-                        <Link className="sf-bar-group-link" href={`/people/${person.kind}/${person.id}`}>
+                        <Link className="sf-bar-group-link" href={href}>
                           {person.name}
                         </Link>
                       </td>
@@ -267,9 +269,20 @@ export default function PeopleSearchPage() {
                       <td>{person.school}</td>
                       <td>{person.group}</td>
                       <td>
-                        <StatusBadge tone={PROFILE_STATUS_TONE[profileStatus]}>
-                          {profileStatus}
+                        <StatusBadge tone={person.active ? "ok" : "neutral"}>
+                          {person.active ? "Active" : "Inactive"}
                         </StatusBadge>
+                      </td>
+                      <td>{person.lastLogin ? formatDateTime(person.lastLogin) : "—"}</td>
+                      <td>
+                        <div className="sf-row-actions">
+                          <Link className="sf-btn sf-btn--sm" href={href}>
+                            View
+                          </Link>
+                          <Link className="sf-btn sf-btn--sm sf-btn--primary" href={href}>
+                            Edit
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -278,6 +291,51 @@ export default function PeopleSearchPage() {
             </table>
           </div>
         )}
+
+        {results.length > 0 ? (
+          <Pagination className="sf-pagination">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  aria-disabled={currentPage === 1}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : undefined}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setPage((current) => Math.max(1, current - 1));
+                  }}
+                />
+              </PaginationItem>
+
+              {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
+                <PaginationItem key={pageNumber}>
+                  <PaginationLink
+                    href="#"
+                    isActive={pageNumber === currentPage}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setPage(pageNumber);
+                    }}
+                  >
+                    {pageNumber}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  aria-disabled={currentPage === pageCount}
+                  className={currentPage === pageCount ? "pointer-events-none opacity-50" : undefined}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setPage((current) => Math.min(pageCount, current + 1));
+                  }}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        ) : null}
       </div>
 
       {isAddingUser ? (

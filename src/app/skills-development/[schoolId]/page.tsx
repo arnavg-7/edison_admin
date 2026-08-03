@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { schools } from "@/lib/data/schools";
 import { gradeConfigSummary, isSchoolInScope } from "@/lib/data/skillsDevelopment";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -33,7 +35,12 @@ export default async function GradePickerPage({
 
       <div className="sf-panel">
         <div className="sf-panel-head">
-          <h2>{school.name}</h2>
+          <h2 className="sf-page-title--with-back">
+            <Link href="/skills-development" className="sf-back-btn" aria-label="Back to Schools">
+              <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={2} />
+            </Link>
+            {school.name}
+          </h2>
           <span className="sf-panel-note">
             Pick a grade to view and edit its development areas and skills profile
           </span>

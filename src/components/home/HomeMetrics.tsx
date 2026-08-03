@@ -1,107 +1,99 @@
-import { MetricCard } from "@/components/sf/MetricCard";
-import { CoreMetricCard } from "@/components/sf/CoreMetricCard";
-import { Donut, Funnel, StackedBars, StatValue } from "@/components/sf/charts";
+import { DistributionDonutCard } from "@/components/home/charts/DistributionDonutCard";
+import { RatioBarCard } from "@/components/home/charts/RatioBarCard";
+import { StatCard } from "@/components/home/charts/StatCard";
+import { TrendStatCard } from "@/components/home/charts/TrendStatCard";
 import { REPORTS } from "@/lib/data/salesforce";
+import { coreMetrics, numberOfStudents, totalFaculty } from "@/lib/data/dashboard";
 import {
-  RATIO_SERIES,
-  coreMetrics,
-  numberOfStudents,
-  studentCountBySchool,
-  studentsStatus,
-  teacherStudentRatio,
-  totalFaculty
-} from "@/lib/data/dashboard";
+  STUDENTS_STATUS_ASOF,
+  STUDENT_COUNT_BY_SCHOOL_ASOF,
+  TEACHER_STUDENT_RATIO_ASOF,
+  TEACHER_STUDENT_RATIO_TARGET,
+  studentCountBySchoolDistribution,
+  studentsStatusDistribution,
+  teacherStudentRatioBySchool
+} from "@/lib/data/homeDashboardCharts";
 
 /**
- * Enrollment, staffing and academic figures in one flat grid — the steady-state
- * numbers a Super Admin checks after Needs Attention.
+ * Enrollment/staffing, distribution and academic performance grouped into
+ * three rows instead of one flat interleaved grid, so a Super Admin's eye
+ * lands on one theme at a time during the morning scan rather than jumping
+ * between unrelated figures. The two distribution donuts sit side by side at
+ * equal width — a ring doesn't need the full row a table or list would.
  */
 export function HomeMetrics() {
   return (
     <div className="sf-card-grid">
-      <MetricCard
+      <StatCard
         title="Number of Students"
-        report={REPORTS.numberOfStudents.name}
+        value={numberOfStudents}
         asOf={REPORTS.numberOfStudents.asOf}
-        span="sf-col-6"
-      >
-        <StatValue value={numberOfStudents} label="Number of Students" />
-      </MetricCard>
+        className="sf-col-6"
+      />
 
-      <MetricCard
+      <StatCard
         title="Total Faculty"
-        report={REPORTS.totalFaculty.name}
+        value={totalFaculty}
         asOf={REPORTS.totalFaculty.asOf}
-        span="sf-col-6"
-      >
-        <StatValue value={totalFaculty} label="Total Faculty" />
-      </MetricCard>
+        className="sf-col-6"
+      />
 
-      <MetricCard
+      {/* Full width, own row: a per-school bar list scales with the district's
+          school count and needs the Y-axis labels and bar length room a
+          six-column card can't give it — pairing it next to two short stat
+          numbers just stretched them to match its height instead. */}
+      <RatioBarCard
         title="Teacher-Student Ratio"
-        report={REPORTS.teacherStudentRatio.name}
-        asOf={REPORTS.teacherStudentRatio.asOf}
-        span="sf-col-6"
-      >
-        <StackedBars
-          rows={teacherStudentRatio}
-          axisTitle="Record Count (%)"
-          legendTitle="Role"
-          series={RATIO_SERIES}
-        />
-      </MetricCard>
+        schools={teacherStudentRatioBySchool}
+        asOf={TEACHER_STUDENT_RATIO_ASOF}
+        target={TEACHER_STUDENT_RATIO_TARGET}
+        className="sf-col-12"
+      />
 
-      <MetricCard
+      <DistributionDonutCard
         title="Student Count By School"
-        report={REPORTS.studentCountBySchool.name}
-        asOf={REPORTS.studentCountBySchool.asOf}
-        span="sf-col-6"
-      >
-        <Donut
-          slices={studentCountBySchool}
-          legendTitle="School"
-          caption="Record Count"
-          total={numberOfStudents}
-        />
-      </MetricCard>
+        data={studentCountBySchoolDistribution}
+        asOf={STUDENT_COUNT_BY_SCHOOL_ASOF}
+        totalLabel="Students"
+        className="sf-col-6"
+      />
 
-      <MetricCard
+      <DistributionDonutCard
         title="Students' Status"
-        report={REPORTS.studentsStatus.name}
-        asOf={REPORTS.studentsStatus.asOf}
-        span="sf-col-12"
-      >
-        <Funnel stages={studentsStatus} legendTitle="Status" total={numberOfStudents} />
-      </MetricCard>
+        data={studentsStatusDistribution}
+        asOf={STUDENTS_STATUS_ASOF}
+        totalLabel="Students"
+        className="sf-col-6"
+      />
 
-      <CoreMetricCard
+      <TrendStatCard
         title="Attendance Rate"
-        report={REPORTS.attendanceRate.name}
-        asOf={REPORTS.attendanceRate.asOf}
         value={coreMetrics[0].value}
         delta={coreMetrics[0].trend.replace(/^[-+]/, "")}
         direction="down"
         series={[93.4, 92.8, 93.1, 92.2, 92.9, 92.5, 92.4]}
+        asOf={REPORTS.attendanceRate.asOf}
+        className="sf-col-4"
       />
 
-      <CoreMetricCard
+      <TrendStatCard
         title="Goal Completion %"
-        report={REPORTS.goalCompletion.name}
-        asOf={REPORTS.goalCompletion.asOf}
         value={coreMetrics[1].value}
         delta={coreMetrics[1].trend.replace(/^[-+]/, "")}
         direction="up"
         series={[63.2, 64.1, 65.0, 65.4, 66.8, 67.2, 68.1]}
+        asOf={REPORTS.goalCompletion.asOf}
+        className="sf-col-4"
       />
 
-      <CoreMetricCard
+      <TrendStatCard
         title="Assignment Completion Rate"
-        report={REPORTS.assignmentCompletion.name}
-        asOf={REPORTS.assignmentCompletion.asOf}
         value={coreMetrics[2].value}
         delta={coreMetrics[2].trend.replace(/^[-+]/, "")}
         direction="up"
         series={[82.1, 82.9, 83.4, 83.1, 84.0, 84.4, 84.7]}
+        asOf={REPORTS.assignmentCompletion.asOf}
+        className="sf-col-4"
       />
     </div>
   );

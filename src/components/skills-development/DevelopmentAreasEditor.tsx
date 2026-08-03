@@ -13,14 +13,7 @@ import { DevAreaIcon } from "./DevAreaIcon";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList
-} from "@/components/ui/combobox";
+import { Combobox } from "@/components/shared/Combobox";
 
 // TODO: local state only — persist through the Admin DB skills-and-development
 // contract when it exists.
@@ -187,23 +180,11 @@ export function DevelopmentAreasEditor({
       <label className="sf-field">
         <span>Icon</span>
         <Combobox
-          items={DEV_AREA_ICONS}
-          value={DEV_AREA_ICONS.find((icon) => icon.value === areaDraft.icon) ?? null}
-          onValueChange={(icon) => setAreaDraft({ ...areaDraft, icon: (icon?.value ?? "check") as IconName })}
-          isItemEqualToValue={isIconOptionEqual}
-        >
-          <ComboboxInput placeholder="Select an icon" />
-          <ComboboxContent>
-            <ComboboxEmpty>No matches</ComboboxEmpty>
-            <ComboboxList>
-              {(icon: (typeof DEV_AREA_ICONS)[number]) => (
-                <ComboboxItem key={icon.value} value={icon}>
-                  {icon.label}
-                </ComboboxItem>
-              )}
-            </ComboboxList>
-          </ComboboxContent>
-        </Combobox>
+          options={DEV_AREA_ICONS}
+          value={areaDraft.icon}
+          onChange={(next) => setAreaDraft({ ...areaDraft, icon: next as IconName })}
+          placeholder="Select an icon"
+        />
       </label>
 
       <div className="list-editor-form-actions">

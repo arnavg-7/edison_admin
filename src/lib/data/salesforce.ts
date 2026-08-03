@@ -50,14 +50,3 @@ export const REPORTS = {
   goalCompletion: { name: "Goal Completion %", asOf: "2026-07-17T12:02:00-04:00" },
   assignmentCompletion: { name: "Assignment Completion Rate", asOf: "2026-07-17T11:47:00-04:00" }
 } as const satisfies Record<string, SalesforceReport>;
-
-/** Salesforce API connection health — the Integrations panel in v2. */
-export const salesforceHealth = {
-  status: "ok" as "ok" | "warn" | "error",
-  statusLabel: "Connected",
-  lastSuccessfulPull: "2026-07-17T12:12:00-04:00",
-  errorRate: "0.04%",
-  rateLimit: "18,204 / 100,000 API calls today",
-  reportsTracked: Object.keys(REPORTS).length,
-  slowestReport: { name: "Attendance YTD Report", seconds: 8.4 }
-};

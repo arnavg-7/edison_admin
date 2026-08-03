@@ -10,18 +10,9 @@ import {
 } from "@/lib/data/people";
 import { SCHOOL_LEVELS, gradeLabel, gradesForSchool, schools, type SchoolLevel } from "@/lib/data/schools";
 import { Button } from "@/components/ui/button";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList
-} from "@/components/ui/combobox";
+import { Combobox, type ComboboxOption } from "@/components/shared/Combobox";
 
-type ComboOption = { value: string; label: string };
-
-const isOptionEqual = (a: ComboOption, b: ComboOption) => a.value === b.value;
+type ComboOption = ComboboxOption;
 
 const KIND_OPTIONS: ComboOption[] = [
   { value: "student", label: "Student" },
@@ -102,6 +93,9 @@ export function ManualUserForm({
       school: school.name,
       group: kind === "student" ? gradeLabel(grade) : department.trim(),
       status: "Other",
+      active: true,
+      // Never signed in yet — this is a brand new account.
+      lastLogin: null,
       // Seeded blank so the profile opens with fields ready to complete; this
       // is what puts a new account at Draft until the admin fills them in.
       personal: blankPersonalFields(kind),
@@ -125,69 +119,33 @@ export function ManualUserForm({
       <label className="sf-field">
         <span>Type</span>
         <Combobox
-          items={KIND_OPTIONS}
-          value={KIND_OPTIONS.find((option) => option.value === kind) ?? null}
-          onValueChange={(option) => setKind((option?.value ?? "student") as PersonKind)}
-          isItemEqualToValue={isOptionEqual}
-        >
-          <ComboboxInput placeholder="Select a type" />
-          <ComboboxContent>
-            <ComboboxEmpty>No matches</ComboboxEmpty>
-            <ComboboxList>
-              {(option: ComboOption) => (
-                <ComboboxItem key={option.value} value={option}>
-                  {option.label}
-                </ComboboxItem>
-              )}
-            </ComboboxList>
-          </ComboboxContent>
-        </Combobox>
+          options={KIND_OPTIONS}
+          value={kind}
+          onChange={(next) => setKind(next as PersonKind)}
+          placeholder="Select a type"
+        />
       </label>
 
       <div className="sf-field-row">
         <label className="sf-field">
           <span>Grade Level</span>
           <Combobox
-            items={LEVEL_OPTIONS}
-            value={LEVEL_OPTIONS.find((option) => option.value === level) ?? null}
-            onValueChange={(option) => setLevelAndReset((option?.value ?? "") as SchoolLevel | "")}
-            isItemEqualToValue={isOptionEqual}
-          >
-            <ComboboxInput placeholder="Select a level" />
-            <ComboboxContent>
-              <ComboboxEmpty>No matches</ComboboxEmpty>
-              <ComboboxList>
-                {(option: ComboOption) => (
-                  <ComboboxItem key={option.value} value={option}>
-                    {option.label}
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+            options={LEVEL_OPTIONS}
+            value={level}
+            onChange={(next) => setLevelAndReset(next as SchoolLevel)}
+            placeholder="Select a level"
+          />
         </label>
 
         <label className="sf-field">
           <span>School</span>
           <Combobox
-            items={schoolOptions}
-            value={schoolOptions.find((option) => option.value === schoolId) ?? null}
-            onValueChange={(option) => setSchoolAndReset(option?.value ?? "")}
-            isItemEqualToValue={isOptionEqual}
+            options={schoolOptions}
+            value={schoolId}
+            onChange={setSchoolAndReset}
+            placeholder="Select a school"
             disabled={level === ""}
-          >
-            <ComboboxInput placeholder="Select a school" disabled={level === ""} />
-            <ComboboxContent>
-              <ComboboxEmpty>No matches</ComboboxEmpty>
-              <ComboboxList>
-                {(option: ComboOption) => (
-                  <ComboboxItem key={option.value} value={option}>
-                    {option.label}
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+          />
         </label>
       </div>
 
@@ -195,24 +153,12 @@ export function ManualUserForm({
         <label className="sf-field">
           <span>Grade</span>
           <Combobox
-            items={gradeOptions}
-            value={gradeOptions.find((option) => option.value === grade) ?? null}
-            onValueChange={(option) => setGrade(option?.value ?? "")}
-            isItemEqualToValue={isOptionEqual}
+            options={gradeOptions}
+            value={grade}
+            onChange={setGrade}
+            placeholder="Select a grade"
             disabled={!school}
-          >
-            <ComboboxInput placeholder="Select a grade" disabled={!school} />
-            <ComboboxContent>
-              <ComboboxEmpty>No matches</ComboboxEmpty>
-              <ComboboxList>
-                {(option: ComboOption) => (
-                  <ComboboxItem key={option.value} value={option}>
-                    {option.label}
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+          />
         </label>
       ) : (
         <label className="sf-field">

@@ -6,7 +6,9 @@ import "../styles/pages/admin.css";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { ContextBar } from "@/components/shell/ContextBar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { UsersProvider } from "@/lib/users-store";
+import { AdminUsersProvider } from "@/lib/admin-users-store";
 import { cn } from "@/lib/utils";
 
 const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
@@ -28,16 +30,18 @@ export default function RootLayout({
       <body className={inter.className}>
         <TooltipProvider>
           <UsersProvider>
-            <a className="sf-skip-link" href="#main-content">
-              Skip to main content
-            </a>
-            <div className="sf-shell">
-              <Sidebar />
-              <div className="sf-main-region">
-                <ContextBar />
-                <div id="main-content">{children}</div>
-              </div>
-            </div>
+            <AdminUsersProvider>
+              <a className="sf-skip-link" href="#main-content">
+                Skip to main content
+              </a>
+              <SidebarProvider>
+                <Sidebar />
+                <SidebarInset className="sf-main-region">
+                  <ContextBar />
+                  <div id="main-content">{children}</div>
+                </SidebarInset>
+              </SidebarProvider>
+            </AdminUsersProvider>
           </UsersProvider>
         </TooltipProvider>
       </body>

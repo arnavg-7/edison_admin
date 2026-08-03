@@ -2,16 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import {
   PROFILE_STATUS_TONE,
   REQUIRED_PERSONAL_FIELDS,
   deriveProfileStatus,
   type AlertRecord,
-  type AttendanceSummary,
-  type ClassEnrolment,
-  type ClassPerformanceRow,
   type GoalRecord,
-  type GradeRecord,
   type Person,
   type PersonKind,
   type ReadOnlyField
@@ -22,14 +20,7 @@ import { DevelopmentAreasEditor } from "@/components/skills-development/Developm
 import { SkillsProfileEditor } from "@/components/skills-development/SkillsProfileEditor";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList
-} from "@/components/ui/combobox";
+import { Combobox } from "@/components/shared/Combobox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatSalesforceStamp } from "@/lib/format";
 
@@ -37,8 +28,6 @@ const GOAL_STATUSES: GoalRecord["status"][] = ["On track", "At risk", "Complete"
 const ALERT_STATUSES: AlertRecord["status"][] = ["Open", "Acknowledged", "Resolved"];
 
 type ComboOption<T extends string> = { value: T; label: string };
-
-const isOptionEqual = <T extends string>(a: ComboOption<T>, b: ComboOption<T>) => a.value === b.value;
 
 const GOAL_STATUS_OPTIONS: ComboOption<GoalRecord["status"]>[] = GOAL_STATUSES.map((status) => ({
   value: status,
@@ -49,6 +38,14 @@ const ALERT_STATUS_OPTIONS: ComboOption<AlertRecord["status"]>[] = ALERT_STATUSE
   value: status,
   label: status
 }));
+
+/**
+ * Admin's editable surface is exactly: personal details, goals, skills profile,
+ * development areas and alert history. Everything else on a profile belongs to
+ * Salesforce/Genesis and is shown read-only, so this note is the one place that
+ * wording lives.
+ */
+const SOURCE_NOTE = "Read-only · owned by the source system";
 
 type TabId =
   | "personal"
@@ -91,17 +88,10 @@ export function ProfileShell({ person }: { person: Person }) {
   const tabs = isStudent ? STUDENT_TABS : FACULTY_TABS;
   const [tab, setTab] = useState<TabId>("personal");
 
+  // Only the editable sections hold local state. Enrollment, grades, attendance
+  // and classes render straight from `person` because Admin can't change them.
   const [goals, setGoals] = useState<GoalRecord[]>(person.goals ?? []);
   const [alertRecords, setAlertRecords] = useState<AlertRecord[]>(person.alerts);
-  const [grades, setGrades] = useState<GradeRecord[]>(person.grades ?? []);
-  const [attendanceSummary, setAttendanceSummary] = useState<AttendanceSummary | undefined>(
-    person.attendanceSummary
-  );
-  const [classes, setClasses] = useState<ClassEnrolment[]>(person.classes ?? []);
-  const [teachingClasses, setTeachingClasses] = useState<ClassPerformanceRow[]>(
-    person.teachingClasses ?? []
-  );
-  const [schedule, setSchedule] = useState<ClassEnrolment[]>(person.schedule ?? []);
 
   const gradeScope = isStudent ? resolveGradeScope(person.school, person.group) : null;
 
@@ -141,34 +131,6 @@ export function ProfileShell({ person }: { person: Person }) {
     );
   };
 
-  const updateGrade = (index: number, patch: Partial<GradeRecord>) => {
-    setGrades((current) => current.map((g, i) => (i === index ? { ...g, ...patch } : g)));
-  };
-
-  const updateAttendanceStat = (patch: Partial<AttendanceSummary>) => {
-    setAttendanceSummary((current) => (current ? { ...current, ...patch } : current));
-  };
-
-  const updateAttendanceTerm = (index: number, patch: Partial<AttendanceSummary["byTerm"][number]>) => {
-    setAttendanceSummary((current) =>
-      current
-        ? { ...current, byTerm: current.byTerm.map((t, i) => (i === index ? { ...t, ...patch } : t)) }
-        : current
-    );
-  };
-
-  const updateClass = (index: number, patch: Partial<ClassEnrolment>) => {
-    setClasses((current) => current.map((c, i) => (i === index ? { ...c, ...patch } : c)));
-  };
-
-  const updateTeachingClass = (index: number, patch: Partial<ClassPerformanceRow>) => {
-    setTeachingClasses((current) => current.map((c, i) => (i === index ? { ...c, ...patch } : c)));
-  };
-
-  const updateSchedule = (index: number, patch: Partial<ClassEnrolment>) => {
-    setSchedule((current) => current.map((c, i) => (i === index ? { ...c, ...patch } : c)));
-  };
-
   return (
     <section className="sf-main">
       <nav className="sf-crumbs" aria-label="Breadcrumb">
@@ -179,7 +141,12 @@ export function ProfileShell({ person }: { person: Person }) {
 
       <div className="sf-profile-head">
         <div>
-          <h1 className="sf-page-title">{person.name}</h1>
+          <h1 className="sf-page-title sf-page-title--with-back">
+            <Link href="/people" className="sf-back-btn" aria-label="Back to Student & Faculty 360">
+              <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={2} />
+            </Link>
+            {person.name}
+          </h1>
           <p className="sf-page-sub">
             {isStudent ? "Student" : "Faculty"} · {person.group} · {person.school}
           </p>
@@ -230,63 +197,27 @@ export function ProfileShell({ person }: { person: Person }) {
       ) : null}
 
       {tab === "academic" ? (
-        <EditableFieldsPanel
+        <ReadOnlyFieldsPanel
           title={isStudent ? "Enrollment & academic record" : "Assignment summary"}
           fields={person.academic}
-          kind={person.kind}
-          personId={person.id}
-          section="academic"
         />
       ) : null}
 
       {/* ---------------------------------------------------------- grades */}
       {tab === "grades" ? (
         <>
-          <Panel title="Current term grades" note="Editable in Admin">
-            <p className="sf-card-hint">
-              Admin-native — grade changes apply only to this record. TODO: local state only until
-              the Admin DB contract exists.
-            </p>
-            {!grades.length ? (
+          <Panel title="Current term grades" note={SOURCE_NOTE}>
+            {!person.grades?.length ? (
               <EmptyState title="No grades recorded" message="No current-term grades for this student." />
             ) : (
               <Table
                 head={["Subject", "Teacher", "Grade", "Percent", "Assignments"]}
-                rows={grades.map((g, index) => [
+                rows={person.grades.map((g) => [
                   g.subject,
                   g.teacher,
-                  <input
-                    key="grade"
-                    type="text"
-                    className="sf-input sf-input--cell"
-                    value={g.grade}
-                    aria-label={`Grade for ${g.subject}`}
-                    onChange={(event) => updateGrade(index, { grade: event.target.value })}
-                  />,
-                  <input
-                    key="percent"
-                    type="number"
-                    className="sf-input sf-input--cell"
-                    value={g.percent}
-                    min={0}
-                    max={100}
-                    aria-label={`Percent for ${g.subject}`}
-                    onChange={(event) => updateGrade(index, { percent: Number(event.target.value) })}
-                  />,
-                  <div className="sf-stepper" key="assignments">
-                    <input
-                      type="number"
-                      className="sf-input sf-input--cell"
-                      value={g.assignmentsComplete}
-                      min={0}
-                      max={g.assignmentsSet}
-                      aria-label={`Assignments complete for ${g.subject}`}
-                      onChange={(event) =>
-                        updateGrade(index, { assignmentsComplete: Number(event.target.value) })
-                      }
-                    />
-                    <span>of {g.assignmentsSet}</span>
-                  </div>
+                  g.grade,
+                  `${g.percent}%`,
+                  `${g.assignmentsComplete} of ${g.assignmentsSet}`
                 ])}
               />
             )}
@@ -322,96 +253,34 @@ export function ProfileShell({ person }: { person: Person }) {
       {/* ------------------------------------------------------ attendance */}
       {tab === "attendance" && isStudent ? (
         <>
-          <Panel title="Attendance summary" note="Editable in Admin">
-            <p className="sf-card-hint">
-              Admin-native — changes apply only to this record. TODO: local state only until the
-              Admin DB contract exists.
-            </p>
-            {!attendanceSummary ? (
+          <Panel title="Attendance summary" note={SOURCE_NOTE}>
+            {!person.attendanceSummary ? (
               <EmptyState title="No attendance data yet" message="No attendance records received." />
             ) : (
               <>
                 <div className="sf-stat-row">
                   <div>
                     <dt>Attendance rate</dt>
-                    <dd>
-                      <input
-                        type="text"
-                        value={attendanceSummary.rate}
-                        aria-label="Attendance rate"
-                        onChange={(event) => updateAttendanceStat({ rate: event.target.value })}
-                      />
-                    </dd>
+                    <dd>{person.attendanceSummary.rate}</dd>
                   </div>
                   <div>
                     <dt>Present</dt>
-                    <dd>
-                      <input
-                        type="number"
-                        min={0}
-                        value={attendanceSummary.present}
-                        aria-label="Present days"
-                        onChange={(event) =>
-                          updateAttendanceStat({ present: Number(event.target.value) })
-                        }
-                      />
-                    </dd>
+                    <dd>{person.attendanceSummary.present}</dd>
                   </div>
                   <div>
                     <dt>Absent</dt>
-                    <dd>
-                      <input
-                        type="number"
-                        min={0}
-                        value={attendanceSummary.absent}
-                        aria-label="Absent days"
-                        onChange={(event) =>
-                          updateAttendanceStat({ absent: Number(event.target.value) })
-                        }
-                      />
-                    </dd>
+                    <dd>{person.attendanceSummary.absent}</dd>
                   </div>
                   <div>
                     <dt>Half day</dt>
-                    <dd>
-                      <input
-                        type="number"
-                        min={0}
-                        value={attendanceSummary.halfDay}
-                        aria-label="Half days"
-                        onChange={(event) =>
-                          updateAttendanceStat({ halfDay: Number(event.target.value) })
-                        }
-                      />
-                    </dd>
+                    <dd>{person.attendanceSummary.halfDay}</dd>
                   </div>
                 </div>
 
                 <h3 className="sf-subhead">By term</h3>
                 <Table
                   head={["Term", "Rate", "Absences"]}
-                  rows={attendanceSummary.byTerm.map((t, index) => [
-                    t.term,
-                    <input
-                      key="rate"
-                      type="text"
-                      className="sf-input sf-input--cell"
-                      value={t.rate}
-                      aria-label={`Rate for ${t.term}`}
-                      onChange={(event) => updateAttendanceTerm(index, { rate: event.target.value })}
-                    />,
-                    <input
-                      key="absences"
-                      type="number"
-                      min={0}
-                      className="sf-input sf-input--cell"
-                      value={t.absences}
-                      aria-label={`Absences for ${t.term}`}
-                      onChange={(event) =>
-                        updateAttendanceTerm(index, { absences: Number(event.target.value) })
-                      }
-                    />
-                  ])}
+                  rows={person.attendanceSummary.byTerm.map((t) => [t.term, t.rate, t.absences])}
                 />
               </>
             )}
@@ -502,23 +371,12 @@ export function ProfileShell({ person }: { person: Person }) {
                 </div>,
                 <Combobox
                   key="s"
-                  items={GOAL_STATUS_OPTIONS}
-                  value={GOAL_STATUS_OPTIONS.find((option) => option.value === g.status) ?? null}
-                  onValueChange={(option) => setGoalStatus(g.id, option?.value ?? g.status)}
-                  isItemEqualToValue={isOptionEqual}
-                >
-                  <ComboboxInput aria-label={`Status for ${g.title}`} placeholder="Status" />
-                  <ComboboxContent>
-                    <ComboboxEmpty>No matches</ComboboxEmpty>
-                    <ComboboxList>
-                      {(option: ComboOption<GoalRecord["status"]>) => (
-                        <ComboboxItem key={option.value} value={option}>
-                          {option.label}
-                        </ComboboxItem>
-                      )}
-                    </ComboboxList>
-                  </ComboboxContent>
-                </Combobox>,
+                  options={GOAL_STATUS_OPTIONS}
+                  value={g.status}
+                  onChange={(next) => setGoalStatus(g.id, next)}
+                  placeholder="Status"
+                  ariaLabel={`Status for ${g.title}`}
+                />,
                 g.target,
                 <span key="u" style={{ whiteSpace: "nowrap" }}>
                   {formatSalesforceStamp(g.lastUpdated)}
@@ -580,43 +438,13 @@ export function ProfileShell({ person }: { person: Person }) {
 
       {/* -------------------------------------------- classes / schedule */}
       {tab === "classes" && isStudent ? (
-        <Panel title="Classes & schedule" note="Editable in Admin">
-          <p className="sf-card-hint">
-            Admin-native — changes apply only to this record. TODO: local state only until the
-            Admin DB contract exists.
-          </p>
-          {!classes.length ? (
+        <Panel title="Classes & schedule" note={SOURCE_NOTE}>
+          {!person.classes?.length ? (
             <EmptyState title="No class enrolments" message="No classes recorded for this student." />
           ) : (
             <Table
               head={["Class", "Teacher", "Period", "Room"]}
-              rows={classes.map((c, index) => [
-                c.className,
-                <input
-                  key="teacher"
-                  type="text"
-                  className="sf-input sf-input--cell"
-                  value={c.teacher}
-                  aria-label={`Teacher for ${c.className}`}
-                  onChange={(event) => updateClass(index, { teacher: event.target.value })}
-                />,
-                <input
-                  key="period"
-                  type="text"
-                  className="sf-input sf-input--cell"
-                  value={c.period}
-                  aria-label={`Period for ${c.className}`}
-                  onChange={(event) => updateClass(index, { period: event.target.value })}
-                />,
-                <input
-                  key="room"
-                  type="text"
-                  className="sf-input sf-input--cell"
-                  value={c.room}
-                  aria-label={`Room for ${c.className}`}
-                  onChange={(event) => updateClass(index, { room: event.target.value })}
-                />
-              ])}
+              rows={person.classes.map((c) => [c.className, c.teacher, c.period, c.room])}
             />
           )}
         </Panel>
@@ -624,91 +452,30 @@ export function ProfileShell({ person }: { person: Person }) {
 
       {tab === "classes" && !isStudent ? (
         <>
-          <Panel title="Classes & performance" note="Editable in Admin">
-            <p className="sf-card-hint">
-              Admin-native — changes apply only to this record. TODO: local state only until the
-              Admin DB contract exists.
-            </p>
-            {!teachingClasses.length ? (
+          <Panel title="Classes & performance" note={SOURCE_NOTE}>
+            {!person.teachingClasses?.length ? (
               <EmptyState title="No classes assigned" message="No teaching assignments recorded." />
             ) : (
               <Table
                 head={["Class", "Roster", "Avg. attendance", "Assignment completion", "Open alerts"]}
-                rows={teachingClasses.map((c, index) => [
+                rows={person.teachingClasses.map((c) => [
                   c.className,
-                  <input
-                    key="roster"
-                    type="number"
-                    min={0}
-                    className="sf-input sf-input--cell"
-                    value={c.roster}
-                    aria-label={`Roster size for ${c.className}`}
-                    onChange={(event) => updateTeachingClass(index, { roster: Number(event.target.value) })}
-                  />,
-                  <input
-                    key="attendance"
-                    type="text"
-                    className="sf-input sf-input--cell"
-                    value={c.avgAttendance}
-                    aria-label={`Average attendance for ${c.className}`}
-                    onChange={(event) => updateTeachingClass(index, { avgAttendance: event.target.value })}
-                  />,
-                  <input
-                    key="completion"
-                    type="text"
-                    className="sf-input sf-input--cell"
-                    value={c.assignmentCompletion}
-                    aria-label={`Assignment completion for ${c.className}`}
-                    onChange={(event) =>
-                      updateTeachingClass(index, { assignmentCompletion: event.target.value })
-                    }
-                  />,
-                  <input
-                    key="alerts"
-                    type="number"
-                    min={0}
-                    className="sf-input sf-input--cell"
-                    value={c.openAlerts}
-                    aria-label={`Open alerts for ${c.className}`}
-                    onChange={(event) => updateTeachingClass(index, { openAlerts: Number(event.target.value) })}
-                  />
+                  c.roster,
+                  c.avgAttendance,
+                  c.assignmentCompletion,
+                  c.openAlerts
                 ])}
               />
             )}
           </Panel>
 
-          <Panel title="Schedule" note="Assigned periods · editable in Admin">
-            {!schedule.length ? (
+          <Panel title="Schedule" note={`Assigned periods · ${SOURCE_NOTE}`}>
+            {!person.schedule?.length ? (
               <EmptyState title="No schedule" message="No timetable recorded." />
             ) : (
               <Table
                 head={["Period", "Class", "Room"]}
-                rows={schedule.map((c, index) => [
-                  <input
-                    key="period"
-                    type="text"
-                    className="sf-input sf-input--cell"
-                    value={c.period}
-                    aria-label={`Period ${index + 1}`}
-                    onChange={(event) => updateSchedule(index, { period: event.target.value })}
-                  />,
-                  <input
-                    key="class"
-                    type="text"
-                    className="sf-input sf-input--cell"
-                    value={c.className}
-                    aria-label={`Class for period ${index + 1}`}
-                    onChange={(event) => updateSchedule(index, { className: event.target.value })}
-                  />,
-                  <input
-                    key="room"
-                    type="text"
-                    className="sf-input sf-input--cell"
-                    value={c.room}
-                    aria-label={`Room for period ${index + 1}`}
-                    onChange={(event) => updateSchedule(index, { room: event.target.value })}
-                  />
-                ])}
+                rows={person.schedule.map((c) => [c.period, c.className, c.room])}
               />
             )}
           </Panel>
@@ -747,23 +514,12 @@ export function ProfileShell({ person }: { person: Person }) {
                       a.raisedBy ?? "—",
                       <div className="sf-alert-status-cell" key="s">
                         <Combobox
-                          items={ALERT_STATUS_OPTIONS}
-                          value={ALERT_STATUS_OPTIONS.find((option) => option.value === a.status) ?? null}
-                          onValueChange={(option) => setAlertStatus(a.id, option?.value ?? a.status)}
-                          isItemEqualToValue={isOptionEqual}
-                        >
-                          <ComboboxInput aria-label={`Status for ${a.rule}`} placeholder="Status" />
-                          <ComboboxContent>
-                            <ComboboxEmpty>No matches</ComboboxEmpty>
-                            <ComboboxList>
-                              {(option: ComboOption<AlertRecord["status"]>) => (
-                                <ComboboxItem key={option.value} value={option}>
-                                  {option.label}
-                                </ComboboxItem>
-                              )}
-                            </ComboboxList>
-                          </ComboboxContent>
-                        </Combobox>
+                          options={ALERT_STATUS_OPTIONS}
+                          value={a.status}
+                          onChange={(next) => setAlertStatus(a.id, next)}
+                          placeholder="Status"
+                          ariaLabel={`Status for ${a.rule}`}
+                        />
                         {a.overdue && a.status === "Open" ? (
                           <StatusBadge tone="error">Past SLA</StatusBadge>
                         ) : null}
@@ -851,6 +607,27 @@ function Table({
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/** Same field grid as the editable panel, but as plain values. */
+function ReadOnlyFieldsPanel({ title, fields }: { title: string; fields: ReadOnlyField[] }) {
+  return (
+    <div className="sf-panel">
+      <div className="sf-panel-head">
+        <h2>{title}</h2>
+        <span className="sf-panel-note">{SOURCE_NOTE}</span>
+      </div>
+
+      <dl className="sf-field-grid">
+        {fields.map((field) => (
+          <div key={field.label}>
+            <dt>{field.label}</dt>
+            <dd>{field.value.trim() === "" ? "—" : field.value}</dd>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }

@@ -88,6 +88,9 @@ function toPerson(row: Record<string, string>, line: number): ParsedRow {
       school: school.name,
       group,
       status,
+      active: true,
+      // Never signed in yet — these are brand new accounts.
+      lastLogin: null,
       // Seeded blank so each imported profile opens with fields to complete,
       // and starts at Draft until the admin fills them in.
       personal: blankPersonalFields(kind),

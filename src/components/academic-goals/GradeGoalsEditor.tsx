@@ -10,21 +10,12 @@ import {
 } from "@/lib/data/academicGoals";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList
-} from "@/components/ui/combobox";
+import { Combobox } from "@/components/shared/Combobox";
 
 // TODO: local state only — persist through the Admin DB Academic Goals
 // contract when it exists.
 
 type ComboOption = { value: string; label: string };
-
-const isOptionEqual = (a: ComboOption, b: ComboOption) => a.value === b.value;
 
 const categoryOptions: ComboOption[] = goalCategories.map((category) => ({
   value: category.title,
@@ -193,23 +184,11 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
       <label className="sf-field">
         <span>Category</span>
         <Combobox
-          items={categoryOptions}
-          value={categoryOptions.find((option) => option.value === draft.category) ?? null}
-          onValueChange={(option) => setDraft({ ...draft, category: option?.value ?? draft.category })}
-          isItemEqualToValue={isOptionEqual}
-        >
-          <ComboboxInput placeholder="Select a category" />
-          <ComboboxContent>
-            <ComboboxEmpty>No matches</ComboboxEmpty>
-            <ComboboxList>
-              {(option: ComboOption) => (
-                <ComboboxItem key={option.value} value={option}>
-                  {option.label}
-                </ComboboxItem>
-              )}
-            </ComboboxList>
-          </ComboboxContent>
-        </Combobox>
+          options={categoryOptions}
+          value={draft.category}
+          onChange={(next) => setDraft({ ...draft, category: next })}
+          placeholder="Select a category"
+        />
       </label>
 
       <label className="sf-field">

@@ -208,6 +208,11 @@ export type Person = {
   /** Grade for students, department for faculty. */
   group: string;
   status: "On Track" | "At Risk" | "Other";
+  /** Account state for the login/portal account — distinct from `status`,
+      which tracks academic standing, not whether the account is in use. */
+  active: boolean;
+  /** ISO timestamp of the account's most recent sign-in, if it has ever logged in. */
+  lastLogin: string | null;
   personal: ReadOnlyField[];
   academic: ReadOnlyField[];
 
@@ -237,6 +242,8 @@ export const people: Person[] = [
     school: "Edison High School",
     group: "Grade 10",
     status: "At Risk",
+    active: true,
+    lastLogin: "2026-07-17T08:12:00-04:00",
     personal: [
       { label: "Preferred name", value: "Mike" },
       { label: "Date of birth", value: "14 Mar 2010" },
@@ -395,6 +402,8 @@ export const people: Person[] = [
     school: "Edison High School",
     group: "Grade 9",
     status: "At Risk",
+    active: true,
+    lastLogin: "2026-07-16T15:40:00-04:00",
     personal: [
       { label: "Preferred name", value: "Nick" },
       { label: "Date of birth", value: "02 Nov 2011" },
@@ -499,6 +508,8 @@ export const people: Person[] = [
     school: "James Madison Intermediate",
     group: "Grade 8",
     status: "At Risk",
+    active: false,
+    lastLogin: "2026-06-02T09:15:00-04:00",
     personal: [
       { label: "Preferred name", value: "Ravi" },
       { label: "Date of birth", value: "18 Jan 2012" },
@@ -586,6 +597,8 @@ export const people: Person[] = [
     school: "Edison High School",
     group: "Grade 10",
     status: "On Track",
+    active: true,
+    lastLogin: "2026-07-17T07:50:00-04:00",
     personal: [
       { label: "Preferred name", value: "Anas" },
       { label: "Guardian contact", value: "guardian@example.org" },
@@ -624,6 +637,8 @@ export const people: Person[] = [
     school: "Edison High School",
     group: "Grade 9",
     status: "On Track",
+    active: true,
+    lastLogin: "2026-07-15T13:22:00-04:00",
     personal: [
       { label: "Preferred name", value: "Naphi" },
       { label: "Guardian contact", value: "guardian@example.org" },
@@ -659,6 +674,8 @@ export const people: Person[] = [
     school: "James Madison Intermediate",
     group: "Grade 8",
     status: "On Track",
+    active: false,
+    lastLogin: "2026-05-20T10:05:00-04:00",
     personal: [
       { label: "Preferred name", value: "Oliver" },
       { label: "Guardian contact", value: "guardian@example.org" },
@@ -697,6 +714,8 @@ export const people: Person[] = [
     school: "Edison High School",
     group: "Grade 10",
     status: "On Track",
+    active: true,
+    lastLogin: "2026-07-17T06:45:00-04:00",
     personal: [
       { label: "Preferred name", value: "Rob" },
       { label: "Guardian contact", value: "guardian@example.org" },
@@ -776,6 +795,8 @@ export const people: Person[] = [
     school: "Edison High School",
     group: "Mathematics",
     status: "On Track",
+    active: true,
+    lastLogin: "2026-07-17T07:30:00-04:00",
     personal: [
       { label: "Staff ID", value: "123456789" },
       { label: "Email", value: "kblekeski@edison.example.org" },
@@ -819,6 +840,8 @@ export const people: Person[] = [
     school: "Edison Middle School",
     group: "English Language Arts",
     status: "On Track",
+    active: true,
+    lastLogin: "2026-07-16T16:10:00-04:00",
     personal: [
       { label: "Staff ID", value: "123456912" },
       { label: "Email", value: "achen@edison.example.org" },
@@ -858,6 +881,8 @@ export const people: Person[] = [
     school: "Lincoln Elementary",
     group: "Science",
     status: "On Track",
+    active: true,
+    lastLogin: "2026-07-17T11:58:00-04:00",
     personal: [
       { label: "Staff ID", value: "123457001" },
       { label: "Email", value: "pnair@edison.example.org" },
@@ -900,6 +925,8 @@ export const people: Person[] = [
     school: "Franklin Elementary",
     group: "Computer Science",
     status: "Other",
+    active: false,
+    lastLogin: "2026-04-18T09:00:00-04:00",
     personal: [
       { label: "Staff ID", value: "123457044" },
       { label: "Email", value: "dosei@edison.example.org" },

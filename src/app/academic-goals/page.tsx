@@ -1,56 +1,95 @@
 import Link from "next/link";
 import { schools } from "@/lib/data/schools";
-import { schoolGoalsSummary } from "@/lib/data/academicGoals";
+import { gradeGoalsSummary, schoolGoalsSummary } from "@/lib/data/academicGoals";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import {
+  ExpandableSchoolTable,
+  GradeDetailTable,
+  type SchoolTableRow
+} from "@/components/shared/ExpandableSchoolTable";
 
-/** Step one of school → grade → goals. */
+/** Step one of school → grade → goals. Rows expand to their grades in place. */
 export default function GoalsSchoolPickerPage() {
+  const rows: SchoolTableRow[] = schools.map((school) => {
+    const summary = schoolGoalsSummary(school.id);
+
+    return {
+      id: school.id,
+      name: school.name,
+      href: `/academic-goals/${school.id}`,
+      cells: [
+        school.level,
+        summary.grades,
+        summary.goals,
+        summary.configuredGrades > 0 ? (
+          <StatusBadge key="status" tone="ok">
+            {summary.configuredGrades} of {summary.grades} grades
+          </StatusBadge>
+        ) : (
+          <StatusBadge key="status" tone="neutral">
+            No goals yet
+          </StatusBadge>
+        ),
+        // Goals are set per grade, so a school row only views its grade list.
+        <div className="sf-row-actions" key="actions">
+          <Link className="sf-btn sf-btn--sm" href={`/academic-goals/${school.id}`}>
+            View
+          </Link>
+        </div>
+      ],
+      detail: (
+        <GradeDetailTable
+          head={["Grade", "Active goals", "Status", "Actions"]}
+          rows={school.grades.map((grade) => {
+            const gradeSummary = gradeGoalsSummary(school.id, grade);
+            return {
+              key: grade,
+              cells: [
+                <Link
+                  key="grade"
+                  className="sf-bar-group-link"
+                  href={`/academic-goals/${school.id}/${grade}`}
+                >
+                  Grade {grade}
+                </Link>,
+                gradeSummary.goals,
+                gradeSummary.configured ? (
+                  <StatusBadge key="status" tone="ok">
+                    Configured
+                  </StatusBadge>
+                ) : (
+                  <StatusBadge key="status" tone="neutral">
+                    No goals yet
+                  </StatusBadge>
+                ),
+                // The grade page holds the goals editor.
+                <div className="sf-row-actions" key="actions">
+                  <Link
+                    className="sf-btn sf-btn--sm sf-btn--primary"
+                    href={`/academic-goals/${school.id}/${grade}`}
+                  >
+                    Edit
+                  </Link>
+                </div>
+              ]
+            };
+          })}
+        />
+      )
+    };
+  });
+
   return (
     <div className="sf-panel">
       <div className="sf-panel-head">
         <h2>Schools</h2>
-        <span className="sf-panel-note">Pick a school, then a grade</span>
+        <span className="sf-panel-note">Expand a school, or open it to pick a grade</span>
       </div>
 
-      <div className="sf-table-wrap">
-        <table className="sf-table">
-          <thead>
-            <tr>
-              <th scope="col">School</th>
-              <th scope="col">Level</th>
-              <th scope="col">Grades</th>
-              <th scope="col">Active goals</th>
-              <th scope="col">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {schools.map((school) => {
-              const summary = schoolGoalsSummary(school.id);
-              return (
-                <tr key={school.id}>
-                  <td>
-                    <Link className="sf-bar-group-link" href={`/academic-goals/${school.id}`}>
-                      {school.name}
-                    </Link>
-                  </td>
-                  <td>{school.level}</td>
-                  <td>{summary.grades}</td>
-                  <td>{summary.goals}</td>
-                  <td>
-                    {summary.configuredGrades > 0 ? (
-                      <StatusBadge tone="ok">
-                        {summary.configuredGrades} of {summary.grades} grades
-                      </StatusBadge>
-                    ) : (
-                      <StatusBadge tone="neutral">No goals yet</StatusBadge>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <ExpandableSchoolTable
+        head={["School", "Level", "Grades", "Active goals", "Status", "Actions"]}
+        rows={rows}
+      />
     </div>
   );
 }

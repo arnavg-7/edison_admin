@@ -39,36 +39,48 @@ export default async function GradePickerPage({
           </span>
         </div>
 
-        <ul className="scope-grid scope-grid--tight">
-          {school.grades.map((grade) => {
-            const summary = gradeConfigSummary(school.id, grade);
-            return (
-              <li key={grade}>
-                <Link
-                  className="scope-card"
-                  href={`/skills-development/${school.id}/${grade}`}
-                >
-                  <span className="scope-card-top">
-                    <span className="scope-card-kicker">
-                      {grade === "K" ? "Kindergarten" : `Grade ${grade}`}
-                    </span>
-                    {summary.configured ? (
-                      <StatusBadge tone="ok">{summary.published} published</StatusBadge>
-                    ) : (
-                      <StatusBadge tone="neutral">Not configured</StatusBadge>
-                    )}
-                  </span>
-                  <span className="scope-card-meta">
-                    {summary.areas} areas · {summary.skills} skills
-                  </span>
-                  <span className="scope-card-meta">
-                    {summary.groups} skill groups · {summary.subSkills} sub-skills
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="sf-table-wrap">
+          <table className="sf-table">
+            <thead>
+              <tr>
+                <th scope="col">Grade</th>
+                <th scope="col">Areas</th>
+                <th scope="col">Skills</th>
+                <th scope="col">Skill groups</th>
+                <th scope="col">Sub-skills</th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {school.grades.map((grade) => {
+                const summary = gradeConfigSummary(school.id, grade);
+                return (
+                  <tr key={grade}>
+                    <td>
+                      <Link
+                        className="sf-bar-group-link"
+                        href={`/skills-development/${school.id}/${grade}`}
+                      >
+                        {grade === "K" ? "Kindergarten" : `Grade ${grade}`}
+                      </Link>
+                    </td>
+                    <td>{summary.areas}</td>
+                    <td>{summary.skills}</td>
+                    <td>{summary.groups}</td>
+                    <td>{summary.subSkills}</td>
+                    <td>
+                      {summary.configured ? (
+                        <StatusBadge tone="ok">{summary.published} published</StatusBadge>
+                      ) : (
+                        <StatusBadge tone="neutral">Not configured</StatusBadge>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
         {!inScope ? (
           <p className="sf-panel-foot">

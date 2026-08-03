@@ -24,6 +24,16 @@ export const ATTENTION_SEVERITIES: { value: AttentionSeverity; label: string }[]
   { value: "medium", label: "Medium" }
 ];
 
+/** Worst-first ordering, shared by the Home teaser banner and the full triage queue. */
+export const SEVERITY_RANK: Record<AttentionSeverity, number> = { critical: 0, high: 1, medium: 2 };
+
+/** Status-pill tone per severity, shared by the Home teaser banner and the full triage queue. */
+export const SEVERITY_TONE: Record<AttentionSeverity, string> = {
+  critical: "sf-status--error",
+  high: "sf-status--warn",
+  medium: "sf-status--neutral"
+};
+
 export type AttentionItem = {
   id: string;
   category: AttentionCategory;
@@ -168,6 +178,17 @@ export const attentionItems: AttentionItem[] = [
 
 export function needsAttentionOpenCount(): number {
   return attentionItems.filter((item) => !item.resolved).length;
+}
+
+/** Worst-first, most-recent-first slice for the Home page teaser banner. */
+export function topAttentionItems(limit: number): AttentionItem[] {
+  return attentionItems
+    .filter((item) => !item.resolved)
+    .slice()
+    .sort(
+      (a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || b.flaggedAt.localeCompare(a.flaggedAt)
+    )
+    .slice(0, limit);
 }
 
 export function attentionCountsByCategory(): Record<AttentionCategory, number> {

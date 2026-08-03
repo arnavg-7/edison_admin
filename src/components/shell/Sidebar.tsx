@@ -3,12 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ADMIN_ROLE_LABEL, SECTIONS } from "@/lib/nav";
-import { needsAttentionOpenCount } from "@/lib/data/needsAttention";
 import { NavIcon } from "./NavIcon";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const openCount = needsAttentionOpenCount();
 
   return (
     <aside className="sf-sidebar">
@@ -33,12 +31,6 @@ export function Sidebar() {
                 <NavIcon name={section.id} />
               </span>
               <span>{section.label}</span>
-              {section.id === "needs-attention" && openCount > 0 ? (
-                <span className="sf-nav-count">
-                  {openCount}
-                  <span className="sf-sr-only"> items need attention</span>
-                </span>
-              ) : null}
             </Link>
           );
         })}

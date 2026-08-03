@@ -22,14 +22,6 @@ export function NavIcon({ name }: { name: SectionId }) {
           <path d="M9.5 20v-6h5v6" />
         </svg>
       );
-    case "needs-attention":
-      return (
-        <svg {...base}>
-          <path d="M12 3.5 21 19.5H3L12 3.5Z" />
-          <path d="M12 9.5v4.5" />
-          <path d="M12 17h.01" />
-        </svg>
-      );
     case "reporting":
       return (
         <svg {...base}>

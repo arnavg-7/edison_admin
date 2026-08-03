@@ -1,13 +1,27 @@
 // TODO: replace with the real Genesis OneRoster orgs/classes contract.
 
+export type SchoolLevel = "ES" | "MS" | "HS" | "KG";
+
 export type School = {
   id: string;
   name: string;
-  level: "ES" | "MS" | "HS" | "KG";
+  level: SchoolLevel;
   grades: string[];
   /** Real gap: only one school has homeroom courses in the Genesis export. */
   hasHomeroomCourses: boolean;
 };
+
+/** Grade-level filter options, youngest to oldest, for the User Management drill-down. */
+export const SCHOOL_LEVELS: { value: SchoolLevel; label: string }[] = [
+  { value: "ES", label: "Elementary School" },
+  { value: "MS", label: "Middle School" },
+  { value: "HS", label: "High School" }
+];
+
+/** Human label for a grade value ("K" -> "Kindergarten", "9" -> "Grade 9"). */
+export function gradeLabel(grade: string): string {
+  return grade === "K" ? "Kindergarten" : `Grade ${grade}`;
+}
 
 export const schools: School[] = [
   {
@@ -20,6 +34,13 @@ export const schools: School[] = [
   {
     id: "edison-ms",
     name: "Edison Middle School",
+    level: "MS",
+    grades: ["6", "7", "8"],
+    hasHomeroomCourses: false
+  },
+  {
+    id: "james-madison-intermediate",
+    name: "James Madison Intermediate",
     level: "MS",
     grades: ["6", "7", "8"],
     hasHomeroomCourses: false

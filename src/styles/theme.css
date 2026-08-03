@@ -423,6 +423,7 @@ body {
   color: var(--sf-text);
   padding: 8px 10px;
   font-size: 13px;
+  line-height: 20px;
   font-family: inherit;
   min-height: 36px;
   min-width: 0;
@@ -430,6 +431,22 @@ body {
 
 .sf-field textarea {
   resize: vertical;
+}
+
+.sf-field select,
+select.sf-input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 30px;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3e%3cpath stroke='%23545d73' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 9l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+}
+
+.sf-field select:disabled,
+select.sf-input:disabled {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3e%3cpath stroke='%235b6474' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 9l6 6 6-6'/%3e%3c/svg%3e");
 }
 
 .sf-field select option {
@@ -974,41 +991,104 @@ body {
   }
 }
 
-/* Needs Attention summary card on Home */
+/* Needs Attention priority banner on Home — the first thing a Super Admin
+   sees each morning, so it gets its own prominent treatment rather than
+   sitting as one more card in the metric grid. */
 
-.sf-attention-summary {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 16px;
+.sf-priority-banner {
+  margin-top: 16px;
+  border-radius: var(--sf-radius-card);
+  border: 1px solid var(--sf-card-border);
+  background: var(--sf-card);
+  overflow: hidden;
+}
+
+.sf-priority-banner-head {
+  padding: 20px 24px 18px;
+  border-bottom: 1px solid var(--sf-card-border);
+}
+
+.sf-priority-banner-eyebrow {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sf-warn-text);
+}
+
+.sf-priority-banner-head h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--sf-text);
+}
+
+.sf-priority-banner-empty {
+  display: flex;
   align-items: center;
-  padding: 8px 0 4px;
+  gap: 10px;
+  margin: 0;
+  padding: 18px 24px;
+  font-size: 13px;
+  color: var(--sf-text-muted);
 }
 
-.sf-attention-total {
-  font-size: 52px;
-  line-height: 1;
-  font-weight: 500;
-  color: var(--sf-error-text);
-}
-
-.sf-attention-breakdown {
+.sf-priority-banner-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  gap: 4px;
+}
+
+.sf-priority-banner-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--sf-card-border);
+}
+
+.sf-priority-banner-list li:nth-child(even) {
+  background: var(--sf-plot);
+}
+
+.sf-priority-banner-subject {
+  font-size: 14.5px;
+  color: var(--sf-text);
+  overflow-wrap: anywhere;
+}
+
+.sf-priority-banner-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 24px;
+  flex-wrap: wrap;
+}
+
+.sf-priority-banner-more {
   font-size: 12px;
   color: var(--sf-text-muted);
 }
 
-.sf-attention-breakdown li {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
+.sf-priority-banner-foot .sf-inline-link {
+  margin-top: 0;
 }
 
-.sf-attention-breakdown strong {
-  color: var(--sf-text);
+.sf-priority-banner-caveat {
+  margin: 0;
+  padding: 0 24px 16px;
+  font-size: 12px;
+  color: var(--sf-warn-text);
+}
+
+/* Home metric tabs — the eight steady-state cards this used to flatten into
+   one grid, grouped so only one cluster competes for attention at a time. */
+
+.sf-home-metrics {
+  margin-top: 24px;
 }
 
 .sf-inline-link {

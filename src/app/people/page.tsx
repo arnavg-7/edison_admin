@@ -3,21 +3,44 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { people, type PersonKind } from "@/lib/data/people";
-import { schools } from "@/lib/data/schools";
+import { SCHOOL_LEVELS, gradeLabel, schools, type SchoolLevel } from "@/lib/data/schools";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
+
+const schoolByName = new Map(schools.map((school) => [school.name, school]));
 
 /** Search and browse, then open an individual profile. */
 export default function PeopleSearchPage() {
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState<PersonKind | "all">("all");
+  const [level, setLevel] = useState<SchoolLevel | "all">("all");
   const [school, setSchool] = useState("all");
+  const [grade, setGrade] = useState("all");
+
+  // Cascade: Grade Level -> School -> Grade. Each step's options come from the
+  // step before it, and picking a new value upstream clears everything downstream
+  // so the UI can never be left pointing at an impossible combination.
+  const schoolsForLevel = level === "all" ? schools : schools.filter((s) => s.level === level);
+  const gradesForSchool = school === "all" ? [] : (schoolByName.get(school)?.grades ?? []);
+
+  const setLevelAndReset = (value: SchoolLevel | "all") => {
+    setLevel(value);
+    setSchool("all");
+    setGrade("all");
+  };
+
+  const setSchoolAndReset = (value: string) => {
+    setSchool(value);
+    setGrade("all");
+  };
 
   const results = useMemo(
     () =>
       people
         .filter((person) => (kind === "all" ? true : person.kind === kind))
+        .filter((person) => (level === "all" ? true : schoolByName.get(person.school)?.level === level))
         .filter((person) => (school === "all" ? true : person.school === school))
+        .filter((person) => (grade === "all" ? true : person.group === gradeLabel(grade)))
         .filter((person) =>
           query.trim() === ""
             ? true
@@ -25,14 +48,12 @@ export default function PeopleSearchPage() {
                 .toLowerCase()
                 .includes(query.trim().toLowerCase())
         ),
-    [query, kind, school]
+    [query, kind, level, school, grade]
   );
-
-  const schoolNames = Array.from(new Set([...schools.map((s) => s.name), ...people.map((p) => p.school)]));
 
   return (
     <section className="sf-main">
-      <h1 className="sf-page-title">Student &amp; Faculty 360</h1>
+      <h1 className="sf-page-title">User Management</h1>
       <p className="sf-page-sub">
         Individual profiles. Records owned by Salesforce are read-only here and link out to the
         source; internal notes and flags are editable in Admin.
@@ -59,12 +80,43 @@ export default function PeopleSearchPage() {
         </label>
 
         <label className="sf-field">
+          <span>Grade Level</span>
+          <select
+            value={level}
+            onChange={(event) => setLevelAndReset(event.target.value as SchoolLevel | "all")}
+          >
+            <option value="all">All grade levels</option>
+            {SCHOOL_LEVELS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="sf-field">
           <span>School</span>
-          <select value={school} onChange={(event) => setSchool(event.target.value)}>
+          <select value={school} onChange={(event) => setSchoolAndReset(event.target.value)}>
             <option value="all">All schools</option>
-            {schoolNames.map((name) => (
-              <option key={name} value={name}>
-                {name}
+            {schoolsForLevel.map((option) => (
+              <option key={option.id} value={option.name}>
+                {option.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="sf-field">
+          <span>Grade</span>
+          <select
+            value={grade}
+            onChange={(event) => setGrade(event.target.value)}
+            disabled={school === "all"}
+          >
+            <option value="all">All grades</option>
+            {gradesForSchool.map((value) => (
+              <option key={value} value={value}>
+                {gradeLabel(value)}
               </option>
             ))}
           </select>

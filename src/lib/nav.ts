@@ -10,7 +10,6 @@
 
 export type SectionId =
   | "home"
-  | "needs-attention"
   | "reporting"
   | "people-360"
   | "portal-configuration"
@@ -28,9 +27,8 @@ export type Section = {
 
 export const SECTIONS: Section[] = [
   { id: "home", label: "Home", href: "/" },
-  { id: "needs-attention", label: "Needs Attention", href: "/needs-attention" },
   { id: "reporting", label: "Reporting & Analytics", href: "/reporting" },
-  { id: "people-360", label: "Student & Faculty 360", href: "/people" },
+  { id: "people-360", label: "User Management", href: "/people" },
   { id: "portal-configuration", label: "Portal Configuration", href: "/portal-configuration" },
   { id: "academic-goals", label: "Academic Goals", href: "/academic-goals" },
   { id: "alerts", label: "Alerts & Notifications", href: "/alerts" },

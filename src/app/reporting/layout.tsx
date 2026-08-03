@@ -9,7 +9,7 @@ import { REPORT_ENTRIES } from "@/lib/data/reportIndex";
 const TABS = REPORT_ENTRIES.map(({ label, href }) => ({ label, href }));
 
 /** Class/Section narrows only the reports that go that deep. */
-const SECTION_FILTER_ROUTES = ["/reporting/faculty-performance", "/reporting/custom"];
+const SECTION_FILTER_ROUTES = ["/reporting/faculty-performance"];
 
 export default function ReportingLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

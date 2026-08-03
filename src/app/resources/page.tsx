@@ -22,7 +22,6 @@ export default function ResourcesPage() {
           <div className="sf-panel" key={group.category}>
             <div className="sf-panel-head">
               <h2>{group.category}</h2>
-              <span className="sf-panel-note">{group.items.length} resources</span>
             </div>
 
             <ListEditor

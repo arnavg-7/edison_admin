@@ -1,12 +1,12 @@
 "use client";
 
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowExpandIcon, RefreshIcon } from "@hugeicons/core-free-icons";
+import { RefreshIcon } from "@hugeicons/core-free-icons";
 import { formatSalesforceStamp } from "@/lib/format";
 
 /**
- * The Salesforce-style metric card: title, refresh + expand tools, body slot,
- * then a footer with the underlying report link and its own freshness stamp.
+ * The Salesforce-style metric card: title, refresh tool, body slot, then a
+ * footer with the underlying report link and its own freshness stamp.
  *
  * The stamp is per-card by design — it reflects when that Salesforce report
  * last refreshed, so a stale report shows a stale time rather than a wrong
@@ -41,10 +41,6 @@ export function MetricCard({
           >
             <HugeiconsIcon icon={RefreshIcon} size={14} strokeWidth={2} />
             <span className="sf-sr-only">Refresh {title}</span>
-          </button>
-          <button type="button" className="sf-card-tool" title={`Expand ${title}`}>
-            <HugeiconsIcon icon={ArrowExpandIcon} size={14} strokeWidth={2} />
-            <span className="sf-sr-only">Expand {title}</span>
           </button>
         </div>
       </div>

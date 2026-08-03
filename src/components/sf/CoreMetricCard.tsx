@@ -1,5 +1,7 @@
 "use client";
 
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowDown01Icon, ArrowUp01Icon } from "@hugeicons/core-free-icons";
 import { MetricCard } from "./MetricCard";
 
 /**
@@ -40,7 +42,8 @@ export function CoreMetricCard({
     <MetricCard title={title} report={report} asOf={asOf} span="sf-col-4">
       <div className="sf-metric-value">{value}</div>
       <p className={`sf-metric-delta is-${direction}`}>
-        {direction === "up" ? "▲" : "▼"} {delta}
+        <HugeiconsIcon icon={direction === "up" ? ArrowUp01Icon : ArrowDown01Icon} size={12} strokeWidth={2.5} />
+        {delta}
       </p>
       <svg
         className="sf-sparkline"

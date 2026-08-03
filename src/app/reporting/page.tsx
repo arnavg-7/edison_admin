@@ -73,11 +73,19 @@ export default function MetricsCatalogPage() {
         series={[82.1, 82.9, 83.4, 83.1, 84.0, 84.4, 84.7]}
       />
 
+      {/*
+       * col-6 pairs (not col-3 + col-3 + col-6) to match the same cards' sizing
+       * on Home. col-3 remaps to span 4 between 900-1280px while col-6 stays
+       * put, so a col-3 + col-3 + col-6 row overflowed the 12-column grid at
+       * that width and wrapped into two half-empty rows. col-6 pairs, plus
+       * Students' Status standalone at col-12 like its Home counterpart, hold
+       * at every breakpoint above the single-column mobile layout.
+       */}
       <MetricCard
         title="Number of Students"
         report={REPORTS.numberOfStudents.name}
         asOf={REPORTS.numberOfStudents.asOf}
-        span="sf-col-3"
+        span="sf-col-6"
       >
         <StatValue value={numberOfStudents} label="Number of Students" />
       </MetricCard>
@@ -86,7 +94,7 @@ export default function MetricsCatalogPage() {
         title="Total Faculty"
         report={REPORTS.totalFaculty.name}
         asOf={REPORTS.totalFaculty.asOf}
-        span="sf-col-3"
+        span="sf-col-6"
       >
         <StatValue value={totalFaculty} label="Total Faculty" />
       </MetricCard>
@@ -123,11 +131,19 @@ export default function MetricsCatalogPage() {
         title="Students' Status"
         report={REPORTS.studentsStatus.name}
         asOf={REPORTS.studentsStatus.asOf}
-        span="sf-col-6"
+        span="sf-col-12"
       >
         <Funnel stages={studentsStatus} legendTitle="Status" total={numberOfStudents} />
       </MetricCard>
 
+      {/*
+       * The four detail bar charts read coarse-to-fine: by grade, by school,
+       * then individual students, so the drill-down order matches how an
+       * admin actually narrows in. All four share sf-col-12 — Assignment
+       * Submissions used to be the odd sf-col-6 left dangling alone in the
+       * last row; matching its siblings' width closes that gap and reads as
+       * one consistent section instead of a mismatched trailing card.
+       */}
       <MetricCard
         title="Students By Grade"
         report={REPORTS.studentsByGrade.name}
@@ -139,6 +155,20 @@ export default function MetricsCatalogPage() {
           axisTitle="Record Count"
           legendTitle="Primary Business Organization"
           series={GRADE_SERIES}
+        />
+      </MetricCard>
+
+      <MetricCard
+        title="Student Attendance By School"
+        report={REPORTS.studentAttendanceBySchool.name}
+        asOf={REPORTS.studentAttendanceBySchool.asOf}
+        span="sf-col-12"
+      >
+        <GroupedBars
+          groups={studentAttendanceBySchool}
+          axisTitle="Record Count"
+          legendTitle="Attendance Status"
+          series={ATTENDANCE_SERIES}
         />
       </MetricCard>
 
@@ -160,26 +190,10 @@ export default function MetricsCatalogPage() {
       </MetricCard>
 
       <MetricCard
-        title="Student Attendance By School"
-        report={REPORTS.studentAttendanceBySchool.name}
-        asOf={REPORTS.studentAttendanceBySchool.asOf}
-        span="sf-col-12"
-      >
-        <GroupedBars
-          groups={studentAttendanceBySchool}
-          axisTitle="Record Count"
-          legendTitle="Attendance Status"
-          series={ATTENDANCE_SERIES}
-        />
-      </MetricCard>
-
-
-
-      <MetricCard
         title="Assignment Submissions"
         report={REPORTS.assignmentSubmissions.name}
         asOf={REPORTS.assignmentSubmissions.asOf}
-        span="sf-col-6"
+        span="sf-col-12"
       >
         <GroupedBars
           groups={assignmentSubmissions}
@@ -189,8 +203,6 @@ export default function MetricsCatalogPage() {
           groupLabelIsCategory
         />
       </MetricCard>
-
-
     </div>
   );
 }

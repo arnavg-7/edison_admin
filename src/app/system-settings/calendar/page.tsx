@@ -32,9 +32,6 @@ export default function AcademicCalendarPage() {
       <div className="sf-panel">
         <div className="sf-panel-head">
           <h2>Academic calendar</h2>
-          <span className="sf-panel-note">
-            {`${rows.length} terms · drives the “This Term” reporting filter`}
-          </span>
         </div>
 
         <table className="sf-table">

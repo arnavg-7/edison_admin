@@ -16,9 +16,6 @@ export default function AuditLogPage() {
       <div className="sf-panel">
         <div className="sf-panel-head">
           <h2>Data privacy &amp; audit log</h2>
-          <span className="sf-panel-note">
-            {entries.length} of {auditLog.length} entries
-          </span>
         </div>
 
         <label className="filter-field audit-search">

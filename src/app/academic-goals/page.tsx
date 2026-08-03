@@ -4,15 +4,10 @@ import { goalTemplates } from "@/lib/data/academicGoals";
 import { ListEditor } from "@/components/shared/ListEditor";
 
 export default function GoalTemplatesPage() {
-  const published = goalTemplates.filter((item) => item.status?.label === "Published").length;
-
   return (
     <div className="sf-panel">
       <div className="sf-panel-head">
         <h2>Goal templates</h2>
-        <span className="sf-panel-note">
-          {published} of {goalTemplates.length} published
-        </span>
       </div>
 
       <ListEditor

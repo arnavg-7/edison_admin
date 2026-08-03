@@ -57,8 +57,12 @@ function niceTicks(max: number, count = 6): number[] {
   const raw = max / count;
   const mag = Math.pow(10, Math.floor(Math.log10(raw)));
   const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw) ?? mag * 10;
+  // The top tick must be >= max (not just the largest multiple <= max), or a
+  // bar whose value sits between the last tick and the true max scales past
+  // 100% width and overflows its card.
+  const top = Math.ceil(max / step) * step;
   const ticks: number[] = [];
-  for (let v = 0; v <= max + step * 0.001; v += step) ticks.push(Math.round(v * 100) / 100);
+  for (let v = 0; v <= top + step * 0.001; v += step) ticks.push(Math.round(v * 100) / 100);
   return ticks;
 }
 
@@ -110,8 +114,6 @@ export function GroupedBars({
   return (
     <div className="sf-chart">
       <div className="sf-chart-main">
-        <div className="sf-axis-title">{axisTitle}</div>
-        <Ruler max={max} />
         <div className="sf-bars">
           {groups.map((group) => (
             <div className="sf-bar-group" key={group.label}>
@@ -162,6 +164,8 @@ export function GroupedBars({
             </div>
           ))}
         </div>
+        <Ruler max={max} />
+        <div className="sf-axis-title">{axisTitle}</div>
       </div>
       <Legend title={legendTitle} series={series} />
     </div>
@@ -185,14 +189,6 @@ export function StackedBars({
   return (
     <div className="sf-chart">
       <div className="sf-chart-main">
-        <div className="sf-axis-title">{axisTitle}</div>
-        <div className="sf-ruler" aria-hidden>
-          {[0, 20, 40, 60, 80, 100].map((t) => (
-            <span className="sf-ruler-tick" key={t} style={{ left: `${t}%` }}>
-              {t}%
-            </span>
-          ))}
-        </div>
         <div className="sf-stack">
           {rows.map((row) => {
             const total = row.segments.reduce((sum, s) => sum + s.value, 0) || 1;
@@ -223,6 +219,14 @@ export function StackedBars({
             );
           })}
         </div>
+        <div className="sf-ruler" aria-hidden>
+          {[0, 20, 40, 60, 80, 100].map((t) => (
+            <span className="sf-ruler-tick" key={t} style={{ left: `${t}%` }}>
+              {t}%
+            </span>
+          ))}
+        </div>
+        <div className="sf-axis-title">{axisTitle}</div>
       </div>
       <Legend title={legendTitle} series={series} />
     </div>

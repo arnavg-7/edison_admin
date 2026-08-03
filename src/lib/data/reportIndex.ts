@@ -43,12 +43,5 @@ export const REPORT_ENTRIES: ReportEntry[] = [
     href: "/reporting/admin-dashboard",
     description: "Portal adoption by school and last successful sync per integration.",
     highlight: "Adoption"
-  },
-  {
-    id: "custom",
-    label: "Custom Report Builder",
-    href: "/reporting/custom",
-    description: "Build an ad hoc view over the named reports and export it.",
-    highlight: "Export to CSV"
   }
 ];

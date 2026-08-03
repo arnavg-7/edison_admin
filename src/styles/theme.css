@@ -749,7 +749,7 @@ select.sf-input:disabled {
   text-align: center;
   font-size: 11px;
   color: var(--sf-text-muted);
-  margin-bottom: 6px;
+  margin-top: 6px;
 }
 
 .sf-legend {
@@ -949,18 +949,18 @@ select.sf-input:disabled {
   margin-bottom: 4px;
 }
 
-/* Axis ruler across the top of bar charts */
+/* Axis ruler across the bottom of bar charts */
 
 .sf-ruler {
   position: relative;
   height: 14px;
-  margin-bottom: 4px;
-  border-bottom: 1px solid var(--sf-gridline);
+  margin-top: 8px;
+  border-top: 1px solid var(--sf-gridline);
 }
 
 .sf-ruler-tick {
   position: absolute;
-  top: 0;
+  top: 4px;
   font-size: 10px;
   color: var(--sf-text-dim);
   transform: translateX(-50%);
@@ -1164,8 +1164,15 @@ select.sf-input:disabled {
 }
 
 .sf-metric-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   margin: 4px 0 0;
   font-size: 12px;
+}
+
+.sf-metric-delta svg {
+  flex: 0 0 auto;
 }
 
 .sf-metric-delta.is-up { color: var(--sf-ok-text); }

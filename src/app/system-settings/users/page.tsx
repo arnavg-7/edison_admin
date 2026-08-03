@@ -31,7 +31,6 @@ export default function UserManagementPage() {
       <div className="sf-panel">
         <div className="sf-panel-head">
           <h2>Overview</h2>
-          <span className="sf-panel-note">Single Super Admin role — no section gating</span>
         </div>
 
         <div className="sf-stat-row">
@@ -83,9 +82,6 @@ export default function UserManagementPage() {
       <div className="sf-panel">
         <div className="sf-panel-head">
           <h2>Role assignments</h2>
-          <span className="sf-panel-note">
-            {users.filter((user) => user.role === "super_admin").length} Super Admins
-          </span>
         </div>
 
         <div className="sf-table-wrap">
@@ -128,7 +124,6 @@ export default function UserManagementPage() {
       <div className="sf-panel">
         <div className="sf-panel-head">
           <h2>Directory by role</h2>
-          <span className="sf-panel-note">Across all schools</span>
         </div>
 
         <div className="sf-table-wrap">

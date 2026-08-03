@@ -2,7 +2,6 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
 import {
   ChartBarLineIcon,
-  Folder01Icon,
   Home01Icon,
   Link04Icon,
   Notification01Icon,
@@ -20,7 +19,6 @@ const ICONS: Record<SectionId, IconSvgElement> = {
   "skills-development": PreferenceHorizontalIcon,
   "academic-goals": Target01Icon,
   alerts: Notification01Icon,
-  resources: Folder01Icon,
   "system-settings": Settings02Icon,
   integrations: Link04Icon
 };

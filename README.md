@@ -53,8 +53,7 @@ and performance, attendance submission compliance, and student alerts they raise
 | Student & Faculty 360 | Individual profiles — read-only except internal notes and flags |
 | Skills & Development | School → grade drill-down, then per-grade development areas and skills profile |
 | Academic Goals | Templates, categories, progress tracking |
-| Alerts & Notifications | Alert rules, notification templates |
-| Resources & Content | External-link CRUD |
+| Alerts & Notifications | Live per-student alert feed with create/resolve, plus a by-school/grade rollup |
 | System Settings | Grade levels, subjects, calendar, announcements, users, audit log |
 | Integrations | Salesforce API health plus the Genesis / Classroom / Calendar feeds |
 

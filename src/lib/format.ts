@@ -60,3 +60,12 @@ export function formatCompact(value: number): string {
     value
   );
 }
+
+/** First letter of the first two words, for an avatar placeholder — "Michael Andrew" -> "MA". */
+export function initials(name: string): string {
+  const letters = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0]);
+  return (letters[0] ?? "") + (letters[letters.length - 1] ?? "");
+}

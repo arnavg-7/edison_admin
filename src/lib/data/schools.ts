@@ -23,6 +23,11 @@ export function gradeLabel(grade: string): string {
   return `Grade ${grade}`;
 }
 
+/** Join key for a school/grade pair, used by every per-grade dataset. */
+export function scopeKey(schoolId: string, grade: string): string {
+  return `${schoolId}:${grade}`;
+}
+
 export const schools: School[] = [
   {
     id: "edison-hs",

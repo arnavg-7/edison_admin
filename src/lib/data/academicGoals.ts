@@ -1,4 +1,5 @@
 import type { ListEditorItem } from "@/components/shared/ListEditor";
+import { schools, scopeKey } from "./schools";
 
 // TODO: replace with the real Admin DB Academic Goals contract.
 
@@ -57,18 +58,184 @@ export const goalCategories: ListEditorItem[] = [
   }
 ];
 
-export type ProgressTracking = {
-  facultyEnabled: boolean;
-  studentEnabled: boolean;
-  activeGoals: number;
-  updatedLast30Days: number;
-  asOf: string;
+// ---------------------------------------------------------------------------
+// Goals by school and grade — the admin names a goal, describes it, tags a
+// category, and assigns it to a semester (start/end date) for a grade; this
+// replaced the old flat template/category/progress-tracking tabs
+// (2026-08-03). A goal moves to the grade's goal history once its semester's
+// end date has gone by — there is no separate status field to mark it done.
+// ---------------------------------------------------------------------------
+
+export type GoalSemester = {
+  name: string;
+  /** ISO date (YYYY-MM-DD), no time component. */
+  from: string;
+  to: string;
 };
 
-export const progressTracking: ProgressTracking = {
-  facultyEnabled: true,
-  studentEnabled: false,
-  activeGoals: 1422,
-  updatedLast30Days: 968,
-  asOf: "2026-07-17T13:02:00-04:00"
+export type GradeGoal = {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  semester: GoalSemester;
 };
+
+type GradeGoalSeed = {
+  key: string;
+  title: string;
+  description: string;
+  category: string;
+  semester: GoalSemester;
+};
+
+function buildGradeGoals(scope: string, seeds: GradeGoalSeed[]): GradeGoal[] {
+  return seeds.map((seed) => ({ id: `gg-${scope}-${seed.key}`, ...seed }));
+}
+
+const TIME_ZONE = "America/New_York";
+
+function todayIso(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE }).format(new Date());
+}
+
+/** A goal is past once today is after its semester's end date. */
+export function isPastSemester(goal: GradeGoal): boolean {
+  return goal.semester.to < todayIso();
+}
+
+const FALL_2026: GoalSemester = { name: "Fall 2026", from: "2026-08-24", to: "2026-12-18" };
+const SPRING_2026: GoalSemester = { name: "Spring 2026", from: "2026-01-12", to: "2026-05-22" };
+
+export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
+  [scopeKey("edison-hs", "9")]: buildGradeGoals(scopeKey("edison-hs", "9"), [
+    {
+      key: "poag",
+      title: "Personalized Own Academic Goal — Semester",
+      description: "Student-authored goal reviewed with an advisor at the start of the semester.",
+      category: "Academic achievement",
+      semester: FALL_2026
+    },
+    {
+      key: "attendance",
+      title: "Attendance improvement plan",
+      description: "Structured goal for students below 85% attendance this semester.",
+      category: "Attendance & engagement",
+      semester: FALL_2026
+    },
+    {
+      key: "poag-past",
+      title: "Personalized Own Academic Goal — Semester",
+      description: "Student-authored goal reviewed with an advisor at the start of the semester.",
+      category: "Academic achievement",
+      semester: SPRING_2026
+    }
+  ]),
+  [scopeKey("edison-hs", "10")]: buildGradeGoals(scopeKey("edison-hs", "10"), [
+    {
+      key: "poag",
+      title: "Personalized Own Academic Goal — Semester",
+      description: "Student-authored goal reviewed with an advisor at the start of the semester.",
+      category: "Academic achievement",
+      semester: FALL_2026
+    },
+    {
+      key: "attendance",
+      title: "Attendance improvement plan",
+      description: "Structured goal for students below 85% attendance this semester.",
+      category: "Attendance & engagement",
+      semester: FALL_2026
+    },
+    {
+      key: "attendance-past",
+      title: "Attendance improvement plan",
+      description: "Structured goal for students below 85% attendance last semester.",
+      category: "Attendance & engagement",
+      semester: SPRING_2026
+    }
+  ]),
+  [scopeKey("edison-hs", "11")]: buildGradeGoals(scopeKey("edison-hs", "11"), [
+    {
+      key: "poag",
+      title: "Personalized Own Academic Goal — Semester",
+      description: "Student-authored goal reviewed with an advisor at the start of the semester.",
+      category: "Academic achievement",
+      semester: FALL_2026
+    },
+    {
+      key: "readiness",
+      title: "Post-secondary readiness",
+      description: "Covers applications, testing, and portfolio milestones this semester.",
+      category: "Post-secondary readiness",
+      semester: FALL_2026
+    },
+    {
+      key: "readiness-past",
+      title: "Post-secondary readiness",
+      description: "Covers applications, testing, and portfolio milestones from last semester.",
+      category: "Post-secondary readiness",
+      semester: SPRING_2026
+    }
+  ]),
+  [scopeKey("edison-hs", "12")]: buildGradeGoals(scopeKey("edison-hs", "12"), [
+    {
+      key: "poag",
+      title: "Personalized Own Academic Goal — Semester",
+      description: "Student-authored goal reviewed with an advisor at the start of the semester.",
+      category: "Academic achievement",
+      semester: FALL_2026
+    },
+    {
+      key: "readiness",
+      title: "Post-secondary readiness",
+      description: "Covers applications, testing, and portfolio milestones for graduating seniors.",
+      category: "Post-secondary readiness",
+      semester: FALL_2026
+    },
+    {
+      key: "readiness-past",
+      title: "Post-secondary readiness",
+      description: "Covers applications, testing, and portfolio milestones from last semester.",
+      category: "Post-secondary readiness",
+      semester: SPRING_2026
+    }
+  ]),
+  [scopeKey("edison-kg", "K")]: buildGradeGoals(scopeKey("edison-kg", "K"), [
+    {
+      key: "social",
+      title: "Social readiness check-in",
+      description: "Check-in on sharing, listening, and following routines.",
+      category: "Social & emotional",
+      semester: FALL_2026
+    },
+    {
+      key: "social-past",
+      title: "Social readiness check-in",
+      description: "Check-in on sharing, listening, and following routines.",
+      category: "Social & emotional",
+      semester: SPRING_2026
+    }
+  ])
+};
+
+export function gradeGoalsFor(schoolId: string, grade: string): GradeGoal[] {
+  return gradeGoalsByGrade[scopeKey(schoolId, grade)] ?? [];
+}
+
+/** Counts for the school and grade pickers — current goals only, history doesn't count as "active". */
+export function gradeGoalsSummary(schoolId: string, grade: string) {
+  const goals = gradeGoalsFor(schoolId, grade);
+  const current = goals.filter((goal) => !isPastSemester(goal));
+  return {
+    goals: current.length,
+    configured: goals.length > 0
+  };
+}
+
+export function schoolGoalsSummary(schoolId: string) {
+  const school = schools.find((entry) => entry.id === schoolId);
+  const grades = school?.grades ?? [];
+  const configured = grades.filter((grade) => gradeGoalsSummary(schoolId, grade).configured);
+  const goals = grades.reduce((sum, grade) => sum + gradeGoalsSummary(schoolId, grade).goals, 0);
+  return { grades: grades.length, configuredGrades: configured.length, goals };
+}

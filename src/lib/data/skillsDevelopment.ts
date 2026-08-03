@@ -17,7 +17,7 @@
 // Faculty Dashboard component toggles (2026-08-03). Both are listed in the
 // screen inventory, so re-adding either is a scope change.
 
-import { schools } from "./schools";
+import { schools, scopeKey } from "./schools";
 
 /**
  * Development areas are two levels: an area is the coloured heading a student
@@ -101,10 +101,6 @@ export type GradeScope = {
   /** Whether this grade is inside the committed HS/KG scope. */
   inScope: boolean;
 };
-
-export function scopeKey(schoolId: string, grade: string): string {
-  return `${schoolId}:${grade}`;
-}
 
 /** HS only — Kindergarten removed 2026-08-03 along with the school itself. */
 const IN_SCOPE_SCHOOLS = new Set(["edison-hs"]);

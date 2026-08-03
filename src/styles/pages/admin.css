@@ -933,3 +933,260 @@
     flex: 1 1 100%;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Alerts — live feed cards, and the modal primitive they use for details
+   and creation.
+   --------------------------------------------------------------------------- */
+
+.sf-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(19, 26, 43, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 100;
+}
+
+.sf-modal {
+  background: var(--sf-card);
+  border-radius: var(--sf-radius-card);
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(19, 26, 43, 0.25);
+}
+
+.sf-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 22px 0;
+}
+
+.sf-modal-head h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.sf-modal-close {
+  border: none;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--sf-text-muted);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.sf-modal-close:hover {
+  color: var(--sf-text);
+}
+
+.sf-modal-body {
+  padding: 18px 22px 22px;
+  display: grid;
+  gap: 16px;
+}
+
+.alert-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: var(--sf-accent-soft);
+  color: var(--sf-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.alert-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.alert-identity-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.alert-identity-time {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--sf-text-muted);
+}
+
+.alert-body-panel {
+  background: var(--sf-warn-bg);
+  border-radius: var(--sf-radius-control);
+  padding: 14px 16px;
+  display: grid;
+  gap: 6px;
+}
+
+.alert-body-panel-category {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sf-warn-text);
+}
+
+.alert-body-panel-description {
+  font-size: 14px;
+  color: var(--sf-text);
+  line-height: 1.5;
+}
+
+.alert-meta-list {
+  display: grid;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--sf-card-border);
+  font-size: 13px;
+}
+
+.alert-meta-row {
+  display: flex;
+  gap: 6px;
+  color: var(--sf-text-muted);
+}
+
+.alert-meta-row strong {
+  color: var(--sf-text);
+  font-weight: 600;
+}
+
+.alert-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.alert-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  background: var(--sf-neutral-bg);
+  color: var(--sf-neutral-text);
+}
+
+.sf-btn--center {
+  text-align: center;
+}
+
+.alert-cards {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.alert-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--sf-card);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-card);
+  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  width: 100%;
+}
+
+.alert-card:hover {
+  border-color: var(--sf-accent);
+}
+
+.alert-card-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--sf-accent-soft);
+  color: var(--sf-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.alert-card-main {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 4px;
+}
+
+.alert-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.alert-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.alert-card-sub {
+  font-size: 12px;
+  color: var(--sf-text-muted);
+}
+
+.alert-card-desc {
+  font-size: 13px;
+  color: var(--sf-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alert-card-time {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--sf-text-dim);
+  white-space: nowrap;
+}
+
+.alert-checkbox-list {
+  display: grid;
+  gap: 8px;
+  max-height: 160px;
+  overflow-y: auto;
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-control);
+  padding: 10px 12px;
+}
+
+.alert-checkbox-list label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--sf-text);
+}
+
+.alert-checkbox-list input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--sf-accent);
+}

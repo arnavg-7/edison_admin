@@ -142,7 +142,6 @@ body {
   background: var(--sf-accent-soft);
   color: var(--sf-accent-hover);
   font-weight: 600;
-  box-shadow: inset 2px 0 0 var(--sf-accent);
 }
 
 .sf-nav-icon {
@@ -677,6 +676,9 @@ select.sf-input:disabled {
 }
 
 .sf-card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   padding: 0 16px 12px;
   flex: 1;
   min-width: 0;
@@ -719,7 +721,7 @@ select.sf-input:disabled {
   line-height: 1.05;
   font-weight: 400;
   letter-spacing: -1.5px;
-  padding: 14px 0 20px;
+  padding: 8px 0;
   text-align: center;
 }
 
@@ -733,6 +735,7 @@ select.sf-input:disabled {
 .sf-chart {
   display: grid;
   grid-template-columns: 1fr auto;
+  align-items: center;
   gap: 14px;
   min-width: 0;
 }
@@ -1082,13 +1085,6 @@ select.sf-input:disabled {
   padding: 0 24px 16px;
   font-size: 12px;
   color: var(--sf-warn-text);
-}
-
-/* Home metric tabs — the eight steady-state cards this used to flatten into
-   one grid, grouped so only one cluster competes for attention at a time. */
-
-.sf-home-metrics {
-  margin-top: 24px;
 }
 
 .sf-inline-link {
@@ -1680,8 +1676,16 @@ select.sf-input:disabled {
   max-width: 620px;
 }
 
+.sf-note-form--inline {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .sf-note-form--inline .sf-field {
-  max-width: 380px;
+  flex: 1 1 200px;
+  max-width: 280px;
 }
 
 .sf-note-list {
@@ -1725,11 +1729,33 @@ select.sf-input:disabled {
 .sf-flag-list li {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: var(--sf-plot);
+  gap: 6px;
+  background: var(--sf-card);
   border: 1px solid var(--sf-card-border);
   border-radius: var(--sf-radius-pill);
-  padding: 5px 10px 5px 6px;
+  padding: 4px 4px 4px 12px;
+}
+
+.sf-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--sf-text-muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.sf-chip-remove:hover,
+.sf-chip-remove:focus-visible {
+  background: var(--sf-error-bg);
+  color: var(--sf-error-text);
 }
 
 .sf-stat-row dd.sf-stat-small {
@@ -1795,10 +1821,19 @@ select.sf-input:disabled {
 
 .sf-skill-groups {
   display: grid;
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  align-items: start;
+  gap: 16px;
 }
 
-.sf-skill-group:first-child .sf-subhead {
+.sf-skill-group {
+  background: var(--sf-plot);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-control);
+  padding: 14px 16px;
+}
+
+.sf-skill-group .sf-subhead {
   margin-top: 0;
 }
 
@@ -1839,4 +1874,66 @@ select.sf-input:disabled {
   background: var(--sf-warn-bg);
   font-size: 12px;
   color: var(--sf-warn-text);
+}
+
+/* Editable 360 controls — checkpoint stepper (Goals), inline level select
+   (Skills), status + SLA flag (Alert history). Admin-native edits only; see
+   the sf-card-hint on each panel. */
+
+.sf-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--sf-text);
+  white-space: nowrap;
+}
+
+.sf-stepper-btn {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d3d8e5;
+  background: var(--sf-card);
+  color: var(--sf-text);
+  border-radius: var(--sf-radius-control);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.sf-stepper-btn:hover:not(:disabled) {
+  border-color: var(--sf-accent);
+  color: var(--sf-accent);
+}
+
+.sf-stepper-btn:disabled {
+  color: var(--sf-text-dim);
+  cursor: not-allowed;
+}
+
+.sf-skill-edit-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--sf-card);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-pill);
+  padding: 4px 6px 4px 12px;
+  font-size: 13px;
+  color: var(--sf-text);
+}
+
+.sf-skill-edit-row select {
+  min-height: 28px;
+  padding: 2px 26px 2px 8px;
+  font-size: 12px;
+}
+
+.sf-alert-status-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }

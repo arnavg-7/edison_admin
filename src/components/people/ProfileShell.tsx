@@ -2,11 +2,24 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { salesforceRecordUrl, type InternalNote, type Person, type ReadOnlyField } from "@/lib/data/people";
+import {
+  salesforceRecordUrl,
+  type AlertRecord,
+  type DevelopmentAreaEntry,
+  type GoalRecord,
+  type InternalNote,
+  type Person,
+  type ReadOnlyField,
+  type SkillAssessment
+} from "@/lib/data/people";
 import { gradeConfigHref } from "@/lib/data/skillsDevelopment";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatSalesforceStamp } from "@/lib/format";
+
+const GOAL_STATUSES: GoalRecord["status"][] = ["On track", "At risk", "Complete", "Overdue"];
+const SKILL_LEVELS: SkillAssessment["subSkills"][number]["level"][] = ["High", "Middle", "Elementary"];
+const ALERT_STATUSES: AlertRecord["status"][] = ["Open", "Acknowledged", "Resolved"];
 
 type TabId =
   | "personal"
@@ -47,8 +60,6 @@ const FACULTY_TABS: { id: TabId; label: string }[] = [
   { id: "notes", label: "Internal notes & flags" }
 ];
 
-const LEVEL_TONE = { High: "ok", Middle: "neutral", Elementary: "warn" } as const;
-
 export function ProfileShell({ person }: { person: Person }) {
   const isStudent = person.kind === "student";
   const tabs = isStudent ? STUDENT_TABS : FACULTY_TABS;
@@ -58,6 +69,77 @@ export function ProfileShell({ person }: { person: Person }) {
   const [flags, setFlags] = useState<string[]>(person.flags);
   const [draft, setDraft] = useState("");
   const [flagDraft, setFlagDraft] = useState("");
+
+  const [goals, setGoals] = useState<GoalRecord[]>(person.goals ?? []);
+  const [skills, setSkills] = useState<SkillAssessment[]>(person.skills ?? []);
+  const [developmentAreas, setDevelopmentAreas] = useState<DevelopmentAreaEntry[]>(
+    person.developmentAreas ?? []
+  );
+  const [alertRecords, setAlertRecords] = useState<AlertRecord[]>(person.alerts);
+  const [devSkillDraft, setDevSkillDraft] = useState<Record<string, string>>({});
+
+  const adjustCheckpoint = (goalId: string, delta: number) => {
+    setGoals((current) =>
+      current.map((g) =>
+        g.id === goalId
+          ? {
+              ...g,
+              checkpointsMet: Math.max(0, Math.min(g.checkpointsTotal, g.checkpointsMet + delta)),
+              lastUpdated: new Date().toISOString()
+            }
+          : g
+      )
+    );
+  };
+
+  const setGoalStatus = (goalId: string, status: GoalRecord["status"]) => {
+    setGoals((current) =>
+      current.map((g) => (g.id === goalId ? { ...g, status, lastUpdated: new Date().toISOString() } : g))
+    );
+  };
+
+  const setSkillLevel = (
+    group: string,
+    label: string,
+    level: SkillAssessment["subSkills"][number]["level"]
+  ) => {
+    setSkills((current) =>
+      current.map((g) =>
+        g.group === group
+          ? { ...g, subSkills: g.subSkills.map((s) => (s.label === label ? { ...s, level } : s)) }
+          : g
+      )
+    );
+  };
+
+  const addDevAreaSkill = (area: string) => {
+    const value = (devSkillDraft[area] ?? "").trim();
+    if (!value) return;
+    setDevelopmentAreas((current) =>
+      current.map((entry) =>
+        entry.area === area && !entry.skills.includes(value)
+          ? { ...entry, skills: [...entry.skills, value] }
+          : entry
+      )
+    );
+    setDevSkillDraft((current) => ({ ...current, [area]: "" }));
+  };
+
+  const removeDevAreaSkill = (area: string, skill: string) => {
+    setDevelopmentAreas((current) =>
+      current.map((entry) =>
+        entry.area === area ? { ...entry, skills: entry.skills.filter((s) => s !== skill) } : entry
+      )
+    );
+  };
+
+  const setAlertStatus = (alertId: string, status: AlertRecord["status"]) => {
+    setAlertRecords((current) =>
+      current.map((a) =>
+        a.id === alertId ? { ...a, status, overdue: status === "Open" ? a.overdue : false } : a
+      )
+    );
+  };
 
   const addNote = () => {
     if (!draft.trim()) return;
@@ -262,28 +344,57 @@ export function ProfileShell({ person }: { person: Person }) {
 
       {/* ----------------------------------------------------------- goals */}
       {tab === "goals" ? (
-        <Panel title="Goals" note="Read-only · templates configured in Academic Goals">
-          {!person.goals?.length ? (
+        <Panel title="Goals" note="Editable in Admin · templates configured in Academic Goals">
+          <p className="sf-card-hint">
+            Admin-native — checkpoint and status changes apply only to this student and are not
+            written back to Salesforce or the shared goal template. TODO: local state only until
+            the Admin DB contract exists.
+          </p>
+          {!goals.length ? (
             <EmptyState title="No goals recorded" message="No active or historic goals for this student." />
           ) : (
             <Table
               head={["Goal", "Category", "Checkpoints", "Status", "Target", "Last updated"]}
-              rows={person.goals.map((g) => [
+              widths={["32%", "18%", "14%", "14%", "11%", "11%"]}
+              rows={goals.map((g) => [
                 g.title,
                 g.category,
-                `${g.checkpointsMet} of ${g.checkpointsTotal}`,
-                <StatusBadge
+                <div className="sf-stepper" key="c">
+                  <button
+                    type="button"
+                    className="sf-stepper-btn"
+                    onClick={() => adjustCheckpoint(g.id, -1)}
+                    disabled={g.checkpointsMet <= 0}
+                    aria-label={`Decrease checkpoints met for ${g.title}`}
+                  >
+                    −
+                  </button>
+                  <span>
+                    {g.checkpointsMet} of {g.checkpointsTotal}
+                  </span>
+                  <button
+                    type="button"
+                    className="sf-stepper-btn"
+                    onClick={() => adjustCheckpoint(g.id, 1)}
+                    disabled={g.checkpointsMet >= g.checkpointsTotal}
+                    aria-label={`Increase checkpoints met for ${g.title}`}
+                  >
+                    +
+                  </button>
+                </div>,
+                <select
                   key="s"
-                  tone={
-                    g.status === "On track" || g.status === "Complete"
-                      ? "ok"
-                      : g.status === "Overdue"
-                        ? "error"
-                        : "warn"
-                  }
+                  className="sf-input"
+                  value={g.status}
+                  aria-label={`Status for ${g.title}`}
+                  onChange={(event) => setGoalStatus(g.id, event.target.value as GoalRecord["status"])}
                 >
-                  {g.status}
-                </StatusBadge>,
+                  {GOAL_STATUSES.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>,
                 g.target,
                 formatSalesforceStamp(g.lastUpdated)
               ])}
@@ -297,20 +408,41 @@ export function ProfileShell({ person }: { person: Person }) {
 
       {/* ---------------------------------------------------------- skills */}
       {tab === "skills" ? (
-        <Panel title="Skills profile" note="Read-only · configured in Skills & Development">
-          {!person.skills?.length ? (
+        <Panel title="Skills profile" note="Editable in Admin · configured in Skills & Development">
+          <p className="sf-card-hint">
+            Admin-native — level changes apply only to this student and are not written back to
+            Salesforce or the shared skills profile. TODO: local state only until the Admin DB
+            contract exists.
+          </p>
+          {!skills.length ? (
             <EmptyState title="No skills assessed" message="No skills profile recorded for this student." />
           ) : (
             <div className="sf-skill-groups">
-              {person.skills.map((group) => (
+              {skills.map((group) => (
                 <div className="sf-skill-group" key={group.group}>
                   <h3 className="sf-subhead">{group.group}</h3>
                   <ul className="sf-chip-list">
                     {group.subSkills.map((sub) => (
-                      <li key={sub.label}>
-                        <StatusBadge tone={LEVEL_TONE[sub.level]}>
-                          {sub.label} · {sub.level}
-                        </StatusBadge>
+                      <li className="sf-skill-edit-row" key={sub.label}>
+                        <span>{sub.label}</span>
+                        <select
+                          className="sf-input"
+                          value={sub.level}
+                          aria-label={`Level for ${sub.label}`}
+                          onChange={(event) =>
+                            setSkillLevel(
+                              group.group,
+                              sub.label,
+                              event.target.value as SkillAssessment["subSkills"][number]["level"]
+                            )
+                          }
+                        >
+                          {SKILL_LEVELS.map((level) => (
+                            <option key={level} value={level}>
+                              {level}
+                            </option>
+                          ))}
+                        </select>
                       </li>
                     ))}
                   </ul>
@@ -326,21 +458,57 @@ export function ProfileShell({ person }: { person: Person }) {
 
       {/* ----------------------------------------------- development areas */}
       {tab === "development" ? (
-        <Panel title="Development areas" note="Read-only · configured in Skills & Development">
-          {!person.developmentAreas?.length ? (
+        <Panel title="Development areas" note="Editable in Admin · configured in Skills & Development">
+          <p className="sf-card-hint">
+            Admin-native — skills added or removed here apply only to this student and are not
+            written back to Salesforce or the shared development areas. TODO: local state only
+            until the Admin DB contract exists.
+          </p>
+          {!developmentAreas.length ? (
             <EmptyState title="No development areas" message="Nothing recorded for this student." />
           ) : (
             <div className="sf-skill-groups">
-              {person.developmentAreas.map((area) => (
+              {developmentAreas.map((area) => (
                 <div className="sf-skill-group" key={area.area}>
                   <h3 className="sf-subhead">{area.area}</h3>
-                  <ul className="sf-chip-list">
+                  <ul className="sf-flag-list">
                     {area.skills.map((skill) => (
                       <li key={skill}>
-                        <span className="sf-status sf-status--neutral">{skill}</span>
+                        <span>{skill}</span>
+                        <button
+                          type="button"
+                          className="sf-chip-remove"
+                          onClick={() => removeDevAreaSkill(area.area, skill)}
+                          aria-label={`Remove ${skill} from ${area.area}`}
+                        >
+                          ×
+                        </button>
                       </li>
                     ))}
                   </ul>
+                  <div className="sf-note-form sf-note-form--inline">
+                    <label className="sf-field">
+                      <span className="sf-sr-only">Add a skill to {area.area}</span>
+                      <input
+                        type="text"
+                        value={devSkillDraft[area.area] ?? ""}
+                        placeholder="Add a skill"
+                        onChange={(event) =>
+                          setDevSkillDraft((current) => ({ ...current, [area.area]: event.target.value }))
+                        }
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") addDevAreaSkill(area.area);
+                        }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="sf-btn sf-btn--sm"
+                      onClick={() => addDevAreaSkill(area.area)}
+                    >
+                      Add
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -403,9 +571,19 @@ export function ProfileShell({ person }: { person: Person }) {
       {tab === "alerts" ? (
         <Panel
           title={isStudent ? "Alert history" : "Student alerts"}
-          note="Read-only · rules live in Alerts & Notifications"
+          note={
+            isStudent
+              ? "Editable in Admin · rules live in Alerts & Notifications"
+              : "Read-only · rules live in Alerts & Notifications"
+          }
         >
-          {!person.alerts.length ? (
+          {isStudent ? (
+            <p className="sf-card-hint">
+              Admin-native — status changes apply only to this record and are not written back to
+              Salesforce. TODO: local state only until the Admin DB contract exists.
+            </p>
+          ) : null}
+          {!alertRecords.length ? (
             <EmptyState
               title="No alerts"
               message={isStudent ? "No alerts raised for this student." : "No alerts involving this teacher's students."}
@@ -413,15 +591,40 @@ export function ProfileShell({ person }: { person: Person }) {
           ) : (
             <Table
               head={["Rule", "Raised", "Raised by", "Status"]}
-              rows={person.alerts.map((a) => [
-                a.rule,
-                formatSalesforceStamp(a.raised),
-                a.raisedBy ?? "—",
-                <StatusBadge key="s" tone={a.status === "Resolved" ? "ok" : a.overdue ? "error" : "warn"}>
-                  {a.status}
-                  {a.overdue ? " · past SLA" : ""}
-                </StatusBadge>
-              ])}
+              rows={alertRecords.map((a) =>
+                isStudent
+                  ? [
+                      a.rule,
+                      formatSalesforceStamp(a.raised),
+                      a.raisedBy ?? "—",
+                      <div className="sf-alert-status-cell" key="s">
+                        <select
+                          className="sf-input"
+                          value={a.status}
+                          aria-label={`Status for ${a.rule}`}
+                          onChange={(event) => setAlertStatus(a.id, event.target.value as AlertRecord["status"])}
+                        >
+                          {ALERT_STATUSES.map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                        {a.overdue && a.status === "Open" ? (
+                          <span className="sf-status sf-status--error">Past SLA</span>
+                        ) : null}
+                      </div>
+                    ]
+                  : [
+                      a.rule,
+                      formatSalesforceStamp(a.raised),
+                      a.raisedBy ?? "—",
+                      <StatusBadge key="s" tone={a.status === "Resolved" ? "ok" : a.overdue ? "error" : "warn"}>
+                        {a.status}
+                        {a.overdue ? " · past SLA" : ""}
+                      </StatusBadge>
+                    ]
+              )}
             />
           )}
           <Link className="sf-inline-link" href="/alerts">
@@ -507,10 +710,11 @@ export function ProfileShell({ person }: { person: Person }) {
                     <span className="sf-status sf-status--warn">{flag}</span>
                     <button
                       type="button"
-                      className="sf-link-btn sf-link-btn--danger"
+                      className="sf-chip-remove"
                       onClick={() => setFlags((current) => current.filter((f) => f !== flag))}
+                      aria-label={`Remove flag ${flag}`}
                     >
-                      Remove<span className="sf-sr-only"> flag {flag}</span>
+                      ×
                     </button>
                   </li>
                 ))}
@@ -543,10 +747,27 @@ function Panel({
   );
 }
 
-function Table({ head, rows }: { head: string[]; rows: React.ReactNode[][] }) {
+function Table({
+  head,
+  rows,
+  widths
+}: {
+  head: string[];
+  rows: React.ReactNode[][];
+  /** Optional per-column width hints (e.g. "34%") for tables whose columns
+      would otherwise size unevenly around a couple of short-content ones. */
+  widths?: string[];
+}) {
   return (
     <div className="sf-table-wrap">
       <table className="sf-table">
+        {widths ? (
+          <colgroup>
+            {widths.map((width, index) => (
+              <col key={index} style={{ width }} />
+            ))}
+          </colgroup>
+        ) : null}
         <thead>
           <tr>
             {head.map((h) => (

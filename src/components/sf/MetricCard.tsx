@@ -1,5 +1,7 @@
 "use client";
 
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowExpandIcon, RefreshIcon } from "@hugeicons/core-free-icons";
 import { formatSalesforceStamp } from "@/lib/format";
 
 /**
@@ -37,11 +39,11 @@ export function MetricCard({
             onClick={onRefresh}
             title={`Refresh ${title}`}
           >
-            <RefreshIcon />
+            <HugeiconsIcon icon={RefreshIcon} size={14} strokeWidth={2} />
             <span className="sf-sr-only">Refresh {title}</span>
           </button>
           <button type="button" className="sf-card-tool" title={`Expand ${title}`}>
-            <ExpandIcon />
+            <HugeiconsIcon icon={ArrowExpandIcon} size={14} strokeWidth={2} />
             <span className="sf-sr-only">Expand {title}</span>
           </button>
         </div>
@@ -58,22 +60,5 @@ export function MetricCard({
         <span className="sf-card-stamp">As of {formatSalesforceStamp(asOf)}</span>
       </div>
     </section>
-  );
-}
-
-function RefreshIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-      <path d="M20 11.5A8 8 0 1 0 12 20a8 8 0 0 0 6.3-3" />
-      <path d="M20 4.5V11h-6.2" />
-    </svg>
-  );
-}
-
-function ExpandIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M9 4H4v5M15 4h5v5M15 20h5v-5M9 20H4v-5" />
-    </svg>
   );
 }

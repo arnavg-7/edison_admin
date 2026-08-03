@@ -8,3 +8,9 @@ out
 
 # Local Netlify folder
 .netlify
+
+# Local tooling
+.claude
+.impeccable
+.vscode
+tsconfig.tsbuildinfo

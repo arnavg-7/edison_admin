@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Figtree } from "next/font/google";
 import "./globals.css";
 import "../styles/theme.css";
 import "../styles/pages/admin.css";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { ContextBar } from "@/components/shell/ContextBar";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { UsersProvider } from "@/lib/users-store";
+import { cn } from "@/lib/utils";
+
+const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,18 +24,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={cn("font-sans", figtree.variable)}>
       <body className={inter.className}>
-        <a className="sf-skip-link" href="#main-content">
-          Skip to main content
-        </a>
-        <div className="sf-shell">
-          <Sidebar />
-          <div className="sf-main-region">
-            <ContextBar />
-            <div id="main-content">{children}</div>
-          </div>
-        </div>
+        <TooltipProvider>
+          <UsersProvider>
+            <a className="sf-skip-link" href="#main-content">
+              Skip to main content
+            </a>
+            <div className="sf-shell">
+              <Sidebar />
+              <div className="sf-main-region">
+                <ContextBar />
+                <div id="main-content">{children}</div>
+              </div>
+            </div>
+          </UsersProvider>
+        </TooltipProvider>
       </body>
     </html>
   );

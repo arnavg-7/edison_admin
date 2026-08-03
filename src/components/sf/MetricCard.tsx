@@ -4,6 +4,13 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { RefreshIcon } from "@hugeicons/core-free-icons";
 import { formatSalesforceStamp } from "@/lib/format";
 
+/** "Goal Completion %" -> "goal-completion". Matches card titles 1:1 since
+    every MetricCard/CoreMetricCard on both Home and /reporting is keyed by
+    the same title string. */
+function cardSlug(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
 /**
  * The Salesforce-style metric card: title, refresh tool, body slot, then a
  * footer with the underlying report link and its own freshness stamp.
@@ -28,8 +35,10 @@ export function MetricCard({
   children: React.ReactNode;
   onRefresh?: () => void;
 }) {
+  const slug = cardSlug(title);
+
   return (
-    <section className={`sf-card ${span}`}>
+    <section className={`sf-card ${span}`} id={slug}>
       <div className="sf-card-head">
         <h2 className="sf-card-title">{title}</h2>
         <div className="sf-card-tools">
@@ -48,9 +57,10 @@ export function MetricCard({
       <div className="sf-card-body">{children}</div>
 
       <div className="sf-card-foot">
-        {/* TODO: destination unconfirmed — brief open item 7. Currently points at
-            the in-app report; may need to deep-link into Salesforce instead. */}
-        <a className="sf-card-report" href="/reporting" title={`View Report (${report})`}>
+        {/* TODO: destination unconfirmed — brief open item 7. Deep-links to this
+            card's own place in the in-app Metrics catalog; may need to point at
+            Salesforce directly instead. */}
+        <a className="sf-card-report" href={`/reporting#${slug}`} title={`View Report (${report})`}>
           View Report ({report})
         </a>
         <span className="sf-card-stamp">As of {formatSalesforceStamp(asOf)}</span>

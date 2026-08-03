@@ -3,17 +3,27 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  salesforceRecordUrl,
+  PROFILE_STATUS_TONE,
+  REQUIRED_PERSONAL_FIELDS,
+  deriveProfileStatus,
   type AlertRecord,
+  type AttendanceSummary,
+  type ClassEnrolment,
+  type ClassPerformanceRow,
   type GoalRecord,
+  type GradeRecord,
   type Person,
+  type PersonKind,
   type ReadOnlyField
 } from "@/lib/data/people";
+import { useUsers } from "@/lib/users-store";
 import { gradeConfigHref, resolveGradeScope } from "@/lib/data/skillsDevelopment";
 import { DevelopmentAreasEditor } from "@/components/skills-development/DevelopmentAreasEditor";
 import { SkillsProfileEditor } from "@/components/skills-development/SkillsProfileEditor";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatSalesforceStamp } from "@/lib/format";
 
 const GOAL_STATUSES: GoalRecord["status"][] = ["On track", "At risk", "Complete", "Overdue"];
@@ -62,8 +72,25 @@ export function ProfileShell({ person }: { person: Person }) {
 
   const [goals, setGoals] = useState<GoalRecord[]>(person.goals ?? []);
   const [alertRecords, setAlertRecords] = useState<AlertRecord[]>(person.alerts);
+  const [grades, setGrades] = useState<GradeRecord[]>(person.grades ?? []);
+  const [attendanceSummary, setAttendanceSummary] = useState<AttendanceSummary | undefined>(
+    person.attendanceSummary
+  );
+  const [classes, setClasses] = useState<ClassEnrolment[]>(person.classes ?? []);
+  const [teachingClasses, setTeachingClasses] = useState<ClassPerformanceRow[]>(
+    person.teachingClasses ?? []
+  );
+  const [schedule, setSchedule] = useState<ClassEnrolment[]>(person.schedule ?? []);
 
   const gradeScope = isStudent ? resolveGradeScope(person.school, person.group) : null;
+
+  // Derived from the record on every render, so filling a required field on the
+  // Personal details tab moves the badge without an explicit save step.
+  const profileStatus = deriveProfileStatus(person);
+  const filledLabels = new Map(person.personal.map((field) => [field.label, field.value]));
+  const missingRequired = REQUIRED_PERSONAL_FIELDS[person.kind].filter(
+    (label) => (filledLabels.get(label) ?? "").trim() === ""
+  );
 
   const adjustCheckpoint = (goalId: string, delta: number) => {
     setGoals((current) =>
@@ -93,6 +120,34 @@ export function ProfileShell({ person }: { person: Person }) {
     );
   };
 
+  const updateGrade = (index: number, patch: Partial<GradeRecord>) => {
+    setGrades((current) => current.map((g, i) => (i === index ? { ...g, ...patch } : g)));
+  };
+
+  const updateAttendanceStat = (patch: Partial<AttendanceSummary>) => {
+    setAttendanceSummary((current) => (current ? { ...current, ...patch } : current));
+  };
+
+  const updateAttendanceTerm = (index: number, patch: Partial<AttendanceSummary["byTerm"][number]>) => {
+    setAttendanceSummary((current) =>
+      current
+        ? { ...current, byTerm: current.byTerm.map((t, i) => (i === index ? { ...t, ...patch } : t)) }
+        : current
+    );
+  };
+
+  const updateClass = (index: number, patch: Partial<ClassEnrolment>) => {
+    setClasses((current) => current.map((c, i) => (i === index ? { ...c, ...patch } : c)));
+  };
+
+  const updateTeachingClass = (index: number, patch: Partial<ClassPerformanceRow>) => {
+    setTeachingClasses((current) => current.map((c, i) => (i === index ? { ...c, ...patch } : c)));
+  };
+
+  const updateSchedule = (index: number, patch: Partial<ClassEnrolment>) => {
+    setSchedule((current) => current.map((c, i) => (i === index ? { ...c, ...patch } : c)));
+  };
+
   return (
     <section className="sf-main">
       <nav className="sf-crumbs" aria-label="Breadcrumb">
@@ -109,63 +164,108 @@ export function ProfileShell({ person }: { person: Person }) {
           </p>
         </div>
         <div className="sf-profile-head-actions">
-          <StatusBadge tone={person.status === "At Risk" ? "warn" : person.status === "Other" ? "neutral" : "ok"}>
-            {person.status}
-          </StatusBadge>
-          <a
-            className="sf-btn sf-btn--sm"
-            href={salesforceRecordUrl(person.salesforceId)}
-            target="_blank"
-            rel="noreferrer"
-          >
-            View in Salesforce
-          </a>
+          <StatusBadge tone={PROFILE_STATUS_TONE[profileStatus]}>{profileStatus}</StatusBadge>
+          {/* Academic risk only means something once the profile is complete —
+              before that there is nothing to assess it from. */}
+          {profileStatus === "Active" ? (
+            <StatusBadge
+              tone={person.status === "At Risk" ? "warn" : person.status === "Other" ? "neutral" : "ok"}
+            >
+              {person.status}
+            </StatusBadge>
+          ) : null}
         </div>
       </div>
 
-      <nav className="sf-tabs" aria-label="Profile sections">
-        {tabs.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={tab === item.id ? "sf-tab active" : "sf-tab"}
-            aria-current={tab === item.id ? "page" : undefined}
-            onClick={() => setTab(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </nav>
+      {profileStatus !== "Active" ? (
+        <div className="sf-notice" role="status">
+          <p className="sf-notice-title">
+            Complete this user&rsquo;s profile to activate their account.
+          </p>
+          <p className="sf-notice-detail">
+            Still needed on Personal details: {missingRequired.join(", ")}.
+          </p>
+        </div>
+      ) : null}
+
+      <Tabs value={tab} onValueChange={(value) => setTab(value as TabId)}>
+        <TabsList variant="line" aria-label="Profile sections">
+          {tabs.map((item) => (
+            <TabsTrigger key={item.id} value={item.id}>
+              {item.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {tab === "personal" ? (
-        <ReadOnlyPanel title="Personal details" fields={person.personal} salesforceId={person.salesforceId} />
+        <EditableFieldsPanel
+          title="Personal details"
+          fields={person.personal}
+          kind={person.kind}
+          personId={person.id}
+          section="personal"
+        />
       ) : null}
 
       {tab === "academic" ? (
-        <ReadOnlyPanel
+        <EditableFieldsPanel
           title={isStudent ? "Enrollment & academic record" : "Assignment summary"}
           fields={person.academic}
-          salesforceId={person.salesforceId}
+          kind={person.kind}
+          personId={person.id}
+          section="academic"
         />
       ) : null}
 
       {/* ---------------------------------------------------------- grades */}
       {tab === "grades" ? (
         <>
-          <Panel title="Current term grades" note="Read-only · owned by Salesforce">
-            {!person.grades?.length ? (
+          <Panel title="Current term grades" note="Editable in Admin">
+            <p className="sf-card-hint">
+              Admin-native — grade changes apply only to this record. TODO: local state only until
+              the Admin DB contract exists.
+            </p>
+            {!grades.length ? (
               <EmptyState title="No grades recorded" message="No current-term grades for this student." />
             ) : (
               <Table
                 head={["Subject", "Teacher", "Grade", "Percent", "Assignments"]}
-                rows={person.grades.map((g) => [
+                rows={grades.map((g, index) => [
                   g.subject,
                   g.teacher,
-                  <StatusBadge key="g" tone={g.percent >= 80 ? "ok" : g.percent >= 70 ? "warn" : "error"}>
-                    {g.grade}
-                  </StatusBadge>,
-                  `${g.percent}%`,
-                  `${g.assignmentsComplete} of ${g.assignmentsSet}`
+                  <input
+                    key="grade"
+                    type="text"
+                    className="sf-input sf-input--cell"
+                    value={g.grade}
+                    aria-label={`Grade for ${g.subject}`}
+                    onChange={(event) => updateGrade(index, { grade: event.target.value })}
+                  />,
+                  <input
+                    key="percent"
+                    type="number"
+                    className="sf-input sf-input--cell"
+                    value={g.percent}
+                    min={0}
+                    max={100}
+                    aria-label={`Percent for ${g.subject}`}
+                    onChange={(event) => updateGrade(index, { percent: Number(event.target.value) })}
+                  />,
+                  <div className="sf-stepper" key="assignments">
+                    <input
+                      type="number"
+                      className="sf-input sf-input--cell"
+                      value={g.assignmentsComplete}
+                      min={0}
+                      max={g.assignmentsSet}
+                      aria-label={`Assignments complete for ${g.subject}`}
+                      onChange={(event) =>
+                        updateGrade(index, { assignmentsComplete: Number(event.target.value) })
+                      }
+                    />
+                    <span>of {g.assignmentsSet}</span>
+                  </div>
                 ])}
               />
             )}
@@ -201,34 +301,96 @@ export function ProfileShell({ person }: { person: Person }) {
       {/* ------------------------------------------------------ attendance */}
       {tab === "attendance" && isStudent ? (
         <>
-          <Panel title="Attendance summary" note="Read-only · Genesis via Salesforce">
-            {!person.attendanceSummary ? (
+          <Panel title="Attendance summary" note="Editable in Admin">
+            <p className="sf-card-hint">
+              Admin-native — changes apply only to this record. TODO: local state only until the
+              Admin DB contract exists.
+            </p>
+            {!attendanceSummary ? (
               <EmptyState title="No attendance data yet" message="No attendance records received." />
             ) : (
               <>
                 <div className="sf-stat-row">
                   <div>
                     <dt>Attendance rate</dt>
-                    <dd>{person.attendanceSummary.rate}</dd>
+                    <dd>
+                      <input
+                        type="text"
+                        value={attendanceSummary.rate}
+                        aria-label="Attendance rate"
+                        onChange={(event) => updateAttendanceStat({ rate: event.target.value })}
+                      />
+                    </dd>
                   </div>
                   <div>
                     <dt>Present</dt>
-                    <dd>{person.attendanceSummary.present}</dd>
+                    <dd>
+                      <input
+                        type="number"
+                        min={0}
+                        value={attendanceSummary.present}
+                        aria-label="Present days"
+                        onChange={(event) =>
+                          updateAttendanceStat({ present: Number(event.target.value) })
+                        }
+                      />
+                    </dd>
                   </div>
                   <div>
                     <dt>Absent</dt>
-                    <dd>{person.attendanceSummary.absent}</dd>
+                    <dd>
+                      <input
+                        type="number"
+                        min={0}
+                        value={attendanceSummary.absent}
+                        aria-label="Absent days"
+                        onChange={(event) =>
+                          updateAttendanceStat({ absent: Number(event.target.value) })
+                        }
+                      />
+                    </dd>
                   </div>
                   <div>
                     <dt>Half day</dt>
-                    <dd>{person.attendanceSummary.halfDay}</dd>
+                    <dd>
+                      <input
+                        type="number"
+                        min={0}
+                        value={attendanceSummary.halfDay}
+                        aria-label="Half days"
+                        onChange={(event) =>
+                          updateAttendanceStat({ halfDay: Number(event.target.value) })
+                        }
+                      />
+                    </dd>
                   </div>
                 </div>
 
                 <h3 className="sf-subhead">By term</h3>
                 <Table
                   head={["Term", "Rate", "Absences"]}
-                  rows={person.attendanceSummary.byTerm.map((t) => [t.term, t.rate, String(t.absences)])}
+                  rows={attendanceSummary.byTerm.map((t, index) => [
+                    t.term,
+                    <input
+                      key="rate"
+                      type="text"
+                      className="sf-input sf-input--cell"
+                      value={t.rate}
+                      aria-label={`Rate for ${t.term}`}
+                      onChange={(event) => updateAttendanceTerm(index, { rate: event.target.value })}
+                    />,
+                    <input
+                      key="absences"
+                      type="number"
+                      min={0}
+                      className="sf-input sf-input--cell"
+                      value={t.absences}
+                      aria-label={`Absences for ${t.term}`}
+                      onChange={(event) =>
+                        updateAttendanceTerm(index, { absences: Number(event.target.value) })
+                      }
+                    />
+                  ])}
                 />
               </>
             )}
@@ -282,9 +444,8 @@ export function ProfileShell({ person }: { person: Person }) {
       {tab === "goals" ? (
         <Panel title="Goals" note="Editable in Admin · templates configured in Academic Goals">
           <p className="sf-card-hint">
-            Admin-native — checkpoint and status changes apply only to this student and are not
-            written back to Salesforce or the shared goal template. TODO: local state only until
-            the Admin DB contract exists.
+            Checkpoint and status changes apply to this student only, not to the shared goal
+            template. TODO: local state only until the Admin DB contract exists.
           </p>
           {!goals.length ? (
             <EmptyState title="No goals recorded" message="No active or historic goals for this student." />
@@ -318,19 +479,22 @@ export function ProfileShell({ person }: { person: Person }) {
                     +
                   </button>
                 </div>,
-                <select
+                <Select
                   key="s"
-                  className="sf-input"
                   value={g.status}
-                  aria-label={`Status for ${g.title}`}
-                  onChange={(event) => setGoalStatus(g.id, event.target.value as GoalRecord["status"])}
+                  onValueChange={(value) => setGoalStatus(g.id, value as GoalRecord["status"])}
                 >
-                  {GOAL_STATUSES.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>,
+                  <SelectTrigger aria-label={`Status for ${g.title}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent alignItemWithTrigger={false}>
+                    {GOAL_STATUSES.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>,
                 g.target,
                 <span key="u" style={{ whiteSpace: "nowrap" }}>
                   {formatSalesforceStamp(g.lastUpdated)}
@@ -392,13 +556,43 @@ export function ProfileShell({ person }: { person: Person }) {
 
       {/* -------------------------------------------- classes / schedule */}
       {tab === "classes" && isStudent ? (
-        <Panel title="Classes & schedule" note="Read-only · Genesis via Salesforce">
-          {!person.classes?.length ? (
+        <Panel title="Classes & schedule" note="Editable in Admin">
+          <p className="sf-card-hint">
+            Admin-native — changes apply only to this record. TODO: local state only until the
+            Admin DB contract exists.
+          </p>
+          {!classes.length ? (
             <EmptyState title="No class enrolments" message="No classes recorded for this student." />
           ) : (
             <Table
               head={["Class", "Teacher", "Period", "Room"]}
-              rows={person.classes.map((c) => [c.className, c.teacher, c.period, c.room])}
+              rows={classes.map((c, index) => [
+                c.className,
+                <input
+                  key="teacher"
+                  type="text"
+                  className="sf-input sf-input--cell"
+                  value={c.teacher}
+                  aria-label={`Teacher for ${c.className}`}
+                  onChange={(event) => updateClass(index, { teacher: event.target.value })}
+                />,
+                <input
+                  key="period"
+                  type="text"
+                  className="sf-input sf-input--cell"
+                  value={c.period}
+                  aria-label={`Period for ${c.className}`}
+                  onChange={(event) => updateClass(index, { period: event.target.value })}
+                />,
+                <input
+                  key="room"
+                  type="text"
+                  className="sf-input sf-input--cell"
+                  value={c.room}
+                  aria-label={`Room for ${c.className}`}
+                  onChange={(event) => updateClass(index, { room: event.target.value })}
+                />
+              ])}
             />
           )}
         </Panel>
@@ -406,32 +600,91 @@ export function ProfileShell({ person }: { person: Person }) {
 
       {tab === "classes" && !isStudent ? (
         <>
-          <Panel title="Classes & performance" note="Read-only · rolls up from Salesforce reports">
-            {!person.teachingClasses?.length ? (
+          <Panel title="Classes & performance" note="Editable in Admin">
+            <p className="sf-card-hint">
+              Admin-native — changes apply only to this record. TODO: local state only until the
+              Admin DB contract exists.
+            </p>
+            {!teachingClasses.length ? (
               <EmptyState title="No classes assigned" message="No teaching assignments recorded." />
             ) : (
               <Table
                 head={["Class", "Roster", "Avg. attendance", "Assignment completion", "Open alerts"]}
-                rows={person.teachingClasses.map((c) => [
+                rows={teachingClasses.map((c, index) => [
                   c.className,
-                  String(c.roster),
-                  c.avgAttendance,
-                  c.assignmentCompletion,
-                  <StatusBadge key="a" tone={c.openAlerts > 2 ? "warn" : "neutral"}>
-                    {c.openAlerts}
-                  </StatusBadge>
+                  <input
+                    key="roster"
+                    type="number"
+                    min={0}
+                    className="sf-input sf-input--cell"
+                    value={c.roster}
+                    aria-label={`Roster size for ${c.className}`}
+                    onChange={(event) => updateTeachingClass(index, { roster: Number(event.target.value) })}
+                  />,
+                  <input
+                    key="attendance"
+                    type="text"
+                    className="sf-input sf-input--cell"
+                    value={c.avgAttendance}
+                    aria-label={`Average attendance for ${c.className}`}
+                    onChange={(event) => updateTeachingClass(index, { avgAttendance: event.target.value })}
+                  />,
+                  <input
+                    key="completion"
+                    type="text"
+                    className="sf-input sf-input--cell"
+                    value={c.assignmentCompletion}
+                    aria-label={`Assignment completion for ${c.className}`}
+                    onChange={(event) =>
+                      updateTeachingClass(index, { assignmentCompletion: event.target.value })
+                    }
+                  />,
+                  <input
+                    key="alerts"
+                    type="number"
+                    min={0}
+                    className="sf-input sf-input--cell"
+                    value={c.openAlerts}
+                    aria-label={`Open alerts for ${c.className}`}
+                    onChange={(event) => updateTeachingClass(index, { openAlerts: Number(event.target.value) })}
+                  />
                 ])}
               />
             )}
           </Panel>
 
-          <Panel title="Schedule" note="Assigned periods">
-            {!person.schedule?.length ? (
+          <Panel title="Schedule" note="Assigned periods · editable in Admin">
+            {!schedule.length ? (
               <EmptyState title="No schedule" message="No timetable recorded." />
             ) : (
               <Table
                 head={["Period", "Class", "Room"]}
-                rows={person.schedule.map((c) => [c.period, c.className, c.room])}
+                rows={schedule.map((c, index) => [
+                  <input
+                    key="period"
+                    type="text"
+                    className="sf-input sf-input--cell"
+                    value={c.period}
+                    aria-label={`Period ${index + 1}`}
+                    onChange={(event) => updateSchedule(index, { period: event.target.value })}
+                  />,
+                  <input
+                    key="class"
+                    type="text"
+                    className="sf-input sf-input--cell"
+                    value={c.className}
+                    aria-label={`Class for period ${index + 1}`}
+                    onChange={(event) => updateSchedule(index, { className: event.target.value })}
+                  />,
+                  <input
+                    key="room"
+                    type="text"
+                    className="sf-input sf-input--cell"
+                    value={c.room}
+                    aria-label={`Room for period ${index + 1}`}
+                    onChange={(event) => updateSchedule(index, { room: event.target.value })}
+                  />
+                ])}
               />
             )}
           </Panel>
@@ -450,8 +703,8 @@ export function ProfileShell({ person }: { person: Person }) {
         >
           {isStudent ? (
             <p className="sf-card-hint">
-              Admin-native — status changes apply only to this record and are not written back to
-              Salesforce. TODO: local state only until the Admin DB contract exists.
+              Status changes apply to this record only. TODO: local state only until the Admin DB
+              contract exists.
             </p>
           ) : null}
           {!alertRecords.length ? (
@@ -469,20 +722,23 @@ export function ProfileShell({ person }: { person: Person }) {
                       formatSalesforceStamp(a.raised),
                       a.raisedBy ?? "—",
                       <div className="sf-alert-status-cell" key="s">
-                        <select
-                          className="sf-input"
+                        <Select
                           value={a.status}
-                          aria-label={`Status for ${a.rule}`}
-                          onChange={(event) => setAlertStatus(a.id, event.target.value as AlertRecord["status"])}
+                          onValueChange={(value) => setAlertStatus(a.id, value as AlertRecord["status"])}
                         >
-                          {ALERT_STATUSES.map((status) => (
-                            <option key={status} value={status}>
-                              {status}
-                            </option>
-                          ))}
-                        </select>
+                          <SelectTrigger aria-label={`Status for ${a.rule}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent alignItemWithTrigger={false}>
+                            {ALERT_STATUSES.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {status}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         {a.overdue && a.status === "Open" ? (
-                          <span className="sf-status sf-status--error">Past SLA</span>
+                          <StatusBadge tone="error">Past SLA</StatusBadge>
                         ) : null}
                       </div>
                     ]
@@ -572,39 +828,62 @@ function Table({
   );
 }
 
-function ReadOnlyPanel({
+/**
+ * Field editor backed by the user store, so edits persist and the profile
+ * status recomputes as required fields get filled in. Required fields carry a
+ * marker while blank — those are the ones gating activation.
+ */
+function EditableFieldsPanel({
   title,
   fields,
-  salesforceId
+  kind,
+  personId,
+  section
 }: {
   title: string;
   fields: ReadOnlyField[];
-  salesforceId: string;
+  kind: PersonKind;
+  personId: string;
+  section: "personal" | "academic";
 }) {
+  const { setField } = useUsers();
+  const required = section === "personal" ? REQUIRED_PERSONAL_FIELDS[kind] : [];
+
   return (
     <div className="sf-panel">
       <div className="sf-panel-head">
         <h2>{title}</h2>
-        <span className="sf-panel-note">Read-only · owned by Salesforce</span>
+        <span className="sf-panel-note">Editable in Admin</span>
       </div>
 
       <dl className="sf-field-grid">
-        {fields.map((field) => (
-          <div key={field.label}>
-            <dt>{field.label}</dt>
-            <dd>{field.value}</dd>
-          </div>
-        ))}
-      </dl>
+        {fields.map((field) => {
+          const isRequired = required.includes(field.label);
+          const isMissing = isRequired && field.value.trim() === "";
 
-      <a
-        className="sf-inline-link"
-        href={salesforceRecordUrl(salesforceId)}
-        target="_blank"
-        rel="noreferrer"
-      >
-        Edit in Salesforce →
-      </a>
+          return (
+            <div key={field.label}>
+              <dt>
+                {field.label}
+                {isMissing ? <span className="sf-field-required"> Required</span> : null}
+              </dt>
+              <dd>
+                <input
+                  type="text"
+                  className="sf-input"
+                  value={field.value}
+                  aria-label={field.label}
+                  aria-required={isRequired || undefined}
+                  placeholder={isRequired ? "Required to activate" : "Not set"}
+                  onChange={(event) =>
+                    setField(kind, personId, section, field.label, event.target.value)
+                  }
+                />
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
     </div>
   );
 }

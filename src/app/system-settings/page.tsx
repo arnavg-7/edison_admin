@@ -6,11 +6,8 @@ import { ListEditor } from "@/components/shared/ListEditor";
 export default function GradeLevelsPage() {
   return (
     <div className="sf-panel">
-      <div className="sf-panel-head">
-        <h2>Grade levels</h2>
-      </div>
-
       <ListEditor
+        heading="Grade levels"
         items={gradeLevels}
         addLabel="Add grade level"
         emptyTitle="No grade levels configured"

@@ -957,6 +957,10 @@
   box-shadow: 0 20px 60px rgba(19, 26, 43, 0.25);
 }
 
+.sf-modal--lg {
+  max-width: 680px;
+}
+
 .sf-modal-head {
   display: flex;
   align-items: center;

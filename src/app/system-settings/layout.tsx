@@ -12,7 +12,6 @@ const TABS = [
   { label: "Subjects", href: "/system-settings/subjects" },
   { label: "Academic Calendar", href: "/system-settings/calendar" },
   { label: "Announcements", href: "/system-settings/announcements" },
-  { label: "User Management", href: "/system-settings/users" },
   { label: "Data Privacy & Audit Log", href: "/system-settings/audit-log" }
 ];
 
@@ -21,7 +20,7 @@ export default function SystemSettingsLayout({ children }: { children: React.Rea
     <section className="sf-main">
       <h1 className="sf-page-title">System Settings</h1>
       <p className="sf-page-sub">
-        Grade levels, subjects, calendar, announcements, users and audit history.
+        Grade levels, subjects, calendar, announcements and audit history.
       </p>
 
       <Suspense fallback={null}>

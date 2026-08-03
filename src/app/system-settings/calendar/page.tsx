@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { terms } from "@/lib/data/academicCalendar";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Button } from "@/components/ui/button";
 
 /**
  * Source of truth for the "This Term" preset in the Reporting date filter.
@@ -82,13 +83,9 @@ export default function AcademicCalendarPage() {
                 <td>
                   {editingId === term.id ? (
                     <div className="setting-actions">
-                      <button
-                        type="button"
-                        className="sf-btn sf-btn--sm sf-btn--primary"
-                        onClick={() => save(term.id)}
-                      >
+                      <Button size="sm" onClick={() => save(term.id)}>
                         Save
-                      </button>
+                      </Button>
                       <button type="button" className="sf-btn sf-btn--sm" onClick={() => setEditingId(null)}>
                         Cancel
                       </button>

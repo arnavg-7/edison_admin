@@ -7,6 +7,8 @@
 // a well-being rule taken from the reference screenshots; well-being is not in
 // Edison's scope docs and has no source system, so it is not a signal here.
 
+import type { StatusTone } from "./types";
+
 export type AttentionCategory = "at-risk" | "overdue-alert" | "sync-failure" | "pending-config";
 
 export type AttentionSeverity = "critical" | "high" | "medium";
@@ -28,10 +30,10 @@ export const ATTENTION_SEVERITIES: { value: AttentionSeverity; label: string }[]
 export const SEVERITY_RANK: Record<AttentionSeverity, number> = { critical: 0, high: 1, medium: 2 };
 
 /** Status-pill tone per severity, shared by the Home teaser banner and the full triage queue. */
-export const SEVERITY_TONE: Record<AttentionSeverity, string> = {
-  critical: "sf-status--error",
-  high: "sf-status--warn",
-  medium: "sf-status--neutral"
+export const SEVERITY_TONE: Record<AttentionSeverity, StatusTone> = {
+  critical: "error",
+  high: "warn",
+  medium: "neutral"
 };
 
 export type AttentionItem = {

@@ -9,6 +9,8 @@ import {
 } from "@/lib/data/skillsDevelopment";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // TODO: local state only — persist through the Admin DB skills-and-development
 // contract when it exists.
@@ -142,19 +144,21 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
 
       <label className="sf-field">
         <span>Level</span>
-        <select
-          className="sf-input"
+        <Select
           value={subDraft.level}
-          onChange={(event) =>
-            setSubDraft({ ...subDraft, level: event.target.value as SkillLevel })
-          }
+          onValueChange={(value) => setSubDraft({ ...subDraft, level: value as SkillLevel })}
         >
-          {SKILL_LEVELS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent alignItemWithTrigger={false}>
+            {SKILL_LEVELS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </label>
 
       <label className="sf-field">
@@ -168,9 +172,7 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
       </label>
 
       <div className="list-editor-form-actions">
-        <button type="button" className="sf-btn sf-btn--primary" onClick={onSave}>
-          {saveLabel}
-        </button>
+        <Button onClick={onSave}>{saveLabel}</Button>
         <button type="button" className="sf-btn" onClick={onCancel}>
           Cancel
         </button>
@@ -200,9 +202,7 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
       </div>
 
       <div className="list-editor-head">
-        <button
-          type="button"
-          className="sf-btn sf-btn--primary"
+        <Button
           onClick={() => {
             setGroupTitle("");
             setEditingGroupId(null);
@@ -210,7 +210,7 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
           }}
         >
           Add skill
-        </button>
+        </Button>
       </div>
 
       {addingGroup ? (
@@ -230,9 +230,7 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
             />
           </label>
           <div className="list-editor-form-actions">
-            <button type="button" className="sf-btn sf-btn--primary" onClick={saveNewGroup}>
-              Create skill
-            </button>
+            <Button onClick={saveNewGroup}>Create skill</Button>
             <button type="button" className="sf-btn" onClick={() => setAddingGroup(false)}>
               Cancel
             </button>
@@ -263,13 +261,9 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
                         if (event.key === "Escape") setEditingGroupId(null);
                       }}
                     />
-                    <button
-                      type="button"
-                      className="sf-btn sf-btn--sm sf-btn--primary"
-                      onClick={() => saveGroupTitle(group.id)}
-                    >
+                    <Button size="sm" onClick={() => saveGroupTitle(group.id)}>
                       Save
-                    </button>
+                    </Button>
                     <button
                       type="button"
                       className="sf-btn sf-btn--sm"

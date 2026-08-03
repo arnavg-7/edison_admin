@@ -5,7 +5,7 @@ import { SectionTabs } from "@/components/shared/SectionTabs";
 
 const TABS = [
   { label: "Alerts", href: "/alerts" },
-  { label: "By School", href: "/alerts/by-school" }
+  { label: "Alert History", href: "/alerts/history" }
 ];
 
 export default function AlertsLayout({ children }: { children: React.ReactNode }) {

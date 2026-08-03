@@ -11,10 +11,10 @@
  * screenshots and are flagged in the Portal Specs as data domains not covered by
  * Edison's scope docs, with no known source system.
  *
- * TODO: all values are mocked. Personal details, enrollment, grades and
- * attendance are system-of-record fields owned by Salesforce/SIS and are
- * rendered read-only with a "View in Salesforce" link — editing them here would
- * risk divergence from the source of truth.
+ * TODO: all values are mocked. There is no external system of record — this
+ * product owns its own data, so every section here (personal details,
+ * enrollment, grades, attendance included) is directly editable by the Super
+ * Admin rather than deferring to an outside source.
  *
  * TODO — the exact editable-field list is an open item (brief §8 / open item 9).
  */
@@ -113,12 +113,97 @@ export type ClassPerformanceRow = {
   openAlerts: number;
 };
 
+/**
+ * Profile completeness, derived from the record itself rather than stored — see
+ * `deriveProfileStatus`. Admin is the source of truth for these accounts, so
+ * the only thing gating an account is whether its own required fields are
+ * filled in.
+ */
+export type ProfileStatus = "Draft" | "Profile Incomplete" | "Active";
+
+/**
+ * Personal-details fields a profile must have filled before it counts as
+ * Active. Deliberately the Personal details tab only: those are the fields an
+ * admin owns outright, so completeness never waits on a roster import.
+ */
+export const REQUIRED_PERSONAL_FIELDS: Record<PersonKind, string[]> = {
+  student: [
+    "Preferred name",
+    "Date of birth",
+    "Guardian",
+    "Guardian contact",
+    "Home language"
+  ],
+  faculty: ["Staff ID", "Email", "Room", "Employment type"]
+};
+
+/** Academic-tab labels a new profile starts with, so the tab isn't empty. */
+const BLANK_ACADEMIC_FIELDS: Record<PersonKind, string[]> = {
+  student: [
+    "Primary academic program",
+    "Enrolled since",
+    "Homeroom",
+    "Counselor",
+    "Current GPA",
+    "Credits earned"
+  ],
+  faculty: ["Department", "Classes assigned", "Total roster", "Joined", "Subjects taught"]
+};
+
+/** Blank Personal details fields for a newly created profile. */
+export function blankPersonalFields(kind: PersonKind): ReadOnlyField[] {
+  return REQUIRED_PERSONAL_FIELDS[kind].map((label) => ({ label, value: "" }));
+}
+
+/** Blank Enrollment / Assignment summary fields for a newly created profile. */
+export function blankAcademicFields(kind: PersonKind): ReadOnlyField[] {
+  return BLANK_ACADEMIC_FIELDS[kind].map((label) => ({ label, value: "" }));
+}
+
+/**
+ * Draft until the admin fills anything in, Active once every required field is
+ * filled, Profile Incomplete in between. Derived rather than stored so the
+ * badge can never drift from the record it describes.
+ */
+export function deriveProfileStatus(person: {
+  kind: PersonKind;
+  personal: ReadOnlyField[];
+}): ProfileStatus {
+  const required = REQUIRED_PERSONAL_FIELDS[person.kind];
+  const byLabel = new Map(person.personal.map((field) => [field.label, field.value]));
+  const filled = required.filter((label) => (byLabel.get(label) ?? "").trim() !== "").length;
+
+  if (filled === 0) return "Draft";
+  return filled === required.length ? "Active" : "Profile Incomplete";
+}
+
+/** Status pill tone, matching the app-wide three-way status scale. */
+export const PROFILE_STATUS_TONE: Record<ProfileStatus, "ok" | "warn" | "neutral"> = {
+  Active: "ok",
+  "Profile Incomplete": "warn",
+  Draft: "neutral"
+};
+
+/**
+ * Builds a profile id from a name: "Priya Nair" -> "priya-nair-k3f2". The short
+ * suffix keeps two people with the same name on distinct profile URLs.
+ */
+export function newPersonId(name: string): string {
+  const slug =
+    name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "user";
+
+  return `${slug}-${Date.now().toString(36).slice(-4)}`;
+}
+
 export type Person = {
   id: string;
   kind: PersonKind;
   name: string;
-  /** Salesforce record id, for the "View in Salesforce" link. */
-  salesforceId: string;
   school: string;
   /** Grade for students, department for faculty. */
   group: string;
@@ -144,19 +229,11 @@ export type Person = {
   alerts: AlertRecord[];
 };
 
-/** TODO: replace with the real Salesforce org instance URL. */
-export const SALESFORCE_BASE_URL = "https://edison.my.salesforce.com";
-
-export function salesforceRecordUrl(salesforceId: string): string {
-  return `${SALESFORCE_BASE_URL}/lightning/r/Contact/${salesforceId}/view`;
-}
-
 export const people: Person[] = [
   {
     id: "michael-andrew",
     kind: "student",
     name: "Michael Andrew",
-    salesforceId: "003AX000004ZmT1YAM",
     school: "Edison High School",
     group: "Grade 10",
     status: "At Risk",
@@ -315,7 +392,6 @@ export const people: Person[] = [
     id: "nick-johnson",
     kind: "student",
     name: "Nick Johnson",
-    salesforceId: "003AX000004ZmT2YAM",
     school: "Edison High School",
     group: "Grade 9",
     status: "At Risk",
@@ -420,7 +496,6 @@ export const people: Person[] = [
     id: "rk-sharma",
     kind: "student",
     name: "R.K. Sharma",
-    salesforceId: "003AX000004ZmT3YAM",
     school: "James Madison Intermediate",
     group: "Grade 8",
     status: "At Risk",
@@ -508,7 +583,6 @@ export const people: Person[] = [
     id: "mohd-anas-gupta",
     kind: "student",
     name: "Mohd.Anas Gupta",
-    salesforceId: "003AX000004ZmT4YAM",
     school: "Edison High School",
     group: "Grade 10",
     status: "On Track",
@@ -547,7 +621,6 @@ export const people: Person[] = [
     id: "naphisabet-lyngkhoi",
     kind: "student",
     name: "Naphisabet Lyngkhoi",
-    salesforceId: "003AX000004ZmT5YAM",
     school: "Edison High School",
     group: "Grade 9",
     status: "On Track",
@@ -583,7 +656,6 @@ export const people: Person[] = [
     id: "oliver-james",
     kind: "student",
     name: "Oliver James",
-    salesforceId: "003AX000004ZmT6YAM",
     school: "James Madison Intermediate",
     group: "Grade 8",
     status: "On Track",
@@ -622,7 +694,6 @@ export const people: Person[] = [
     id: "robert-daniel",
     kind: "student",
     name: "Robert Daniel",
-    salesforceId: "003AX000004ZmT7YAM",
     school: "Edison High School",
     group: "Grade 10",
     status: "On Track",
@@ -702,7 +773,6 @@ export const people: Person[] = [
     id: "k-blekeski",
     kind: "faculty",
     name: "K. Blekeski",
-    salesforceId: "003AX000004ZmF1YAM",
     school: "Edison High School",
     group: "Mathematics",
     status: "On Track",
@@ -746,7 +816,6 @@ export const people: Person[] = [
     id: "a-chen",
     kind: "faculty",
     name: "A. Chen",
-    salesforceId: "003AX000004ZmF2YAM",
     school: "Edison Middle School",
     group: "English Language Arts",
     status: "On Track",
@@ -786,7 +855,6 @@ export const people: Person[] = [
     id: "p-nair",
     kind: "faculty",
     name: "P. Nair",
-    salesforceId: "003AX000004ZmF3YAM",
     school: "Lincoln Elementary",
     group: "Science",
     status: "On Track",
@@ -829,7 +897,6 @@ export const people: Person[] = [
     id: "d-osei",
     kind: "faculty",
     name: "D. Osei",
-    salesforceId: "003AX000004ZmF4YAM",
     school: "Franklin Elementary",
     group: "Computer Science",
     status: "Other",

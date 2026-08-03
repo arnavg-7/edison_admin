@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { StatusBadge } from "./StatusBadge";
 import { EmptyState } from "./EmptyState";
+import { Button } from "@/components/ui/button";
 
 export type ListEditorItem = {
   id: string;
@@ -34,12 +35,16 @@ const DEFAULT_FIELDS: ListEditorField[] = [
  * exists. Nothing here persists across a refresh.
  */
 export function ListEditor({
+  heading,
   items: initialItems,
   addLabel = "Add item",
   fields = DEFAULT_FIELDS,
   emptyTitle = "Nothing configured yet",
   emptyMessage = "Add the first entry to get started."
 }: {
+  /** Panel heading shown beside the add button, so the two share one row
+      instead of the heading sitting alone above a right-aligned button. */
+  heading: string;
   items: ListEditorItem[];
   addLabel?: string;
   fields?: ListEditorField[];
@@ -126,9 +131,7 @@ export function ListEditor({
         </label>
       ))}
       <div className="list-editor-form-actions">
-        <button type="button" className="sf-btn sf-btn--primary" onClick={save}>
-          Save
-        </button>
+        <Button onClick={save}>Save</Button>
         <button type="button" className="sf-btn" onClick={cancel}>
           Cancel
         </button>
@@ -138,10 +141,9 @@ export function ListEditor({
 
   return (
     <div className="list-editor">
-      <div className="list-editor-head">
-        <button type="button" className="sf-btn sf-btn--primary" onClick={startAdd}>
-          {addLabel}
-        </button>
+      <div className="sf-panel-head">
+        <h2>{heading}</h2>
+        <Button onClick={startAdd}>{addLabel}</Button>
       </div>
 
       {isAdding ? form : null}

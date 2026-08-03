@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SEVERITY_TONE, needsAttentionOpenCount, topAttentionItems } from "@/lib/data/needsAttention";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 
 /**
  * The first thing a Super Admin sees each morning: what needs a response
@@ -19,7 +20,7 @@ export function NeedsAttentionBanner() {
 
       {open === 0 ? (
         <p className="sf-priority-banner-empty">
-          <span className="sf-status sf-status--ok">All clear</span>
+          <StatusBadge tone="ok">All clear</StatusBadge>
           No open items across at-risk students, overdue alerts, sync failures, or pending
           configuration.
         </p>
@@ -29,7 +30,7 @@ export function NeedsAttentionBanner() {
             {top.map((item) => (
               <li key={item.id}>
                 <span className="sf-priority-banner-subject">{item.subject}</span>
-                <span className={`sf-status ${SEVERITY_TONE[item.severity]}`}>{item.severity}</span>
+                <StatusBadge tone={SEVERITY_TONE[item.severity]}>{item.severity}</StatusBadge>
               </li>
             ))}
           </ul>

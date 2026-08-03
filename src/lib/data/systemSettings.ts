@@ -1,5 +1,4 @@
 import type { ListEditorItem } from "@/components/shared/ListEditor";
-import type { UserRole } from "./userRoles";
 
 // TODO: replace with the real Admin DB system-settings contract.
 
@@ -79,67 +78,6 @@ export const announcements: ListEditorItem[] = [
     detail: "Orientation details for incoming grade 9 students.",
     status: { tone: "neutral", label: "Scheduled" },
     meta: "Grade 9 · starts Aug 24, 2026"
-  }
-];
-
-export type ManagedUser = {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  lastActive: string;
-};
-
-export const managedUsers: ManagedUser[] = [
-  {
-    id: "u-1",
-    name: "Dana Whitfield",
-    email: "dwhitfield@edison.example.org",
-    role: "school_leader",
-    lastActive: "2026-07-17T09:14:00-04:00"
-  },
-  {
-    id: "u-2",
-    name: "Marcus Reyes",
-    email: "mreyes@edison.example.org",
-    role: "school_leader",
-    lastActive: "2026-07-16T16:42:00-04:00"
-  },
-  {
-    id: "u-3",
-    name: "Priya Nair",
-    email: "pnair@edison.example.org",
-    role: "super_admin",
-    lastActive: "2026-07-17T12:05:00-04:00"
-  },
-  {
-    id: "u-4",
-    name: "Sam Okonkwo",
-    email: "sokonkwo@edison.example.org",
-    role: "support_staff",
-    lastActive: "2026-07-17T11:38:00-04:00"
-  }
-];
-
-export type ProvisioningRequest = {
-  id: string;
-  name: string;
-  requestedRole: UserRole;
-  requestedOn: string;
-};
-
-export const provisioningRequests: ProvisioningRequest[] = [
-  {
-    id: "pr-1",
-    name: "Alicia Gomez",
-    requestedRole: "super_admin",
-    requestedOn: "2026-07-15T10:20:00-04:00"
-  },
-  {
-    id: "pr-2",
-    name: "Tom Bradley",
-    requestedRole: "support_staff",
-    requestedOn: "2026-07-16T14:03:00-04:00"
   }
 ];
 

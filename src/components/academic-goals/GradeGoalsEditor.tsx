@@ -9,6 +9,8 @@ import {
   type GradeGoal
 } from "@/lib/data/academicGoals";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // TODO: local state only — persist through the Admin DB Academic Goals
 // contract when it exists.
@@ -174,16 +176,21 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
 
       <label className="sf-field">
         <span>Category</span>
-        <select
+        <Select
           value={draft.category}
-          onChange={(event) => setDraft({ ...draft, category: event.target.value })}
+          onValueChange={(value) => setDraft({ ...draft, category: value ?? draft.category })}
         >
-          {goalCategories.map((category) => (
-            <option key={category.id} value={category.title}>
-              {category.title}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent alignItemWithTrigger={false}>
+            {goalCategories.map((category) => (
+              <SelectItem key={category.id} value={category.title}>
+                {category.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </label>
 
       <label className="sf-field">
@@ -217,9 +224,9 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
       </div>
 
       <div className="list-editor-form-actions">
-        <button type="button" className="sf-btn sf-btn--primary" onClick={save} disabled={!canSave}>
+        <Button onClick={save} disabled={!canSave}>
           {editingId ? "Save goal" : "Submit goal"}
-        </button>
+        </Button>
         <button type="button" className="sf-btn" onClick={cancel}>
           Cancel
         </button>
@@ -236,9 +243,7 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
         </div>
 
         <div className="list-editor-head">
-          <button type="button" className="sf-btn sf-btn--primary" onClick={startAdd}>
-            Set a goal
-          </button>
+          <Button onClick={startAdd}>Set a goal</Button>
         </div>
 
         {isAdding ? form : null}

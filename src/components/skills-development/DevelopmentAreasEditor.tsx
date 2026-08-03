@@ -12,6 +12,8 @@ import {
 import { DevAreaIcon } from "./DevAreaIcon";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // TODO: local state only — persist through the Admin DB skills-and-development
 // contract when it exists.
@@ -174,23 +176,25 @@ export function DevelopmentAreasEditor({
 
       <label className="sf-field">
         <span>Icon</span>
-        <select
-          className="sf-input"
+        <Select
           value={areaDraft.icon}
-          onChange={(event) => setAreaDraft({ ...areaDraft, icon: event.target.value as IconName })}
+          onValueChange={(value) => setAreaDraft({ ...areaDraft, icon: value as IconName })}
         >
-          {DEV_AREA_ICONS.map((icon) => (
-            <option key={icon.value} value={icon.value}>
-              {icon.label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent alignItemWithTrigger={false}>
+            {DEV_AREA_ICONS.map((icon) => (
+              <SelectItem key={icon.value} value={icon.value}>
+                {icon.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </label>
 
       <div className="list-editor-form-actions">
-        <button type="button" className="sf-btn sf-btn--primary" onClick={onSave}>
-          {saveLabel}
-        </button>
+        <Button onClick={onSave}>{saveLabel}</Button>
         <button type="button" className="sf-btn" onClick={onCancel}>
           Cancel
         </button>
@@ -211,9 +215,7 @@ export function DevelopmentAreasEditor({
       </div>
 
       <div className="list-editor-head">
-        <button
-          type="button"
-          className="sf-btn sf-btn--primary"
+        <Button
           onClick={() => {
             resetAreaDraft();
             setEditingAreaId(null);
@@ -221,7 +223,7 @@ export function DevelopmentAreasEditor({
           }}
         >
           Add area
-        </button>
+        </Button>
       </div>
 
       {addingArea
@@ -266,9 +268,9 @@ export function DevelopmentAreasEditor({
                             if (event.key === "Escape") setEditingSkill(null);
                           }}
                         />
-                        <button type="button" className="sf-btn sf-btn--sm sf-btn--primary" onClick={saveSkillEdit}>
+                        <Button size="sm" onClick={saveSkillEdit}>
                           Save
-                        </button>
+                        </Button>
                         <button
                           type="button"
                           className="sf-btn sf-btn--sm"
@@ -322,13 +324,9 @@ export function DevelopmentAreasEditor({
                         if (event.key === "Escape") setSkillDraftFor(null);
                       }}
                     />
-                    <button
-                      type="button"
-                      className="sf-btn sf-btn--sm sf-btn--primary"
-                      onClick={() => addSkill(area.id)}
-                    >
+                    <Button size="sm" onClick={() => addSkill(area.id)}>
                       Add
-                    </button>
+                    </Button>
                     <button
                       type="button"
                       className="sf-btn sf-btn--sm"

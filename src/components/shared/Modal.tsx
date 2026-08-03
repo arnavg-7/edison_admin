@@ -10,11 +10,14 @@ import { useEffect } from "react";
 export function Modal({
   title,
   onClose,
-  children
+  children,
+  size = "md"
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  /** "lg" for flows with more to show at once, e.g. a multi-step wizard. */
+  size?: "md" | "lg";
 }) {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -35,7 +38,12 @@ export function Modal({
         }
       }}
     >
-      <div className="sf-modal" role="dialog" aria-modal="true" aria-label={title}>
+      <div
+        className={size === "lg" ? "sf-modal sf-modal--lg" : "sf-modal"}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+      >
         <div className="sf-modal-head">
           <h2>{title}</h2>
           <button type="button" className="sf-modal-close" aria-label="Close" onClick={onClose}>

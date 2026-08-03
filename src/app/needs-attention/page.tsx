@@ -6,18 +6,15 @@ import {
   ATTENTION_CATEGORIES,
   ATTENTION_SEVERITIES,
   AT_RISK_PLACEHOLDER_RULES,
+  SEVERITY_TONE,
   attentionItems,
   type AttentionCategory,
   type AttentionSeverity
 } from "@/lib/data/needsAttention";
 import { formatSalesforceStamp } from "@/lib/format";
 import { EmptyState } from "@/components/shared/EmptyState";
-
-const SEVERITY_TONE: Record<AttentionSeverity, string> = {
-  critical: "sf-status--error",
-  high: "sf-status--warn",
-  medium: "sf-status--neutral"
-};
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const SEVERITY_RANK: Record<AttentionSeverity, number> = { critical: 0, high: 1, medium: 2 };
 
@@ -68,32 +65,42 @@ export default function NeedsAttentionPage() {
       <div className="sf-filter-bar">
         <label className="sf-field">
           <span>Category</span>
-          <select
+          <Select
             value={category}
-            onChange={(event) => setCategory(event.target.value as AttentionCategory | "all")}
+            onValueChange={(value) => setCategory(value as AttentionCategory | "all")}
           >
-            <option value="all">All categories</option>
-            {ATTENTION_CATEGORIES.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger={false}>
+              <SelectItem value="all">All categories</SelectItem>
+              {ATTENTION_CATEGORIES.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </label>
 
         <label className="sf-field">
           <span>Severity</span>
-          <select
+          <Select
             value={severity}
-            onChange={(event) => setSeverity(event.target.value as AttentionSeverity | "all")}
+            onValueChange={(value) => setSeverity(value as AttentionSeverity | "all")}
           >
-            <option value="all">All severities</option>
-            {ATTENTION_SEVERITIES.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger={false}>
+              <SelectItem value="all">All severities</SelectItem>
+              {ATTENTION_SEVERITIES.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </label>
 
         <p className="sf-filter-note">
@@ -142,9 +149,7 @@ export default function NeedsAttentionPage() {
                 >
                   <div className="sf-triage-main">
                     <div className="sf-triage-top">
-                      <span className={`sf-status ${SEVERITY_TONE[item.severity]}`}>
-                        {item.severity}
-                      </span>
+                      <StatusBadge tone={SEVERITY_TONE[item.severity]}>{item.severity}</StatusBadge>
                       <span className="sf-triage-category">{CATEGORY_LABEL[item.category]}</span>
                       <span className="sf-triage-when">
                         Flagged {formatSalesforceStamp(item.flaggedAt)}

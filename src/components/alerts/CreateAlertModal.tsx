@@ -6,6 +6,8 @@ import { taggableFaculty } from "@/lib/data/alerts";
 import { peopleOfKind } from "@/lib/data/people";
 import { schools } from "@/lib/data/schools";
 import { Modal } from "@/components/shared/Modal";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ADMIN_ROLE_LABEL } from "@/lib/nav";
 
 const CATEGORIES = ["Attendance", "Missing work", "Goal overdue", "Grade drop", "Behavior"];
@@ -70,36 +72,51 @@ export function CreateAlertModal({
     <Modal title="Create Alert" onClose={onClose}>
       <label className="sf-field">
         <span>Student</span>
-        <select value={studentId} onChange={(event) => setStudentId(event.target.value)}>
-          {students.map((student) => (
-            <option key={student.id} value={student.id}>
-              {student.name} — {student.school}
-            </option>
-          ))}
-        </select>
+        <Select value={studentId} onValueChange={(value) => setStudentId(value ?? "")}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent alignItemWithTrigger={false}>
+            {students.map((student) => (
+              <SelectItem key={student.id} value={student.id}>
+                {student.name} — {student.school}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </label>
 
       <div className="sf-field-row">
         <label className="sf-field">
           <span>Category</span>
-          <select value={category} onChange={(event) => setCategory(event.target.value)}>
-            {CATEGORIES.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+          <Select value={category} onValueChange={(value) => setCategory(value ?? category)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger={false}>
+              {CATEGORIES.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </label>
 
         <label className="sf-field">
           <span>Severity</span>
-          <select value={severity} onChange={(event) => setSeverity(event.target.value as AlertSeverity)}>
-            {SEVERITIES.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+          <Select value={severity} onValueChange={(value) => setSeverity(value as AlertSeverity)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger={false}>
+              {SEVERITIES.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </label>
       </div>
 
@@ -130,9 +147,9 @@ export function CreateAlertModal({
       </label>
 
       <div className="list-editor-form-actions">
-        <button type="button" className="sf-btn sf-btn--primary" onClick={save} disabled={!canSave}>
+        <Button onClick={save} disabled={!canSave}>
           Create Alert
-        </button>
+        </Button>
         <button type="button" className="sf-btn" onClick={onClose}>
           Cancel
         </button>

@@ -220,6 +220,27 @@ body {
   max-width: 90ch;
 }
 
+/** Page title + subtitle on the left, a primary page-level action top-right. */
+.sf-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sf-page-head .sf-page-title,
+.sf-page-head .sf-page-sub {
+  margin: 0;
+}
+
+.sf-page-head .sf-page-sub {
+  margin-top: 6px;
+}
+
+.sf-page-head .sf-btn {
+  flex: 0 0 auto;
+}
+
 .sf-skip-link {
   position: absolute;
   left: -9999px;
@@ -340,11 +361,13 @@ body {
   border-color: var(--sf-accent);
   color: #ffffff;
   font-weight: 600;
+  box-shadow: 0 1px 2px rgba(79, 70, 229, 0.25), 0 4px 10px rgba(79, 70, 229, 0.18);
 }
 
 .sf-btn--primary:hover {
   background: var(--sf-accent-hover);
   border-color: var(--sf-accent-hover);
+  box-shadow: 0 1px 2px rgba(79, 70, 229, 0.3), 0 6px 14px rgba(79, 70, 229, 0.24);
 }
 
 .sf-btn--quiet {
@@ -424,7 +447,6 @@ body {
 }
 
 .sf-field input,
-.sf-field select,
 .sf-field textarea,
 .sf-input {
   background: var(--sf-card);
@@ -443,37 +465,24 @@ body {
   resize: vertical;
 }
 
-.sf-field select,
-select.sf-input {
-  appearance: none;
-  -webkit-appearance: none;
-  padding-right: 30px;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3e%3cpath stroke='%23545d73' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 9l6 6 6-6'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 14px;
+/* Compact inline input for editing a value directly inside a table cell. */
+.sf-input--cell {
+  width: 100%;
+  min-width: 60px;
+  max-width: 140px;
+  padding: 6px 8px;
+  min-height: 30px;
+  font-size: 13px;
 }
 
-.sf-field select:disabled,
-select.sf-input:disabled {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3e%3cpath stroke='%235b6474' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 9l6 6 6-6'/%3e%3c/svg%3e");
-}
-
-.sf-field select option {
-  background: var(--sf-card);
-  color: var(--sf-text);
-}
+/* Selects are the shadcn NativeSelect component now — it owns its own
+   appearance, chevron and disabled state, so it deliberately isn't styled
+   here alongside plain inputs/textareas. */
 
 .sf-field input::placeholder,
 .sf-field textarea::placeholder,
 .sf-input::placeholder {
   color: var(--sf-text-dim);
-}
-
-.sf-field select:disabled,
-.sf-field select:disabled option {
-  color: #5b6474;
-  background: var(--sf-raised);
 }
 
 .sf-filter-bar {
@@ -493,41 +502,18 @@ select.sf-input:disabled {
   min-width: 168px;
 }
 
+/* The free-text filter grows to take the row's remaining space, so it reads
+   as the primary control and a trailing CTA sits right after it instead of
+   stranded at the far edge behind a wide gap. */
+.sf-filter-bar .sf-field--search {
+  flex: 1 1 240px;
+}
+
 .sf-filter-note {
   flex-basis: 100%;
   margin: 0;
   font-size: 12px;
   color: var(--sf-text-muted);
-}
-
-/* Tabs */
-
-.sf-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  margin-top: 16px;
-  border-bottom: 1px solid var(--sf-card-border);
-}
-
-.sf-tab {
-  text-decoration: none;
-  color: var(--sf-text-muted);
-  font-size: 13px;
-  font-weight: 500;
-  padding: 9px 14px;
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-}
-
-.sf-tab:hover {
-  color: var(--sf-text);
-}
-
-.sf-tab.active {
-  color: var(--sf-text);
-  font-weight: 600;
-  border-bottom-color: var(--sf-accent);
 }
 
 /* Tables */
@@ -641,6 +627,7 @@ select.sf-input:disabled {
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
+  scroll-margin-top: 16px;
 }
 
 .sf-card-head {
@@ -1130,6 +1117,19 @@ select.sf-input:disabled {
   color: var(--sf-text);
 }
 
+/* An editable stat keeps the same numeral weight/size as a static one, just
+   boxed to read as a control rather than a printed figure. */
+.sf-stat-row dd input {
+  font: inherit;
+  color: inherit;
+  background: var(--sf-card);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-control);
+  padding: 2px 8px;
+  width: 100%;
+  max-width: 110px;
+}
+
 /* Page headings inside the themed main region */
 
 .sf-main > h1,
@@ -1162,6 +1162,101 @@ select.sf-input:disabled {
 
 .sf-bar-group-link:hover {
   text-decoration: underline;
+}
+
+/* Add User: choice between the manual form and a CSV bulk import */
+
+.sf-choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.sf-choice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  background: var(--sf-card);
+  color: var(--sf-text-muted);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-card);
+  padding: 24px 20px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.sf-choice-card:hover {
+  border-color: var(--sf-accent);
+  background: var(--sf-accent-soft);
+  color: var(--sf-accent-hover);
+}
+
+.sf-choice-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sf-accent-soft);
+  color: var(--sf-accent);
+  flex: 0 0 auto;
+}
+
+.sf-choice-card:hover .sf-choice-icon {
+  background: var(--sf-card);
+}
+
+.sf-choice-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.sf-choice-card-desc {
+  font-size: 12.5px;
+  color: var(--sf-text-muted);
+  line-height: 1.4;
+}
+
+.sf-inline-btn {
+  display: inline-block;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: -4px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--sf-link);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.sf-inline-btn:hover {
+  text-decoration: underline;
+}
+
+.sf-csv-row-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  font-size: 12px;
+}
+
+.sf-csv-row-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sf-csv-row-list li.is-error {
+  color: var(--sf-text-muted);
 }
 
 /* Core metric tile — the 3 original metrics, value + delta + sparkline */
@@ -1470,6 +1565,43 @@ select.sf-input:disabled {
 /* ---------------------------------------------------------------------------
    Needs Attention triage queue
    --------------------------------------------------------------------------- */
+
+/* Informational banner, e.g. a profile that still needs completing. A tinted
+   surface plus a hairline border — deliberately not a thick side bar. */
+
+.sf-notice {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border: 1px solid #d5d0f7;
+  border-radius: var(--sf-radius-card);
+  background: var(--sf-accent-soft);
+}
+
+.sf-notice-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sf-accent-hover);
+}
+
+.sf-notice-detail {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--sf-text-muted);
+  max-width: 90ch;
+}
+
+/* Marks a blank required field on the Personal details tab. */
+
+.sf-field-required {
+  margin-left: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sf-warn-text);
+}
 
 .sf-callout {
   border-left: 3px solid #d99a2b;

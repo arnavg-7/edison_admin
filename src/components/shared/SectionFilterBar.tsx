@@ -1,5 +1,7 @@
 "use client";
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 export type SectionFilterOption = { value: string; label: string };
 
 export type SectionFilterConfig = {
@@ -21,13 +23,18 @@ export function SectionFilterBar({ filters }: { filters: SectionFilterConfig[] }
       {filters.map((filter) => (
         <label className="sf-field" key={filter.id}>
           <span>{filter.label}</span>
-          <select value={filter.value} onChange={(event) => filter.onChange(event.target.value)}>
-            {filter.options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <Select value={filter.value} onValueChange={(value) => filter.onChange(value ?? filter.value)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger={false}>
+              {filter.options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </label>
       ))}
     </div>

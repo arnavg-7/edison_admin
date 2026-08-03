@@ -6,11 +6,8 @@ import { ListEditor } from "@/components/shared/ListEditor";
 export default function AnnouncementsPage() {
   return (
       <div className="sf-panel">
-        <div className="sf-panel-head">
-          <h2>Announcements</h2>
-        </div>
-
         <ListEditor
+          heading="Announcements"
           items={announcements}
           addLabel="Add announcement"
           emptyTitle="No announcements"

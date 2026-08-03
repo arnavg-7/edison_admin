@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { GradeScope } from "@/lib/data/skillsDevelopment";
 import { DevelopmentAreasEditor } from "./DevelopmentAreasEditor";
 import { SkillsProfileEditor } from "./SkillsProfileEditor";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 /**
  * Both editors for one grade. The tabs are local rather than routed: the two
@@ -43,20 +44,15 @@ export function GradeScopeEditor({ scope }: { scope: GradeScope }) {
         </p>
       ) : null}
 
-      <div className="sf-tabs" role="tablist" aria-label="Configuration view">
-        {TABS.map((label) => (
-          <button
-            key={label}
-            type="button"
-            role="tab"
-            aria-selected={tab === label}
-            className={tab === label ? "sf-tab active" : "sf-tab"}
-            onClick={() => setTab(label)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <Tabs value={tab} onValueChange={(value) => setTab(value as (typeof TABS)[number])}>
+        <TabsList variant="line" aria-label="Configuration view">
+          {TABS.map((label) => (
+            <TabsTrigger key={label} value={label}>
+              {label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {tab === "Development areas" ? (
         <DevelopmentAreasEditor schoolId={scope.schoolId} grade={scope.grade} />

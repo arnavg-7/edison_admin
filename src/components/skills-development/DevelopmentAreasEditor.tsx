@@ -13,10 +13,20 @@ import { DevAreaIcon } from "./DevAreaIcon";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList
+} from "@/components/ui/combobox";
 
 // TODO: local state only — persist through the Admin DB skills-and-development
 // contract when it exists.
+
+const isIconOptionEqual = (a: (typeof DEV_AREA_ICONS)[number], b: (typeof DEV_AREA_ICONS)[number]) =>
+  a.value === b.value;
 
 let seq = 0;
 const nextId = (prefix: string) => `${prefix}-local-${Date.now()}-${seq++}`;
@@ -176,21 +186,24 @@ export function DevelopmentAreasEditor({
 
       <label className="sf-field">
         <span>Icon</span>
-        <Select
-          value={areaDraft.icon}
-          onValueChange={(value) => setAreaDraft({ ...areaDraft, icon: value as IconName })}
+        <Combobox
+          items={DEV_AREA_ICONS}
+          value={DEV_AREA_ICONS.find((icon) => icon.value === areaDraft.icon) ?? null}
+          onValueChange={(icon) => setAreaDraft({ ...areaDraft, icon: (icon?.value ?? "check") as IconName })}
+          isItemEqualToValue={isIconOptionEqual}
         >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent alignItemWithTrigger={false}>
-            {DEV_AREA_ICONS.map((icon) => (
-              <SelectItem key={icon.value} value={icon.value}>
-                {icon.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <ComboboxInput placeholder="Select an icon" />
+          <ComboboxContent>
+            <ComboboxEmpty>No matches</ComboboxEmpty>
+            <ComboboxList>
+              {(icon: (typeof DEV_AREA_ICONS)[number]) => (
+                <ComboboxItem key={icon.value} value={icon}>
+                  {icon.label}
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
       </label>
 
       <div className="list-editor-form-actions">

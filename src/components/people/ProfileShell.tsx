@@ -22,12 +22,33 @@ import { DevelopmentAreasEditor } from "@/components/skills-development/Developm
 import { SkillsProfileEditor } from "@/components/skills-development/SkillsProfileEditor";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList
+} from "@/components/ui/combobox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatSalesforceStamp } from "@/lib/format";
 
 const GOAL_STATUSES: GoalRecord["status"][] = ["On track", "At risk", "Complete", "Overdue"];
 const ALERT_STATUSES: AlertRecord["status"][] = ["Open", "Acknowledged", "Resolved"];
+
+type ComboOption<T extends string> = { value: T; label: string };
+
+const isOptionEqual = <T extends string>(a: ComboOption<T>, b: ComboOption<T>) => a.value === b.value;
+
+const GOAL_STATUS_OPTIONS: ComboOption<GoalRecord["status"]>[] = GOAL_STATUSES.map((status) => ({
+  value: status,
+  label: status
+}));
+
+const ALERT_STATUS_OPTIONS: ComboOption<AlertRecord["status"]>[] = ALERT_STATUSES.map((status) => ({
+  value: status,
+  label: status
+}));
 
 type TabId =
   | "personal"
@@ -479,22 +500,25 @@ export function ProfileShell({ person }: { person: Person }) {
                     +
                   </button>
                 </div>,
-                <Select
+                <Combobox
                   key="s"
-                  value={g.status}
-                  onValueChange={(value) => setGoalStatus(g.id, value as GoalRecord["status"])}
+                  items={GOAL_STATUS_OPTIONS}
+                  value={GOAL_STATUS_OPTIONS.find((option) => option.value === g.status) ?? null}
+                  onValueChange={(option) => setGoalStatus(g.id, option?.value ?? g.status)}
+                  isItemEqualToValue={isOptionEqual}
                 >
-                  <SelectTrigger aria-label={`Status for ${g.title}`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent alignItemWithTrigger={false}>
-                    {GOAL_STATUSES.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>,
+                  <ComboboxInput aria-label={`Status for ${g.title}`} placeholder="Status" />
+                  <ComboboxContent>
+                    <ComboboxEmpty>No matches</ComboboxEmpty>
+                    <ComboboxList>
+                      {(option: ComboOption<GoalRecord["status"]>) => (
+                        <ComboboxItem key={option.value} value={option}>
+                          {option.label}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>,
                 g.target,
                 <span key="u" style={{ whiteSpace: "nowrap" }}>
                   {formatSalesforceStamp(g.lastUpdated)}
@@ -722,21 +746,24 @@ export function ProfileShell({ person }: { person: Person }) {
                       formatSalesforceStamp(a.raised),
                       a.raisedBy ?? "—",
                       <div className="sf-alert-status-cell" key="s">
-                        <Select
-                          value={a.status}
-                          onValueChange={(value) => setAlertStatus(a.id, value as AlertRecord["status"])}
+                        <Combobox
+                          items={ALERT_STATUS_OPTIONS}
+                          value={ALERT_STATUS_OPTIONS.find((option) => option.value === a.status) ?? null}
+                          onValueChange={(option) => setAlertStatus(a.id, option?.value ?? a.status)}
+                          isItemEqualToValue={isOptionEqual}
                         >
-                          <SelectTrigger aria-label={`Status for ${a.rule}`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent alignItemWithTrigger={false}>
-                            {ALERT_STATUSES.map((status) => (
-                              <SelectItem key={status} value={status}>
-                                {status}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          <ComboboxInput aria-label={`Status for ${a.rule}`} placeholder="Status" />
+                          <ComboboxContent>
+                            <ComboboxEmpty>No matches</ComboboxEmpty>
+                            <ComboboxList>
+                              {(option: ComboOption<AlertRecord["status"]>) => (
+                                <ComboboxItem key={option.value} value={option}>
+                                  {option.label}
+                                </ComboboxItem>
+                              )}
+                            </ComboboxList>
+                          </ComboboxContent>
+                        </Combobox>
                         {a.overdue && a.status === "Open" ? (
                           <StatusBadge tone="error">Past SLA</StatusBadge>
                         ) : null}

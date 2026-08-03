@@ -6,7 +6,18 @@ import { schools, gradeLabel } from "@/lib/data/schools";
 import { AlertCard } from "./AlertCard";
 import { AlertDetailsModal } from "./AlertDetailsModal";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList
+} from "@/components/ui/combobox";
+
+type ComboOption = { value: string; label: string };
+
+const isOptionEqual = (a: ComboOption, b: ComboOption) => a.value === b.value;
 
 function sortGrades(grades: string[]): string[] {
   return [...new Set(grades)].sort((a, b) => {
@@ -18,9 +29,6 @@ function sortGrades(grades: string[]): string[] {
 
 const ALL_GRADES = sortGrades(schools.flatMap((school) => school.grades));
 
-/** Base UI's Select treats value="" as "nothing selected" and never renders
-    its label, so "All X" — a real, persistent filter state — needs a
-    non-empty sentinel instead. */
 const ALL = "all";
 
 /** Resolved alerts only — the "Alerts" tab is current/open by design, so this
@@ -34,6 +42,16 @@ export function AlertHistoryBoard() {
   const gradeOptions = schoolId !== ALL
     ? sortGrades(schools.find((school) => school.id === schoolId)?.grades ?? [])
     : ALL_GRADES;
+
+  const schoolComboOptions: ComboOption[] = [
+    { value: ALL, label: "All schools" },
+    ...schools.map((school) => ({ value: school.id, label: school.name }))
+  ];
+
+  const gradeComboOptions: ComboOption[] = [
+    { value: ALL, label: "All grades" },
+    ...gradeOptions.map((option) => ({ value: option, label: gradeLabel(option) }))
+  ];
 
   const resolvedAlerts = useMemo(
     () => studentAlerts.filter((alert) => alert.status === "Resolved"),
@@ -71,42 +89,49 @@ export function AlertHistoryBoard() {
 
         <label className="sf-field">
           <span>School</span>
-          <Select
-            value={schoolId}
-            onValueChange={(value) => {
-              setSchoolId(value ?? ALL);
+          <Combobox
+            items={schoolComboOptions}
+            value={schoolComboOptions.find((option) => option.value === schoolId) ?? null}
+            onValueChange={(option) => {
+              setSchoolId(option?.value ?? ALL);
               setGrade(ALL);
             }}
+            isItemEqualToValue={isOptionEqual}
           >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              <SelectItem value={ALL}>All schools</SelectItem>
-              {schools.map((school) => (
-                <SelectItem key={school.id} value={school.id}>
-                  {school.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <ComboboxInput placeholder="All schools" />
+            <ComboboxContent>
+              <ComboboxEmpty>No matches</ComboboxEmpty>
+              <ComboboxList>
+                {(option: ComboOption) => (
+                  <ComboboxItem key={option.value} value={option}>
+                    {option.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         </label>
 
         <label className="sf-field">
           <span>Grade</span>
-          <Select value={grade} onValueChange={(value) => setGrade(value ?? ALL)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              <SelectItem value={ALL}>All grades</SelectItem>
-              {gradeOptions.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {gradeLabel(option)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            items={gradeComboOptions}
+            value={gradeComboOptions.find((option) => option.value === grade) ?? null}
+            onValueChange={(option) => setGrade(option?.value ?? ALL)}
+            isItemEqualToValue={isOptionEqual}
+          >
+            <ComboboxInput placeholder="All grades" />
+            <ComboboxContent>
+              <ComboboxEmpty>No matches</ComboboxEmpty>
+              <ComboboxList>
+                {(option: ComboOption) => (
+                  <ComboboxItem key={option.value} value={option}>
+                    {option.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         </label>
       </div>
 

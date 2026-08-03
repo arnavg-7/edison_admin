@@ -10,10 +10,26 @@ import {
 } from "@/lib/data/academicGoals";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList
+} from "@/components/ui/combobox";
 
 // TODO: local state only — persist through the Admin DB Academic Goals
 // contract when it exists.
+
+type ComboOption = { value: string; label: string };
+
+const isOptionEqual = (a: ComboOption, b: ComboOption) => a.value === b.value;
+
+const categoryOptions: ComboOption[] = goalCategories.map((category) => ({
+  value: category.title,
+  label: category.title
+}));
 
 let seq = 0;
 const nextId = (scope: string) => `gg-local-${scope}-${Date.now()}-${seq++}`;
@@ -176,21 +192,24 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
 
       <label className="sf-field">
         <span>Category</span>
-        <Select
-          value={draft.category}
-          onValueChange={(value) => setDraft({ ...draft, category: value ?? draft.category })}
+        <Combobox
+          items={categoryOptions}
+          value={categoryOptions.find((option) => option.value === draft.category) ?? null}
+          onValueChange={(option) => setDraft({ ...draft, category: option?.value ?? draft.category })}
+          isItemEqualToValue={isOptionEqual}
         >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent alignItemWithTrigger={false}>
-            {goalCategories.map((category) => (
-              <SelectItem key={category.id} value={category.title}>
-                {category.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <ComboboxInput placeholder="Select a category" />
+          <ComboboxContent>
+            <ComboboxEmpty>No matches</ComboboxEmpty>
+            <ComboboxList>
+              {(option: ComboOption) => (
+                <ComboboxItem key={option.value} value={option}>
+                  {option.label}
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
       </label>
 
       <label className="sf-field">

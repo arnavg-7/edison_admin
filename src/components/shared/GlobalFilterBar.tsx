@@ -3,12 +3,18 @@
 import { DATE_RANGE_OPTIONS, useReportFilters, type DateRangePreset } from "@/lib/filters";
 import { classesForGrade, gradesForSchool, schools } from "@/lib/data/schools";
 import { currentTerm } from "@/lib/data/academicCalendar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList
+} from "@/components/ui/combobox";
 
-/** Base UI's Select treats value="" as "nothing selected" and never renders
-    its label, so the "All X" item — a real, persistent filter state, not a
-    placeholder — needs a non-empty sentinel instead. */
-const ALL = "__all__";
+type ComboOption = { value: string; label: string };
+
+const isOptionEqual = (a: ComboOption, b: ComboOption) => a.value === b.value;
 
 /**
  * Shared by every Reporting screen. Grade appears once a school is picked and
@@ -20,29 +26,43 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
   const sections = classesForGrade(filters.grade);
   const term = currentTerm();
 
+  const schoolOptions: ComboOption[] = [
+    { value: "all", label: "All schools" },
+    ...schools.map((school) => ({ value: school.id, label: school.name }))
+  ];
+
+  const gradeOptions: ComboOption[] = [
+    { value: "all", label: filters.school ? "All grades" : "Select a school first" },
+    ...grades.map((grade) => ({ value: grade, label: `Grade ${grade}` }))
+  ];
+
+  const sectionOptions: ComboOption[] = [
+    { value: "all", label: filters.grade ? "All sections" : "Select a grade first" },
+    ...sections.map((section) => ({ value: section.id, label: section.name }))
+  ];
+
   return (
     <div className="sf-filter-bar">
       <label className="sf-field">
         <span>Date Range</span>
-        <Select
-          value={filters.range}
-          onValueChange={(value) => setFilters({ range: value as DateRangePreset })}
+        <Combobox
+          items={DATE_RANGE_OPTIONS}
+          value={DATE_RANGE_OPTIONS.find((option) => option.value === filters.range) ?? null}
+          onValueChange={(option) => setFilters({ range: (option?.value ?? "today") as DateRangePreset })}
+          isItemEqualToValue={isOptionEqual}
         >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          {/* alignItemWithTrigger off: the default anchors the popup to the
-              selected item (matching native <select>), which is exactly what
-              made this open upward whenever a mid-list option was selected.
-              Anchoring to the trigger instead makes it always open below. */}
-          <SelectContent alignItemWithTrigger={false}>
-            {DATE_RANGE_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <ComboboxInput placeholder="Select a range" />
+          <ComboboxContent>
+            <ComboboxEmpty>No matches</ComboboxEmpty>
+            <ComboboxList>
+              {(option: (typeof DATE_RANGE_OPTIONS)[number]) => (
+                <ComboboxItem key={option.value} value={option}>
+                  {option.label}
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
       </label>
 
       {filters.range === "custom" ? (
@@ -68,69 +88,77 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
 
       <label className="sf-field">
         <span>School</span>
-        <Select
-          value={filters.school ?? ALL}
-          onValueChange={(value) => setFilters({ school: value === ALL ? null : (value ?? null) })}
+        <Combobox
+          items={schoolOptions}
+          value={schoolOptions.find((option) => option.value === (filters.school ?? "all")) ?? null}
+          onValueChange={(option) =>
+            setFilters({ school: !option || option.value === "all" ? null : option.value })
+          }
+          isItemEqualToValue={isOptionEqual}
         >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent alignItemWithTrigger={false}>
-            <SelectItem value={ALL}>All schools</SelectItem>
-            {schools.map((school) => (
-              <SelectItem key={school.id} value={school.id}>
-                {school.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <ComboboxInput placeholder="All schools" />
+          <ComboboxContent>
+            <ComboboxEmpty>No matches</ComboboxEmpty>
+            <ComboboxList>
+              {(option: ComboOption) => (
+                <ComboboxItem key={option.value} value={option}>
+                  {option.label}
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
       </label>
 
       <label className="sf-field">
         <span>Grade</span>
-        <Select
-          value={filters.grade ?? ALL}
-          onValueChange={(value) => setFilters({ grade: value === ALL ? null : (value ?? null) })}
+        <Combobox
+          items={gradeOptions}
+          value={gradeOptions.find((option) => option.value === (filters.grade ?? "all")) ?? null}
+          onValueChange={(option) =>
+            setFilters({ grade: !option || option.value === "all" ? null : option.value })
+          }
+          isItemEqualToValue={isOptionEqual}
           disabled={!filters.school}
         >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent alignItemWithTrigger={false}>
-            <SelectItem value={ALL}>
-              {filters.school ? "All grades" : "Select a school first"}
-            </SelectItem>
-            {grades.map((grade) => (
-              <SelectItem key={grade} value={grade}>
-                Grade {grade}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <ComboboxInput placeholder="All grades" disabled={!filters.school} />
+          <ComboboxContent>
+            <ComboboxEmpty>No matches</ComboboxEmpty>
+            <ComboboxList>
+              {(option: ComboOption) => (
+                <ComboboxItem key={option.value} value={option}>
+                  {option.label}
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
       </label>
 
       {showSection ? (
         <label className="sf-field">
           <span>Class / Section</span>
-          <Select
-            value={filters.section ?? ALL}
-            onValueChange={(value) => setFilters({ section: value === ALL ? null : (value ?? null) })}
+          <Combobox
+            items={sectionOptions}
+            value={sectionOptions.find((option) => option.value === (filters.section ?? "all")) ?? null}
+            onValueChange={(option) =>
+              setFilters({ section: !option || option.value === "all" ? null : option.value })
+            }
+            isItemEqualToValue={isOptionEqual}
             disabled={!filters.grade}
           >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              <SelectItem value={ALL}>
-                {filters.grade ? "All sections" : "Select a grade first"}
-              </SelectItem>
-              {sections.map((section) => (
-                <SelectItem key={section.id} value={section.id}>
-                  {section.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <ComboboxInput placeholder="All sections" disabled={!filters.grade} />
+            <ComboboxContent>
+              <ComboboxEmpty>No matches</ComboboxEmpty>
+              <ComboboxList>
+                {(option: ComboOption) => (
+                  <ComboboxItem key={option.value} value={option}>
+                    {option.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         </label>
       ) : null}
 

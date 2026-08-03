@@ -15,9 +15,31 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { AddUserModal } from "@/components/people/AddUserModal";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList
+} from "@/components/ui/combobox";
 
 const schoolByName = new Map(schools.map((school) => [school.name, school]));
+
+type ComboOption = { value: string; label: string };
+
+const isOptionEqual = (a: ComboOption, b: ComboOption) => a.value === b.value;
+
+const KIND_OPTIONS: ComboOption[] = [
+  { value: "all", label: "Students and faculty" },
+  { value: "student", label: "Students" },
+  { value: "faculty", label: "Faculty" }
+];
+
+const LEVEL_OPTIONS: ComboOption[] = [
+  { value: "all", label: "All grade levels" },
+  ...SCHOOL_LEVELS.map((option) => ({ value: option.value, label: option.label }))
+];
 
 /** Search and browse, then open an individual profile. */
 export default function PeopleSearchPage() {
@@ -42,6 +64,22 @@ export default function PeopleSearchPage() {
   // so the UI can never be left pointing at an impossible combination.
   const schoolsForLevel = level === "all" ? schools : schools.filter((s) => s.level === level);
   const gradesForSchool = school === "all" ? [] : (schoolByName.get(school)?.grades ?? []);
+
+  const schoolOptions = useMemo<ComboOption[]>(
+    () => [
+      { value: "all", label: "All schools" },
+      ...schoolsForLevel.map((option) => ({ value: option.name, label: option.name }))
+    ],
+    [schoolsForLevel]
+  );
+
+  const gradeOptions = useMemo<ComboOption[]>(
+    () => [
+      { value: "all", label: "All grades" },
+      ...gradesForSchool.map((value) => ({ value, label: gradeLabel(value) }))
+    ],
+    [gradesForSchool]
+  );
 
   const setLevelAndReset = (value: SchoolLevel | "all") => {
     setLevel(value);
@@ -98,74 +136,91 @@ export default function PeopleSearchPage() {
 
         <label className="sf-field">
           <span>Type</span>
-          <Select value={kind} onValueChange={(value) => setKind(value as PersonKind | "all")}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              <SelectItem value="all">Students and faculty</SelectItem>
-              <SelectItem value="student">Students</SelectItem>
-              <SelectItem value="faculty">Faculty</SelectItem>
-            </SelectContent>
-          </Select>
+          <Combobox
+            items={KIND_OPTIONS}
+            value={KIND_OPTIONS.find((option) => option.value === kind) ?? null}
+            onValueChange={(option) => setKind((option?.value ?? "all") as PersonKind | "all")}
+            isItemEqualToValue={isOptionEqual}
+          >
+            <ComboboxInput placeholder="All types" />
+            <ComboboxContent>
+              <ComboboxEmpty>No matches</ComboboxEmpty>
+              <ComboboxList>
+                {(option: ComboOption) => (
+                  <ComboboxItem key={option.value} value={option}>
+                    {option.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         </label>
 
         <label className="sf-field">
           <span>Grade Level</span>
-          <Select
-            value={level}
-            onValueChange={(value) => setLevelAndReset(value as SchoolLevel | "all")}
+          <Combobox
+            items={LEVEL_OPTIONS}
+            value={LEVEL_OPTIONS.find((option) => option.value === level) ?? null}
+            onValueChange={(option) => setLevelAndReset((option?.value ?? "all") as SchoolLevel | "all")}
+            isItemEqualToValue={isOptionEqual}
           >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              <SelectItem value="all">All grade levels</SelectItem>
-              {SCHOOL_LEVELS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <ComboboxInput placeholder="All grade levels" />
+            <ComboboxContent>
+              <ComboboxEmpty>No matches</ComboboxEmpty>
+              <ComboboxList>
+                {(option: ComboOption) => (
+                  <ComboboxItem key={option.value} value={option}>
+                    {option.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         </label>
 
         <label className="sf-field">
           <span>School</span>
-          <Select value={school} onValueChange={(value) => setSchoolAndReset(value ?? "all")}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              <SelectItem value="all">All schools</SelectItem>
-              {schoolsForLevel.map((option) => (
-                <SelectItem key={option.id} value={option.name}>
-                  {option.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            items={schoolOptions}
+            value={schoolOptions.find((option) => option.value === school) ?? null}
+            onValueChange={(option) => setSchoolAndReset(option?.value ?? "all")}
+            isItemEqualToValue={isOptionEqual}
+          >
+            <ComboboxInput placeholder="All schools" />
+            <ComboboxContent>
+              <ComboboxEmpty>No matches</ComboboxEmpty>
+              <ComboboxList>
+                {(option: ComboOption) => (
+                  <ComboboxItem key={option.value} value={option}>
+                    {option.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         </label>
 
         <label className="sf-field">
           <span>Grade</span>
-          <Select
-            value={grade}
-            onValueChange={(value) => setGrade(value ?? "all")}
+          <Combobox
+            items={gradeOptions}
+            value={gradeOptions.find((option) => option.value === grade) ?? null}
+            onValueChange={(option) => setGrade(option?.value ?? "all")}
+            isItemEqualToValue={isOptionEqual}
             disabled={school === "all"}
           >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              <SelectItem value="all">All grades</SelectItem>
-              {gradesForSchool.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {gradeLabel(value)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <ComboboxInput placeholder="All grades" disabled={school === "all"} />
+            <ComboboxContent>
+              <ComboboxEmpty>No matches</ComboboxEmpty>
+              <ComboboxList>
+                {(option: ComboOption) => (
+                  <ComboboxItem key={option.value} value={option}>
+                    {option.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         </label>
 
         <p className="sf-filter-note">

@@ -7,14 +7,34 @@ import { peopleOfKind } from "@/lib/data/people";
 import { schools } from "@/lib/data/schools";
 import { Modal } from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList
+} from "@/components/ui/combobox";
 import { ADMIN_ROLE_LABEL } from "@/lib/nav";
 
 const CATEGORIES = ["Attendance", "Missing work", "Goal overdue", "Grade drop", "Behavior"];
 const SEVERITIES: AlertSeverity[] = ["high", "medium", "low"];
 
+type ComboOption = { value: string; label: string };
+
+const isOptionEqual = (a: ComboOption, b: ComboOption) => a.value === b.value;
+
 const students = peopleOfKind("student");
 const faculty = taggableFaculty();
+
+const studentOptions: ComboOption[] = students.map((student) => ({
+  value: student.id,
+  label: `${student.name} — ${student.school}`
+}));
+
+const categoryOptions: ComboOption[] = CATEGORIES.map((option) => ({ value: option, label: option }));
+
+const severityOptions: ComboOption[] = SEVERITIES.map((option) => ({ value: option, label: option }));
 
 /** Students store "Grade 10" / department strings, not the "10" ids schools.ts uses. */
 function gradeFromGroup(group: string): string {
@@ -72,51 +92,69 @@ export function CreateAlertModal({
     <Modal title="Create Alert" onClose={onClose}>
       <label className="sf-field">
         <span>Student</span>
-        <Select value={studentId} onValueChange={(value) => setStudentId(value ?? "")}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent alignItemWithTrigger={false}>
-            {students.map((student) => (
-              <SelectItem key={student.id} value={student.id}>
-                {student.name} — {student.school}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Combobox
+          items={studentOptions}
+          value={studentOptions.find((option) => option.value === studentId) ?? null}
+          onValueChange={(option) => setStudentId(option?.value ?? "")}
+          isItemEqualToValue={isOptionEqual}
+        >
+          <ComboboxInput placeholder="Select a student" />
+          <ComboboxContent>
+            <ComboboxEmpty>No matches</ComboboxEmpty>
+            <ComboboxList>
+              {(option: ComboOption) => (
+                <ComboboxItem key={option.value} value={option}>
+                  {option.label}
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
       </label>
 
       <div className="sf-field-row">
         <label className="sf-field">
           <span>Category</span>
-          <Select value={category} onValueChange={(value) => setCategory(value ?? category)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              {CATEGORIES.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            items={categoryOptions}
+            value={categoryOptions.find((option) => option.value === category) ?? null}
+            onValueChange={(option) => setCategory(option?.value ?? category)}
+            isItemEqualToValue={isOptionEqual}
+          >
+            <ComboboxInput placeholder="Select a category" />
+            <ComboboxContent>
+              <ComboboxEmpty>No matches</ComboboxEmpty>
+              <ComboboxList>
+                {(option: ComboOption) => (
+                  <ComboboxItem key={option.value} value={option}>
+                    {option.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         </label>
 
         <label className="sf-field">
           <span>Severity</span>
-          <Select value={severity} onValueChange={(value) => setSeverity(value as AlertSeverity)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              {SEVERITIES.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            items={severityOptions}
+            value={severityOptions.find((option) => option.value === severity) ?? null}
+            onValueChange={(option) => setSeverity((option?.value ?? "medium") as AlertSeverity)}
+            isItemEqualToValue={isOptionEqual}
+          >
+            <ComboboxInput placeholder="Select a severity" />
+            <ComboboxContent>
+              <ComboboxEmpty>No matches</ComboboxEmpty>
+              <ComboboxList>
+                {(option: ComboOption) => (
+                  <ComboboxItem key={option.value} value={option}>
+                    {option.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         </label>
       </div>
 

@@ -10,7 +10,28 @@ import {
 } from "@/lib/data/people";
 import { SCHOOL_LEVELS, gradeLabel, gradesForSchool, schools, type SchoolLevel } from "@/lib/data/schools";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList
+} from "@/components/ui/combobox";
+
+type ComboOption = { value: string; label: string };
+
+const isOptionEqual = (a: ComboOption, b: ComboOption) => a.value === b.value;
+
+const KIND_OPTIONS: ComboOption[] = [
+  { value: "student", label: "Student" },
+  { value: "faculty", label: "Faculty" }
+];
+
+const LEVEL_OPTIONS: ComboOption[] = SCHOOL_LEVELS.map((option) => ({
+  value: option.value,
+  label: option.label
+}));
 
 /**
  * Mirrors the User Management filter cascade (Grade Level -> School -> Grade)
@@ -39,7 +60,17 @@ export function ManualUserForm({
 
   const schoolsForLevel = level === "" ? [] : schools.filter((entry) => entry.level === level);
   const school = schools.find((entry) => entry.id === schoolId);
-  const gradeOptions = school ? gradesForSchool(school.id) : [];
+  const gradeOptionValues = school ? gradesForSchool(school.id) : [];
+
+  const schoolOptions: ComboOption[] = schoolsForLevel.map((entry) => ({
+    value: entry.id,
+    label: entry.name
+  }));
+
+  const gradeOptions: ComboOption[] = gradeOptionValues.map((value) => ({
+    value,
+    label: gradeLabel(value)
+  }));
 
   const setLevelAndReset = (value: SchoolLevel | "") => {
     setLevel(value);
@@ -93,76 +124,95 @@ export function ManualUserForm({
 
       <label className="sf-field">
         <span>Type</span>
-        <Select value={kind} onValueChange={(value) => setKind(value as PersonKind)}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent alignItemWithTrigger={false}>
-            <SelectItem value="student">Student</SelectItem>
-            <SelectItem value="faculty">Faculty</SelectItem>
-          </SelectContent>
-        </Select>
+        <Combobox
+          items={KIND_OPTIONS}
+          value={KIND_OPTIONS.find((option) => option.value === kind) ?? null}
+          onValueChange={(option) => setKind((option?.value ?? "student") as PersonKind)}
+          isItemEqualToValue={isOptionEqual}
+        >
+          <ComboboxInput placeholder="Select a type" />
+          <ComboboxContent>
+            <ComboboxEmpty>No matches</ComboboxEmpty>
+            <ComboboxList>
+              {(option: ComboOption) => (
+                <ComboboxItem key={option.value} value={option}>
+                  {option.label}
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
       </label>
 
       <div className="sf-field-row">
         <label className="sf-field">
           <span>Grade Level</span>
-          <Select
-            value={level}
-            onValueChange={(value) => setLevelAndReset(value as SchoolLevel | "")}
+          <Combobox
+            items={LEVEL_OPTIONS}
+            value={LEVEL_OPTIONS.find((option) => option.value === level) ?? null}
+            onValueChange={(option) => setLevelAndReset((option?.value ?? "") as SchoolLevel | "")}
+            isItemEqualToValue={isOptionEqual}
           >
-            <SelectTrigger>
-              {/* Base UI's Select never renders a label for value="" (its
-                  "nothing selected" sentinel), so the unset state has to come
-                  from this placeholder rather than a fake empty SelectItem. */}
-              <SelectValue placeholder="Select a level" />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              {SCHOOL_LEVELS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <ComboboxInput placeholder="Select a level" />
+            <ComboboxContent>
+              <ComboboxEmpty>No matches</ComboboxEmpty>
+              <ComboboxList>
+                {(option: ComboOption) => (
+                  <ComboboxItem key={option.value} value={option}>
+                    {option.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         </label>
 
         <label className="sf-field">
           <span>School</span>
-          <Select
-            value={schoolId}
-            onValueChange={(value) => setSchoolAndReset(value ?? "")}
+          <Combobox
+            items={schoolOptions}
+            value={schoolOptions.find((option) => option.value === schoolId) ?? null}
+            onValueChange={(option) => setSchoolAndReset(option?.value ?? "")}
+            isItemEqualToValue={isOptionEqual}
             disabled={level === ""}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a school" />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              {schoolsForLevel.map((option) => (
-                <SelectItem key={option.id} value={option.id}>
-                  {option.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <ComboboxInput placeholder="Select a school" disabled={level === ""} />
+            <ComboboxContent>
+              <ComboboxEmpty>No matches</ComboboxEmpty>
+              <ComboboxList>
+                {(option: ComboOption) => (
+                  <ComboboxItem key={option.value} value={option}>
+                    {option.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         </label>
       </div>
 
       {kind === "student" ? (
         <label className="sf-field">
           <span>Grade</span>
-          <Select value={grade} onValueChange={(value) => setGrade(value ?? "")} disabled={!school}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a grade" />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              {gradeOptions.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {gradeLabel(value)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            items={gradeOptions}
+            value={gradeOptions.find((option) => option.value === grade) ?? null}
+            onValueChange={(option) => setGrade(option?.value ?? "")}
+            isItemEqualToValue={isOptionEqual}
+            disabled={!school}
+          >
+            <ComboboxInput placeholder="Select a grade" disabled={!school} />
+            <ComboboxContent>
+              <ComboboxEmpty>No matches</ComboboxEmpty>
+              <ComboboxList>
+                {(option: ComboOption) => (
+                  <ComboboxItem key={option.value} value={option}>
+                    {option.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         </label>
       ) : (
         <label className="sf-field">
@@ -194,4 +244,3 @@ export function ManualUserForm({
     </>
   );
 }
-

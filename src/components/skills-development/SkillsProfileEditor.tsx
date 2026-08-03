@@ -10,7 +10,17 @@ import {
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList
+} from "@/components/ui/combobox";
+
+const isLevelOptionEqual = (a: (typeof SKILL_LEVELS)[number], b: (typeof SKILL_LEVELS)[number]) =>
+  a.value === b.value;
 
 // TODO: local state only — persist through the Admin DB skills-and-development
 // contract when it exists.
@@ -144,21 +154,24 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
 
       <label className="sf-field">
         <span>Level</span>
-        <Select
-          value={subDraft.level}
-          onValueChange={(value) => setSubDraft({ ...subDraft, level: value as SkillLevel })}
+        <Combobox
+          items={SKILL_LEVELS}
+          value={SKILL_LEVELS.find((option) => option.value === subDraft.level) ?? null}
+          onValueChange={(option) => setSubDraft({ ...subDraft, level: (option?.value ?? "high") as SkillLevel })}
+          isItemEqualToValue={isLevelOptionEqual}
         >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent alignItemWithTrigger={false}>
-            {SKILL_LEVELS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <ComboboxInput placeholder="Select a level" />
+          <ComboboxContent>
+            <ComboboxEmpty>No matches</ComboboxEmpty>
+            <ComboboxList>
+              {(option: (typeof SKILL_LEVELS)[number]) => (
+                <ComboboxItem key={option.value} value={option}>
+                  {option.label}
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
       </label>
 
       <label className="sf-field">

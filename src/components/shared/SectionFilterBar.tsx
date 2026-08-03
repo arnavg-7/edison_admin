@@ -1,6 +1,13 @@
 "use client";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList
+} from "@/components/ui/combobox";
 
 export type SectionFilterOption = { value: string; label: string };
 
@@ -11,6 +18,8 @@ export type SectionFilterConfig = {
   options: SectionFilterOption[];
   onChange: (value: string) => void;
 };
+
+const isOptionEqual = (a: SectionFilterOption, b: SectionFilterOption) => a.value === b.value;
 
 /**
  * Page-level filters (Integrations). Local state rather
@@ -23,18 +32,24 @@ export function SectionFilterBar({ filters }: { filters: SectionFilterConfig[] }
       {filters.map((filter) => (
         <label className="sf-field" key={filter.id}>
           <span>{filter.label}</span>
-          <Select value={filter.value} onValueChange={(value) => filter.onChange(value ?? filter.value)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              {filter.options.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            items={filter.options}
+            value={filter.options.find((option) => option.value === filter.value) ?? null}
+            onValueChange={(option) => filter.onChange(option?.value ?? filter.value)}
+            isItemEqualToValue={isOptionEqual}
+          >
+            <ComboboxInput placeholder={filter.label} />
+            <ComboboxContent>
+              <ComboboxEmpty>No matches</ComboboxEmpty>
+              <ComboboxList>
+                {(option: SectionFilterOption) => (
+                  <ComboboxItem key={option.value} value={option}>
+                    {option.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         </label>
       ))}
     </div>

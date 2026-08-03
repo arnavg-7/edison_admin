@@ -72,5 +72,8 @@ src/
 
 ## Deployment
 
-Configured for Netlify via `netlify.toml` (Next.js runtime plugin). The live site is a **v1** build
-until this is redeployed.
+Deployed on Vercel. Next.js needs no build configuration there — Vercel detects the framework and
+runs `next build` itself, so there is deliberately no `vercel.json`.
+
+Branches map to environments: `main` is production and `UAT` is the staging deploy. Every other
+branch and pull request gets its own preview URL.

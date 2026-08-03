@@ -7,8 +7,8 @@ out
 .DS_Store
 tsconfig.tsbuildinfo
 
-# Local Netlify folder
-.netlify
+# Local Vercel project linkage
+.vercel
 
 # Local tooling
 .claude

@@ -139,20 +139,10 @@ export const attentionItems: AttentionItem[] = [
     category: "sync-failure",
     severity: "medium",
     subject: "Homeroom mapping — awaiting Genesis data",
-    reason: "Homeroom courses present for 1 of 5 schools, 0 enrollments in any school",
+    reason: "Homeroom courses present for 1 of 4 schools, 0 enrollments in any school",
     flaggedAt: "2026-07-10T05:12:00-04:00",
     href: "/integrations",
     resolveLabel: "Open Genesis ingest"
-  },
-  {
-    id: "na-9",
-    category: "pending-config",
-    severity: "medium",
-    subject: "Kindergarten development areas — Room To Grow unpublished",
-    reason: "Draft area with 1 skill has not been published to the student portal",
-    flaggedAt: "2026-07-12T10:00:00-04:00",
-    href: "/skills-development/edison-kg/K",
-    resolveLabel: "Open Kindergarten configuration"
   },
   {
     id: "na-10",

@@ -56,7 +56,7 @@ export default function PeopleSearchPage() {
       <h1 className="sf-page-title">User Management</h1>
       <p className="sf-page-sub">
         Individual profiles. Records owned by Salesforce are read-only here and link out to the
-        source; internal notes and flags are editable in Admin.
+        source.
       </p>
 
       <div className="sf-filter-bar">

@@ -35,8 +35,8 @@ report reads as stale rather than being silently presented as current.
   Integrations.
 - Needs Attention is the one cross-system triage queue: at-risk students, overdue alerts, sync
   failures, and pending configuration, worst-first.
-- Student & Faculty 360 profiles are read-only except internal notes/flags — do not widen this
-  without asking.
+- Student & Faculty 360 profiles are read-only, except Goals checkpoints/status and a student's
+  Alert status, which stay Admin-native — do not widen this without asking.
 
 ## Capabilities and Constraints
 

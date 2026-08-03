@@ -9,7 +9,7 @@ Needs Attention and Student & Faculty 360. The theme is **light**, on request: t
 Analytics card/anatomy structure is kept, but on light surfaces with a purplish blue reserved for
 CTAs, links, active nav and focus.
 
-Last reviewed: 2026-07-31
+Last reviewed: 2026-08-03
 
 ---
 
@@ -35,7 +35,8 @@ Last reviewed: 2026-07-31
 |---|---|
 | **Single Super Admin role** | v2. All ten sections visible to everyone; no persona gating. The v1 permission model (`SECTION_ACCESS`, `SectionGuard`, `RoleSwitcher`) was deleted, not left inert. |
 | **Portal Configuration renamed to Skills & Development** | Renamed 2026-08-03, and restructured from level tabs to a school → grade drill-down. Content is now per-grade, not per school level. |
-| **Skills & Development seeds HS and KG only** | Unchanged from the original HS/KG scope. All five Genesis schools appear in the picker, but ES/MS grades open empty and say so on the screen. The editors still work there — adding content is a scope extension. |
+| **Kindergarten removed** | Removed on request 2026-08-03: the Edison Kindergarten Center school, its faculty record, seeded skills/development content, System Settings grade-level entry, and its Needs Attention item are all gone. Genesis now lists four schools, not five. |
+| **Skills & Development seeds HS only** | Narrowed from HS/KG to HS-only following the Kindergarten removal above. All four remaining Genesis schools appear in the picker, but ES/MS grades open empty and say so on the screen. The editors still work there — adding content is a scope extension. |
 | **HS/KG layout & branding editors removed** | Removed on request 2026-07-31. Named in the v1 inventory, so restoring them is a scope change. |
 | **Faculty Dashboard component toggles removed** | Removed on request 2026-08-03, resolving the earlier ambiguous "remove the Schedule strip" note — the whole screen went, not just that one row. Named in the inventory, so restoring it is a scope change. |
 | **Alerts & Resources built to simple scope** | Alert rules + notification templates; CRUD over external links. No rules engine, escalation, categorization or access control. |
@@ -83,7 +84,7 @@ There is no authentication. The sidebar shows a fixed Super Admin context.
 
 ## 5. Modeled gaps that are real
 
-- **Homeroom mapping** — Genesis has homeroom courses for 1 of 5 schools and zero enrollments
+- **Homeroom mapping** — Genesis has homeroom courses for 1 of 4 schools and zero enrollments
   anywhere. Drives the `awaiting data from Genesis` empty state and appears in Needs Attention. It
   also shows as "Awaiting Genesis data" on individual 360 profiles.
 - **Attendance** is covered by a synthetic dataset matching the OneRoster schema, so

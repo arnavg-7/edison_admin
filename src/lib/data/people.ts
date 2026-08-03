@@ -17,7 +17,6 @@
  * risk divergence from the source of truth.
  *
  * TODO — the exact editable-field list is an open item (brief §8 / open item 9).
- * Only internal notes and flags are editable. Do not widen without confirmation.
  */
 
 export type PersonKind = "student" | "faculty";
@@ -114,13 +113,6 @@ export type ClassPerformanceRow = {
   openAlerts: number;
 };
 
-export type InternalNote = {
-  id: string;
-  body: string;
-  author: string;
-  at: string;
-};
-
 export type Person = {
   id: string;
   kind: PersonKind;
@@ -150,8 +142,6 @@ export type Person = {
   attendanceCompliance?: AttendanceComplianceRow[];
 
   alerts: AlertRecord[];
-  notes: InternalNote[];
-  flags: string[];
 };
 
 /** TODO: replace with the real Salesforce org instance URL. */
@@ -320,15 +310,6 @@ export const people: Person[] = [
       { id: "a-3", rule: "Three or more missing assignments", raised: "2026-06-20T06:00:00-04:00", status: "Resolved", raisedBy: "K. Blekeski" },
       { id: "a-4", rule: "Grade drop of one letter (Algebra II)", raised: "2026-06-05T06:00:00-04:00", status: "Acknowledged", raisedBy: "K. Blekeski" }
     ],
-    notes: [
-      {
-        id: "n-1",
-        body: "Guardian contacted 15 Jul about the absence pattern. Follow-up call agreed for next week.",
-        author: "Priya Nair",
-        at: "2026-07-15T14:20:00-04:00"
-      }
-    ],
-    flags: ["Chronic absence watch", "Guardian contact in progress"]
   },
   {
     id: "nick-johnson",
@@ -434,8 +415,6 @@ export const people: Person[] = [
     alerts: [
       { id: "a-5", rule: "Two or more missing assignments (ELA)", raised: "2026-07-16T06:00:00-04:00", status: "Acknowledged", raisedBy: "A. Chen" }
     ],
-    notes: [],
-    flags: ["Assignment follow-up"]
   },
   {
     id: "rk-sharma",
@@ -524,8 +503,6 @@ export const people: Person[] = [
     alerts: [
       { id: "a-6", rule: "Goal checkpoint missed", raised: "2026-07-15T06:00:00-04:00", status: "Open", raisedBy: "System" }
     ],
-    notes: [],
-    flags: ["Missed goal checkpoints"]
   },
   {
     id: "mohd-anas-gupta",
@@ -565,8 +542,6 @@ export const people: Person[] = [
     developmentAreas: [],
     classes: [{ className: "Algebra II · Section C", teacher: "K. Blekeski", period: "Period 1", room: "RM-204" }],
     alerts: [],
-    notes: [],
-    flags: []
   },
   {
     id: "naphisabet-lyngkhoi",
@@ -603,8 +578,6 @@ export const people: Person[] = [
     developmentAreas: [],
     classes: [{ className: "Algebra I · Section A", teacher: "K. Blekeski", period: "Period 2", room: "RM-204" }],
     alerts: [],
-    notes: [],
-    flags: []
   },
   {
     id: "oliver-james",
@@ -644,8 +617,6 @@ export const people: Person[] = [
     developmentAreas: [],
     classes: [{ className: "Mathematics · Grade 8", teacher: "P. Nair", period: "Period 1", room: "RM-302" }],
     alerts: [],
-    notes: [],
-    flags: []
   },
   {
     id: "robert-daniel",
@@ -724,8 +695,6 @@ export const people: Person[] = [
       { className: "Algebra II · Section C", teacher: "K. Blekeski", period: "Period 1", room: "RM-204" }
     ],
     alerts: [],
-    notes: [],
-    flags: []
   },
 
   // ---------------------------------------------------------------- faculty
@@ -772,15 +741,6 @@ export const people: Person[] = [
       { id: "fa-1", rule: "Attendance below 80% — Michael Andrew (Algebra II · Section C)", raised: "2026-07-15T06:00:00-04:00", status: "Open", raisedBy: "System", overdue: true },
       { id: "fa-2", rule: "Grade drop of one letter — Michael Andrew", raised: "2026-06-05T06:00:00-04:00", status: "Acknowledged", raisedBy: "K. Blekeski" }
     ],
-    notes: [
-      {
-        id: "n-2",
-        body: "Covering Algebra II Section C while D. Osei is on leave.",
-        author: "Priya Nair",
-        at: "2026-07-10T09:00:00-04:00"
-      }
-    ],
-    flags: []
   },
   {
     id: "a-chen",
@@ -821,8 +781,6 @@ export const people: Person[] = [
     alerts: [
       { id: "fa-3", rule: "Two or more missing assignments — Nick Johnson (ELA)", raised: "2026-07-16T06:00:00-04:00", status: "Acknowledged", raisedBy: "A. Chen" }
     ],
-    notes: [],
-    flags: []
   },
   {
     id: "p-nair",
@@ -866,8 +824,6 @@ export const people: Person[] = [
       { id: "fa-4", rule: "Attendance below 80% — Biology 2 · Class 4", raised: "2026-07-15T06:00:00-04:00", status: "Open", raisedBy: "System", overdue: true },
       { id: "fa-5", rule: "Goal checkpoint missed — R.K. Sharma", raised: "2026-07-15T06:00:00-04:00", status: "Open", raisedBy: "System" }
     ],
-    notes: [],
-    flags: []
   },
   {
     id: "d-osei",
@@ -903,52 +859,6 @@ export const people: Person[] = [
       { date: "16 Jul 2026", submitted: 0, expected: 2, missing: ["Computer Science · Section A", "Data Science · Class 7"] }
     ],
     alerts: [],
-    notes: [
-      {
-        id: "n-3",
-        body: "On leave until 18 Aug. K. Blekeski covering Algebra II Section C; cover still needed for Data Science.",
-        author: "Priya Nair",
-        at: "2026-07-09T10:30:00-04:00"
-      }
-    ],
-    flags: ["On leave", "Cover required"]
-  },
-  {
-    id: "m-alvarez",
-    kind: "faculty",
-    name: "M. Alvarez",
-    salesforceId: "003AX000004ZmF5YAM",
-    school: "Edison Kindergarten Center",
-    group: "Early Years",
-    status: "On Track",
-    personal: [
-      { label: "Staff ID", value: "123457102" },
-      { label: "Email", value: "malvarez@edison.example.org" },
-      { label: "Room", value: "RM-004" },
-      { label: "Employment type", value: "Full time" }
-    ],
-    academic: [
-      { label: "Department", value: "Early Years" },
-      { label: "Classes assigned", value: "2" },
-      { label: "Total roster", value: "536 students" },
-      { label: "Joined", value: "03 Feb 2022" },
-      { label: "Subjects taught", value: "Early Years, US History" }
-    ],
-    teachingClasses: [
-      { className: "US History · Section A", roster: 21, avgAttendance: "91.0%", assignmentCompletion: "81.4%", openAlerts: 0 },
-      { className: "Kindergarten · Room 4", roster: 18, avgAttendance: "95.2%", assignmentCompletion: "n/a", openAlerts: 0 }
-    ],
-    schedule: [
-      { className: "Kindergarten · Room 4", teacher: "—", period: "All day", room: "RM-004" },
-      { className: "US History · Section A", teacher: "—", period: "Period 5", room: "RM-210" }
-    ],
-    attendanceCompliance: [
-      { date: "17 Jul 2026", submitted: 2, expected: 2, missing: [] },
-      { date: "16 Jul 2026", submitted: 2, expected: 2, missing: [] }
-    ],
-    alerts: [],
-    notes: [],
-    flags: []
   }
 ];
 

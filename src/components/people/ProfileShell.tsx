@@ -5,20 +5,18 @@ import Link from "next/link";
 import {
   salesforceRecordUrl,
   type AlertRecord,
-  type DevelopmentAreaEntry,
   type GoalRecord,
-  type InternalNote,
   type Person,
-  type ReadOnlyField,
-  type SkillAssessment
+  type ReadOnlyField
 } from "@/lib/data/people";
-import { gradeConfigHref } from "@/lib/data/skillsDevelopment";
+import { gradeConfigHref, resolveGradeScope } from "@/lib/data/skillsDevelopment";
+import { DevelopmentAreasEditor } from "@/components/skills-development/DevelopmentAreasEditor";
+import { SkillsProfileEditor } from "@/components/skills-development/SkillsProfileEditor";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatSalesforceStamp } from "@/lib/format";
 
 const GOAL_STATUSES: GoalRecord["status"][] = ["On track", "At risk", "Complete", "Overdue"];
-const SKILL_LEVELS: SkillAssessment["subSkills"][number]["level"][] = ["High", "Middle", "Elementary"];
 const ALERT_STATUSES: AlertRecord["status"][] = ["Open", "Acknowledged", "Resolved"];
 
 type TabId =
@@ -30,8 +28,7 @@ type TabId =
   | "skills"
   | "development"
   | "classes"
-  | "alerts"
-  | "notes";
+  | "alerts";
 
 /**
  * Sections mirror what Edison's Student and Faculty portals actually cover.
@@ -47,8 +44,7 @@ const STUDENT_TABS: { id: TabId; label: string }[] = [
   { id: "skills", label: "Skills profile" },
   { id: "development", label: "Development areas" },
   { id: "classes", label: "Classes & schedule" },
-  { id: "alerts", label: "Alert history" },
-  { id: "notes", label: "Internal notes & flags" }
+  { id: "alerts", label: "Alert history" }
 ];
 
 const FACULTY_TABS: { id: TabId; label: string }[] = [
@@ -56,8 +52,7 @@ const FACULTY_TABS: { id: TabId; label: string }[] = [
   { id: "academic", label: "Assignment summary" },
   { id: "classes", label: "Classes & performance" },
   { id: "attendance", label: "Attendance submission" },
-  { id: "alerts", label: "Student alerts" },
-  { id: "notes", label: "Internal notes & flags" }
+  { id: "alerts", label: "Student alerts" }
 ];
 
 export function ProfileShell({ person }: { person: Person }) {
@@ -65,18 +60,10 @@ export function ProfileShell({ person }: { person: Person }) {
   const tabs = isStudent ? STUDENT_TABS : FACULTY_TABS;
   const [tab, setTab] = useState<TabId>("personal");
 
-  const [notes, setNotes] = useState<InternalNote[]>(person.notes);
-  const [flags, setFlags] = useState<string[]>(person.flags);
-  const [draft, setDraft] = useState("");
-  const [flagDraft, setFlagDraft] = useState("");
-
   const [goals, setGoals] = useState<GoalRecord[]>(person.goals ?? []);
-  const [skills, setSkills] = useState<SkillAssessment[]>(person.skills ?? []);
-  const [developmentAreas, setDevelopmentAreas] = useState<DevelopmentAreaEntry[]>(
-    person.developmentAreas ?? []
-  );
   const [alertRecords, setAlertRecords] = useState<AlertRecord[]>(person.alerts);
-  const [devSkillDraft, setDevSkillDraft] = useState<Record<string, string>>({});
+
+  const gradeScope = isStudent ? resolveGradeScope(person.school, person.group) : null;
 
   const adjustCheckpoint = (goalId: string, delta: number) => {
     setGoals((current) =>
@@ -98,63 +85,12 @@ export function ProfileShell({ person }: { person: Person }) {
     );
   };
 
-  const setSkillLevel = (
-    group: string,
-    label: string,
-    level: SkillAssessment["subSkills"][number]["level"]
-  ) => {
-    setSkills((current) =>
-      current.map((g) =>
-        g.group === group
-          ? { ...g, subSkills: g.subSkills.map((s) => (s.label === label ? { ...s, level } : s)) }
-          : g
-      )
-    );
-  };
-
-  const addDevAreaSkill = (area: string) => {
-    const value = (devSkillDraft[area] ?? "").trim();
-    if (!value) return;
-    setDevelopmentAreas((current) =>
-      current.map((entry) =>
-        entry.area === area && !entry.skills.includes(value)
-          ? { ...entry, skills: [...entry.skills, value] }
-          : entry
-      )
-    );
-    setDevSkillDraft((current) => ({ ...current, [area]: "" }));
-  };
-
-  const removeDevAreaSkill = (area: string, skill: string) => {
-    setDevelopmentAreas((current) =>
-      current.map((entry) =>
-        entry.area === area ? { ...entry, skills: entry.skills.filter((s) => s !== skill) } : entry
-      )
-    );
-  };
-
   const setAlertStatus = (alertId: string, status: AlertRecord["status"]) => {
     setAlertRecords((current) =>
       current.map((a) =>
         a.id === alertId ? { ...a, status, overdue: status === "Open" ? a.overdue : false } : a
       )
     );
-  };
-
-  const addNote = () => {
-    if (!draft.trim()) return;
-    setNotes((current) => [
-      { id: `local-${Date.now()}`, body: draft.trim(), author: "Super Admin", at: new Date().toISOString() },
-      ...current
-    ]);
-    setDraft("");
-  };
-
-  const addFlag = () => {
-    const value = flagDraft.trim();
-    if (!value || flags.includes(value)) return;
-    setFlags((current) => [...current, value]);
-    setFlagDraft("");
   };
 
   return (
@@ -355,7 +291,7 @@ export function ProfileShell({ person }: { person: Person }) {
           ) : (
             <Table
               head={["Goal", "Category", "Checkpoints", "Status", "Target", "Last updated"]}
-              widths={["32%", "18%", "14%", "14%", "11%", "11%"]}
+              widths={["28%", "16%", "15%", "14%", "12%", "15%"]}
               rows={goals.map((g) => [
                 g.title,
                 g.category,
@@ -396,7 +332,9 @@ export function ProfileShell({ person }: { person: Person }) {
                   ))}
                 </select>,
                 g.target,
-                formatSalesforceStamp(g.lastUpdated)
+                <span key="u" style={{ whiteSpace: "nowrap" }}>
+                  {formatSalesforceStamp(g.lastUpdated)}
+                </span>
               ])}
             />
           )}
@@ -408,115 +346,48 @@ export function ProfileShell({ person }: { person: Person }) {
 
       {/* ---------------------------------------------------------- skills */}
       {tab === "skills" ? (
-        <Panel title="Skills profile" note="Editable in Admin · configured in Skills & Development">
-          <p className="sf-card-hint">
-            Admin-native — level changes apply only to this student and are not written back to
-            Salesforce or the shared skills profile. TODO: local state only until the Admin DB
-            contract exists.
-          </p>
-          {!skills.length ? (
-            <EmptyState title="No skills assessed" message="No skills profile recorded for this student." />
-          ) : (
-            <div className="sf-skill-groups">
-              {skills.map((group) => (
-                <div className="sf-skill-group" key={group.group}>
-                  <h3 className="sf-subhead">{group.group}</h3>
-                  <ul className="sf-chip-list">
-                    {group.subSkills.map((sub) => (
-                      <li className="sf-skill-edit-row" key={sub.label}>
-                        <span>{sub.label}</span>
-                        <select
-                          className="sf-input"
-                          value={sub.level}
-                          aria-label={`Level for ${sub.label}`}
-                          onChange={(event) =>
-                            setSkillLevel(
-                              group.group,
-                              sub.label,
-                              event.target.value as SkillAssessment["subSkills"][number]["level"]
-                            )
-                          }
-                        >
-                          {SKILL_LEVELS.map((level) => (
-                            <option key={level} value={level}>
-                              {level}
-                            </option>
-                          ))}
-                        </select>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
-          <Link className="sf-inline-link" href={gradeConfigHref(person.school, person.group)}>
-            Configure skills for {person.group} →
-          </Link>
-        </Panel>
+        gradeScope ? (
+          <>
+            <p className="sf-page-sub">
+              Shared configuration for every {person.group} student at {person.school} — the same
+              editor as Skills &amp; Development. Changes here are grade-wide, not just for {person.name}.
+            </p>
+            <SkillsProfileEditor schoolId={gradeScope.schoolId} grade={gradeScope.grade} />
+            <Link className="sf-inline-link" href={gradeConfigHref(person.school, person.group)}>
+              Open in Skills &amp; Development →
+            </Link>
+          </>
+        ) : (
+          <Panel title="Skills profile" note="Configured in Skills & Development">
+            <EmptyState
+              title="No grade configured"
+              message={`${person.school} has no matching grade in Skills & Development yet.`}
+            />
+          </Panel>
+        )
       ) : null}
 
       {/* ----------------------------------------------- development areas */}
       {tab === "development" ? (
-        <Panel title="Development areas" note="Editable in Admin · configured in Skills & Development">
-          <p className="sf-card-hint">
-            Admin-native — skills added or removed here apply only to this student and are not
-            written back to Salesforce or the shared development areas. TODO: local state only
-            until the Admin DB contract exists.
-          </p>
-          {!developmentAreas.length ? (
-            <EmptyState title="No development areas" message="Nothing recorded for this student." />
-          ) : (
-            <div className="sf-skill-groups">
-              {developmentAreas.map((area) => (
-                <div className="sf-skill-group" key={area.area}>
-                  <h3 className="sf-subhead">{area.area}</h3>
-                  <ul className="sf-flag-list">
-                    {area.skills.map((skill) => (
-                      <li key={skill}>
-                        <span>{skill}</span>
-                        <button
-                          type="button"
-                          className="sf-chip-remove"
-                          onClick={() => removeDevAreaSkill(area.area, skill)}
-                          aria-label={`Remove ${skill} from ${area.area}`}
-                        >
-                          ×
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="sf-note-form sf-note-form--inline">
-                    <label className="sf-field">
-                      <span className="sf-sr-only">Add a skill to {area.area}</span>
-                      <input
-                        type="text"
-                        value={devSkillDraft[area.area] ?? ""}
-                        placeholder="Add a skill"
-                        onChange={(event) =>
-                          setDevSkillDraft((current) => ({ ...current, [area.area]: event.target.value }))
-                        }
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter") addDevAreaSkill(area.area);
-                        }}
-                      />
-                    </label>
-                    <button
-                      type="button"
-                      className="sf-btn sf-btn--sm"
-                      onClick={() => addDevAreaSkill(area.area)}
-                    >
-                      Add
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          <Link className="sf-inline-link" href={gradeConfigHref(person.school, person.group)}>
-            Configure development areas for {person.group} →
-          </Link>
-        </Panel>
+        gradeScope ? (
+          <>
+            <p className="sf-page-sub">
+              Shared configuration for every {person.group} student at {person.school} — the same
+              editor as Skills &amp; Development. Changes here are grade-wide, not just for {person.name}.
+            </p>
+            <DevelopmentAreasEditor schoolId={gradeScope.schoolId} grade={gradeScope.grade} />
+            <Link className="sf-inline-link" href={gradeConfigHref(person.school, person.group)}>
+              Open in Skills &amp; Development →
+            </Link>
+          </>
+        ) : (
+          <Panel title="Development areas" note="Configured in Skills & Development">
+            <EmptyState
+              title="No grade configured"
+              message={`${person.school} has no matching grade in Skills & Development yet.`}
+            />
+          </Panel>
+        )
       ) : null}
 
       {/* -------------------------------------------- classes / schedule */}
@@ -633,96 +504,6 @@ export function ProfileShell({ person }: { person: Person }) {
         </Panel>
       ) : null}
 
-      {/* ----------------------------------------------------------- notes */}
-      {tab === "notes" ? (
-        <>
-          <div className="sf-panel">
-            <div className="sf-panel-head">
-              <h2>Internal notes</h2>
-              <span className="sf-status sf-status--ok">Editable in Admin</span>
-            </div>
-            <p className="sf-card-hint">
-              Admin-native — not written back to Salesforce. TODO: local state only until the Admin
-              DB contract exists.
-            </p>
-
-            <div className="sf-note-form">
-              <label className="sf-field">
-                <span>Add a note</span>
-                <textarea
-                  rows={3}
-                  value={draft}
-                  placeholder="What happened, and what happens next"
-                  onChange={(event) => setDraft(event.target.value)}
-                />
-              </label>
-              <button type="button" className="sf-btn sf-btn--primary" onClick={addNote}>
-                Save note
-              </button>
-            </div>
-
-            {notes.length === 0 ? (
-              <EmptyState title="No notes yet" message="Notes added here stay in Admin." />
-            ) : (
-              <ul className="sf-note-list">
-                {notes.map((note) => (
-                  <li className="sf-note" key={note.id}>
-                    <p>{note.body}</p>
-                    <span className="sf-note-meta">
-                      {note.author} · {formatSalesforceStamp(note.at)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="sf-panel">
-            <div className="sf-panel-head">
-              <h2>Flags</h2>
-              <span className="sf-status sf-status--ok">Editable in Admin</span>
-            </div>
-
-            <div className="sf-note-form sf-note-form--inline">
-              <label className="sf-field">
-                <span>Add a flag</span>
-                <input
-                  type="text"
-                  value={flagDraft}
-                  placeholder="e.g. Guardian contact in progress"
-                  onChange={(event) => setFlagDraft(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") addFlag();
-                  }}
-                />
-              </label>
-              <button type="button" className="sf-btn sf-btn--primary" onClick={addFlag}>
-                Add flag
-              </button>
-            </div>
-
-            {flags.length === 0 ? (
-              <EmptyState title="No flags" message="No internal flags on this person." />
-            ) : (
-              <ul className="sf-flag-list">
-                {flags.map((flag) => (
-                  <li key={flag}>
-                    <span className="sf-status sf-status--warn">{flag}</span>
-                    <button
-                      type="button"
-                      className="sf-chip-remove"
-                      onClick={() => setFlags((current) => current.filter((f) => f !== flag))}
-                      aria-label={`Remove flag ${flag}`}
-                    >
-                      ×
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </>
-      ) : null}
     </section>
   );
 }

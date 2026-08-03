@@ -1,6 +1,6 @@
 // TODO: replace with the real Genesis OneRoster orgs/classes contract.
 
-export type SchoolLevel = "ES" | "MS" | "HS" | "KG";
+export type SchoolLevel = "ES" | "MS" | "HS";
 
 export type School = {
   id: string;
@@ -18,9 +18,9 @@ export const SCHOOL_LEVELS: { value: SchoolLevel; label: string }[] = [
   { value: "HS", label: "High School" }
 ];
 
-/** Human label for a grade value ("K" -> "Kindergarten", "9" -> "Grade 9"). */
+/** Human label for a grade value ("9" -> "Grade 9"). */
 export function gradeLabel(grade: string): string {
-  return grade === "K" ? "Kindergarten" : `Grade ${grade}`;
+  return `Grade ${grade}`;
 }
 
 export const schools: School[] = [
@@ -57,13 +57,6 @@ export const schools: School[] = [
     name: "Franklin Elementary",
     level: "ES",
     grades: ["1", "2", "3", "4", "5"],
-    hasHomeroomCourses: false
-  },
-  {
-    id: "edison-kg",
-    name: "Edison Kindergarten Center",
-    level: "KG",
-    grades: ["K"],
     hasHomeroomCourses: false
   }
 ];

@@ -1,7 +1,7 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
 import {
-  BarChartIcon,
+  ChartBarLineIcon,
   Folder01Icon,
   Home01Icon,
   Link04Icon,
@@ -15,7 +15,7 @@ import type { SectionId } from "@/lib/nav";
 
 const ICONS: Record<SectionId, IconSvgElement> = {
   home: Home01Icon,
-  reporting: BarChartIcon,
+  reporting: ChartBarLineIcon,
   "people-360": UserGroupIcon,
   "skills-development": PreferenceHorizontalIcon,
   "academic-goals": Target01Icon,

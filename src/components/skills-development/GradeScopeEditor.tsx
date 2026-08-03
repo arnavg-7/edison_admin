@@ -15,7 +15,7 @@ const TABS = ["Development areas", "Skills profile"] as const;
 
 export function GradeScopeEditor({ scope }: { scope: GradeScope }) {
   const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[0]);
-  const gradeLabel = scope.grade === "K" ? "Kindergarten" : `Grade ${scope.grade}`;
+  const gradeLabel = `Grade ${scope.grade}`;
 
   return (
     <>
@@ -38,7 +38,7 @@ export function GradeScopeEditor({ scope }: { scope: GradeScope }) {
 
       {!scope.inScope ? (
         <p className="sf-scope-flag">
-          Outside the committed HS/KG scope — nothing has been configured for this grade. The
+          Outside the committed HS-only scope — nothing has been configured for this grade. The
           editors below work, but adding content here extends the agreed scope.
         </p>
       ) : null}

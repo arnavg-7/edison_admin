@@ -3,9 +3,10 @@
  * visible to everyone with Admin access. The v1 persona gating (SECTION_ACCESS,
  * SectionGuard, RoleSwitcher) was removed rather than left inert.
  *
- * Field-level edit permissions still exist conceptually (Student & Faculty 360
- * is read-only except internal notes/flags) but that is enforced per-field on
- * that screen, not by a section gate.
+ * Field-level edit permissions still exist conceptually (most of Student &
+ * Faculty 360 is read-only, but Goals checkpoints/status and a student's
+ * Alert status are editable) but that is enforced per-field on that screen,
+ * not by a section gate.
  */
 
 export type SectionId =

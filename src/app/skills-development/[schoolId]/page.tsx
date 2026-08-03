@@ -61,7 +61,7 @@ export default async function GradePickerPage({
                         className="sf-bar-group-link"
                         href={`/skills-development/${school.id}/${grade}`}
                       >
-                        {grade === "K" ? "Kindergarten" : `Grade ${grade}`}
+                        Grade {grade}
                       </Link>
                     </td>
                     <td>{summary.areas}</td>
@@ -84,7 +84,7 @@ export default async function GradePickerPage({
 
         {!inScope ? (
           <p className="sf-panel-foot">
-            {school.name} is outside the committed HS/KG scope, so no content has been seeded for
+            {school.name} is outside the committed HS-only scope, so no content has been seeded for
             its grades. The editors still work — anything added here is a scope extension.
           </p>
         ) : null}

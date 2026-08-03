@@ -2,11 +2,22 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { salesforceRecordUrl, type InternalNote, type Person, type ReadOnlyField } from "@/lib/data/people";
-import { gradeConfigHref } from "@/lib/data/skillsDevelopment";
+import {
+  salesforceRecordUrl,
+  type AlertRecord,
+  type GoalRecord,
+  type Person,
+  type ReadOnlyField
+} from "@/lib/data/people";
+import { gradeConfigHref, resolveGradeScope } from "@/lib/data/skillsDevelopment";
+import { DevelopmentAreasEditor } from "@/components/skills-development/DevelopmentAreasEditor";
+import { SkillsProfileEditor } from "@/components/skills-development/SkillsProfileEditor";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatSalesforceStamp } from "@/lib/format";
+
+const GOAL_STATUSES: GoalRecord["status"][] = ["On track", "At risk", "Complete", "Overdue"];
+const ALERT_STATUSES: AlertRecord["status"][] = ["Open", "Acknowledged", "Resolved"];
 
 type TabId =
   | "personal"
@@ -17,8 +28,7 @@ type TabId =
   | "skills"
   | "development"
   | "classes"
-  | "alerts"
-  | "notes";
+  | "alerts";
 
 /**
  * Sections mirror what Edison's Student and Faculty portals actually cover.
@@ -34,8 +44,7 @@ const STUDENT_TABS: { id: TabId; label: string }[] = [
   { id: "skills", label: "Skills profile" },
   { id: "development", label: "Development areas" },
   { id: "classes", label: "Classes & schedule" },
-  { id: "alerts", label: "Alert history" },
-  { id: "notes", label: "Internal notes & flags" }
+  { id: "alerts", label: "Alert history" }
 ];
 
 const FACULTY_TABS: { id: TabId; label: string }[] = [
@@ -43,36 +52,45 @@ const FACULTY_TABS: { id: TabId; label: string }[] = [
   { id: "academic", label: "Assignment summary" },
   { id: "classes", label: "Classes & performance" },
   { id: "attendance", label: "Attendance submission" },
-  { id: "alerts", label: "Student alerts" },
-  { id: "notes", label: "Internal notes & flags" }
+  { id: "alerts", label: "Student alerts" }
 ];
-
-const LEVEL_TONE = { High: "ok", Middle: "neutral", Elementary: "warn" } as const;
 
 export function ProfileShell({ person }: { person: Person }) {
   const isStudent = person.kind === "student";
   const tabs = isStudent ? STUDENT_TABS : FACULTY_TABS;
   const [tab, setTab] = useState<TabId>("personal");
 
-  const [notes, setNotes] = useState<InternalNote[]>(person.notes);
-  const [flags, setFlags] = useState<string[]>(person.flags);
-  const [draft, setDraft] = useState("");
-  const [flagDraft, setFlagDraft] = useState("");
+  const [goals, setGoals] = useState<GoalRecord[]>(person.goals ?? []);
+  const [alertRecords, setAlertRecords] = useState<AlertRecord[]>(person.alerts);
 
-  const addNote = () => {
-    if (!draft.trim()) return;
-    setNotes((current) => [
-      { id: `local-${Date.now()}`, body: draft.trim(), author: "Super Admin", at: new Date().toISOString() },
-      ...current
-    ]);
-    setDraft("");
+  const gradeScope = isStudent ? resolveGradeScope(person.school, person.group) : null;
+
+  const adjustCheckpoint = (goalId: string, delta: number) => {
+    setGoals((current) =>
+      current.map((g) =>
+        g.id === goalId
+          ? {
+              ...g,
+              checkpointsMet: Math.max(0, Math.min(g.checkpointsTotal, g.checkpointsMet + delta)),
+              lastUpdated: new Date().toISOString()
+            }
+          : g
+      )
+    );
   };
 
-  const addFlag = () => {
-    const value = flagDraft.trim();
-    if (!value || flags.includes(value)) return;
-    setFlags((current) => [...current, value]);
-    setFlagDraft("");
+  const setGoalStatus = (goalId: string, status: GoalRecord["status"]) => {
+    setGoals((current) =>
+      current.map((g) => (g.id === goalId ? { ...g, status, lastUpdated: new Date().toISOString() } : g))
+    );
+  };
+
+  const setAlertStatus = (alertId: string, status: AlertRecord["status"]) => {
+    setAlertRecords((current) =>
+      current.map((a) =>
+        a.id === alertId ? { ...a, status, overdue: status === "Open" ? a.overdue : false } : a
+      )
+    );
   };
 
   return (
@@ -262,30 +280,61 @@ export function ProfileShell({ person }: { person: Person }) {
 
       {/* ----------------------------------------------------------- goals */}
       {tab === "goals" ? (
-        <Panel title="Goals" note="Read-only · templates configured in Academic Goals">
-          {!person.goals?.length ? (
+        <Panel title="Goals" note="Editable in Admin · templates configured in Academic Goals">
+          <p className="sf-card-hint">
+            Admin-native — checkpoint and status changes apply only to this student and are not
+            written back to Salesforce or the shared goal template. TODO: local state only until
+            the Admin DB contract exists.
+          </p>
+          {!goals.length ? (
             <EmptyState title="No goals recorded" message="No active or historic goals for this student." />
           ) : (
             <Table
               head={["Goal", "Category", "Checkpoints", "Status", "Target", "Last updated"]}
-              rows={person.goals.map((g) => [
+              widths={["28%", "16%", "15%", "14%", "12%", "15%"]}
+              rows={goals.map((g) => [
                 g.title,
                 g.category,
-                `${g.checkpointsMet} of ${g.checkpointsTotal}`,
-                <StatusBadge
+                <div className="sf-stepper" key="c">
+                  <button
+                    type="button"
+                    className="sf-stepper-btn"
+                    onClick={() => adjustCheckpoint(g.id, -1)}
+                    disabled={g.checkpointsMet <= 0}
+                    aria-label={`Decrease checkpoints met for ${g.title}`}
+                  >
+                    −
+                  </button>
+                  <span>
+                    {g.checkpointsMet} of {g.checkpointsTotal}
+                  </span>
+                  <button
+                    type="button"
+                    className="sf-stepper-btn"
+                    onClick={() => adjustCheckpoint(g.id, 1)}
+                    disabled={g.checkpointsMet >= g.checkpointsTotal}
+                    aria-label={`Increase checkpoints met for ${g.title}`}
+                  >
+                    +
+                  </button>
+                </div>,
+                <select
                   key="s"
-                  tone={
-                    g.status === "On track" || g.status === "Complete"
-                      ? "ok"
-                      : g.status === "Overdue"
-                        ? "error"
-                        : "warn"
-                  }
+                  className="sf-input"
+                  value={g.status}
+                  aria-label={`Status for ${g.title}`}
+                  onChange={(event) => setGoalStatus(g.id, event.target.value as GoalRecord["status"])}
                 >
-                  {g.status}
-                </StatusBadge>,
+                  {GOAL_STATUSES.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>,
                 g.target,
-                formatSalesforceStamp(g.lastUpdated)
+                <span key="u" style={{ whiteSpace: "nowrap" }}>
+                  {formatSalesforceStamp(g.lastUpdated)}
+                </span>
               ])}
             />
           )}
@@ -297,58 +346,48 @@ export function ProfileShell({ person }: { person: Person }) {
 
       {/* ---------------------------------------------------------- skills */}
       {tab === "skills" ? (
-        <Panel title="Skills profile" note="Read-only · configured in Skills & Development">
-          {!person.skills?.length ? (
-            <EmptyState title="No skills assessed" message="No skills profile recorded for this student." />
-          ) : (
-            <div className="sf-skill-groups">
-              {person.skills.map((group) => (
-                <div className="sf-skill-group" key={group.group}>
-                  <h3 className="sf-subhead">{group.group}</h3>
-                  <ul className="sf-chip-list">
-                    {group.subSkills.map((sub) => (
-                      <li key={sub.label}>
-                        <StatusBadge tone={LEVEL_TONE[sub.level]}>
-                          {sub.label} · {sub.level}
-                        </StatusBadge>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
-          <Link className="sf-inline-link" href={gradeConfigHref(person.school, person.group)}>
-            Configure skills for {person.group} →
-          </Link>
-        </Panel>
+        gradeScope ? (
+          <>
+            <p className="sf-page-sub">
+              Shared configuration for every {person.group} student at {person.school} — the same
+              editor as Skills &amp; Development. Changes here are grade-wide, not just for {person.name}.
+            </p>
+            <SkillsProfileEditor schoolId={gradeScope.schoolId} grade={gradeScope.grade} />
+            <Link className="sf-inline-link" href={gradeConfigHref(person.school, person.group)}>
+              Open in Skills &amp; Development →
+            </Link>
+          </>
+        ) : (
+          <Panel title="Skills profile" note="Configured in Skills & Development">
+            <EmptyState
+              title="No grade configured"
+              message={`${person.school} has no matching grade in Skills & Development yet.`}
+            />
+          </Panel>
+        )
       ) : null}
 
       {/* ----------------------------------------------- development areas */}
       {tab === "development" ? (
-        <Panel title="Development areas" note="Read-only · configured in Skills & Development">
-          {!person.developmentAreas?.length ? (
-            <EmptyState title="No development areas" message="Nothing recorded for this student." />
-          ) : (
-            <div className="sf-skill-groups">
-              {person.developmentAreas.map((area) => (
-                <div className="sf-skill-group" key={area.area}>
-                  <h3 className="sf-subhead">{area.area}</h3>
-                  <ul className="sf-chip-list">
-                    {area.skills.map((skill) => (
-                      <li key={skill}>
-                        <span className="sf-status sf-status--neutral">{skill}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
-          <Link className="sf-inline-link" href={gradeConfigHref(person.school, person.group)}>
-            Configure development areas for {person.group} →
-          </Link>
-        </Panel>
+        gradeScope ? (
+          <>
+            <p className="sf-page-sub">
+              Shared configuration for every {person.group} student at {person.school} — the same
+              editor as Skills &amp; Development. Changes here are grade-wide, not just for {person.name}.
+            </p>
+            <DevelopmentAreasEditor schoolId={gradeScope.schoolId} grade={gradeScope.grade} />
+            <Link className="sf-inline-link" href={gradeConfigHref(person.school, person.group)}>
+              Open in Skills &amp; Development →
+            </Link>
+          </>
+        ) : (
+          <Panel title="Development areas" note="Configured in Skills & Development">
+            <EmptyState
+              title="No grade configured"
+              message={`${person.school} has no matching grade in Skills & Development yet.`}
+            />
+          </Panel>
+        )
       ) : null}
 
       {/* -------------------------------------------- classes / schedule */}
@@ -403,9 +442,19 @@ export function ProfileShell({ person }: { person: Person }) {
       {tab === "alerts" ? (
         <Panel
           title={isStudent ? "Alert history" : "Student alerts"}
-          note="Read-only · rules live in Alerts & Notifications"
+          note={
+            isStudent
+              ? "Editable in Admin · rules live in Alerts & Notifications"
+              : "Read-only · rules live in Alerts & Notifications"
+          }
         >
-          {!person.alerts.length ? (
+          {isStudent ? (
+            <p className="sf-card-hint">
+              Admin-native — status changes apply only to this record and are not written back to
+              Salesforce. TODO: local state only until the Admin DB contract exists.
+            </p>
+          ) : null}
+          {!alertRecords.length ? (
             <EmptyState
               title="No alerts"
               message={isStudent ? "No alerts raised for this student." : "No alerts involving this teacher's students."}
@@ -413,15 +462,40 @@ export function ProfileShell({ person }: { person: Person }) {
           ) : (
             <Table
               head={["Rule", "Raised", "Raised by", "Status"]}
-              rows={person.alerts.map((a) => [
-                a.rule,
-                formatSalesforceStamp(a.raised),
-                a.raisedBy ?? "—",
-                <StatusBadge key="s" tone={a.status === "Resolved" ? "ok" : a.overdue ? "error" : "warn"}>
-                  {a.status}
-                  {a.overdue ? " · past SLA" : ""}
-                </StatusBadge>
-              ])}
+              rows={alertRecords.map((a) =>
+                isStudent
+                  ? [
+                      a.rule,
+                      formatSalesforceStamp(a.raised),
+                      a.raisedBy ?? "—",
+                      <div className="sf-alert-status-cell" key="s">
+                        <select
+                          className="sf-input"
+                          value={a.status}
+                          aria-label={`Status for ${a.rule}`}
+                          onChange={(event) => setAlertStatus(a.id, event.target.value as AlertRecord["status"])}
+                        >
+                          {ALERT_STATUSES.map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                        {a.overdue && a.status === "Open" ? (
+                          <span className="sf-status sf-status--error">Past SLA</span>
+                        ) : null}
+                      </div>
+                    ]
+                  : [
+                      a.rule,
+                      formatSalesforceStamp(a.raised),
+                      a.raisedBy ?? "—",
+                      <StatusBadge key="s" tone={a.status === "Resolved" ? "ok" : a.overdue ? "error" : "warn"}>
+                        {a.status}
+                        {a.overdue ? " · past SLA" : ""}
+                      </StatusBadge>
+                    ]
+              )}
             />
           )}
           <Link className="sf-inline-link" href="/alerts">
@@ -430,95 +504,6 @@ export function ProfileShell({ person }: { person: Person }) {
         </Panel>
       ) : null}
 
-      {/* ----------------------------------------------------------- notes */}
-      {tab === "notes" ? (
-        <>
-          <div className="sf-panel">
-            <div className="sf-panel-head">
-              <h2>Internal notes</h2>
-              <span className="sf-status sf-status--ok">Editable in Admin</span>
-            </div>
-            <p className="sf-card-hint">
-              Admin-native — not written back to Salesforce. TODO: local state only until the Admin
-              DB contract exists.
-            </p>
-
-            <div className="sf-note-form">
-              <label className="sf-field">
-                <span>Add a note</span>
-                <textarea
-                  rows={3}
-                  value={draft}
-                  placeholder="What happened, and what happens next"
-                  onChange={(event) => setDraft(event.target.value)}
-                />
-              </label>
-              <button type="button" className="sf-btn sf-btn--primary" onClick={addNote}>
-                Save note
-              </button>
-            </div>
-
-            {notes.length === 0 ? (
-              <EmptyState title="No notes yet" message="Notes added here stay in Admin." />
-            ) : (
-              <ul className="sf-note-list">
-                {notes.map((note) => (
-                  <li className="sf-note" key={note.id}>
-                    <p>{note.body}</p>
-                    <span className="sf-note-meta">
-                      {note.author} · {formatSalesforceStamp(note.at)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="sf-panel">
-            <div className="sf-panel-head">
-              <h2>Flags</h2>
-              <span className="sf-status sf-status--ok">Editable in Admin</span>
-            </div>
-
-            <div className="sf-note-form sf-note-form--inline">
-              <label className="sf-field">
-                <span>Add a flag</span>
-                <input
-                  type="text"
-                  value={flagDraft}
-                  placeholder="e.g. Guardian contact in progress"
-                  onChange={(event) => setFlagDraft(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") addFlag();
-                  }}
-                />
-              </label>
-              <button type="button" className="sf-btn sf-btn--primary" onClick={addFlag}>
-                Add flag
-              </button>
-            </div>
-
-            {flags.length === 0 ? (
-              <EmptyState title="No flags" message="No internal flags on this person." />
-            ) : (
-              <ul className="sf-flag-list">
-                {flags.map((flag) => (
-                  <li key={flag}>
-                    <span className="sf-status sf-status--warn">{flag}</span>
-                    <button
-                      type="button"
-                      className="sf-link-btn sf-link-btn--danger"
-                      onClick={() => setFlags((current) => current.filter((f) => f !== flag))}
-                    >
-                      Remove<span className="sf-sr-only"> flag {flag}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </>
-      ) : null}
     </section>
   );
 }
@@ -543,10 +528,27 @@ function Panel({
   );
 }
 
-function Table({ head, rows }: { head: string[]; rows: React.ReactNode[][] }) {
+function Table({
+  head,
+  rows,
+  widths
+}: {
+  head: string[];
+  rows: React.ReactNode[][];
+  /** Optional per-column width hints (e.g. "34%") for tables whose columns
+      would otherwise size unevenly around a couple of short-content ones. */
+  widths?: string[];
+}) {
   return (
     <div className="sf-table-wrap">
       <table className="sf-table">
+        {widths ? (
+          <colgroup>
+            {widths.map((width, index) => (
+              <col key={index} style={{ width }} />
+            ))}
+          </colgroup>
+        ) : null}
         <thead>
           <tr>
             {head.map((h) => (

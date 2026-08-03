@@ -1,11 +1,10 @@
 import { NeedsAttentionBanner } from "@/components/home/NeedsAttentionBanner";
-import { HomeMetricTabs } from "@/components/home/HomeMetricTabs";
+import { HomeMetrics } from "@/components/home/HomeMetrics";
 
 /**
- * Super Admin landing dashboard. Needs Attention leads — it's what changes
- * day to day and needs a response — with the steady-state enrollment and
- * academic figures grouped below by tab rather than flattened into one grid.
- * Curated set; the full catalog lives in Reporting & Analytics.
+ * Super Admin landing dashboard. Enrollment, staffing and academic figures
+ * lead in one flat grid; Needs Attention follows at the bottom rather than
+ * leading the page. Curated set; the full catalog lives in Reporting & Analytics.
  *
  * The brief's suggested set included Total Events Held and Event Participants.
  * Those are screenshot-derived and outside Edison's scope docs, so the slots go
@@ -23,8 +22,8 @@ export default function HomePage() {
         refresh on their own schedules.
       </p>
 
+      <HomeMetrics />
       <NeedsAttentionBanner />
-      <HomeMetricTabs />
     </section>
   );
 }

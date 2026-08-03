@@ -351,7 +351,7 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
                 : (
                   <button
                     type="button"
-                    className="link-btn area-add-skill"
+                    className="sf-link-btn area-add-skill"
                     onClick={() => {
                       setSubDraft(emptyDraft);
                       setEditingSub(null);

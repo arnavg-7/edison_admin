@@ -94,15 +94,6 @@ export const gradeAlertsByGrade: Record<string, GradeAlert[]> = {
       triggered30d: 0,
       lastTriggered: "Never"
     }
-  ]),
-  [scopeKey("edison-kg", "K")]: buildGradeAlerts(scopeKey("edison-kg", "K"), [
-    {
-      key: "attendance",
-      rule: "Attendance below 80%",
-      status: { tone: "ok", label: "Active" },
-      triggered30d: 2,
-      lastTriggered: "Jul 18, 2026"
-    }
   ])
 };
 
@@ -251,7 +242,7 @@ export const studentAlerts: StudentAlert[] = [
     createdBy: "K. Blekeski",
     resolvedAt: "2026-06-24T10:15:00-04:00",
     resolvedBy: "K. Blekeski",
-    taggedFaculty: ["k-blekeski", "m-alvarez"]
+    taggedFaculty: ["k-blekeski", "d-osei"]
   },
   {
     id: "sa-7",

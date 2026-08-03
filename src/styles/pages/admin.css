@@ -466,19 +466,16 @@
 }
 
 /* Tones. Card tint, icon fill and title colour are set together so the pairing
-   always clears 4.5:1 — the title sits on the tint, the icon glyph on the fill. */
-/* v2: cards are dark like every other surface. The tone survives as the icon
-   fill, the title colour and a left accent bar, so areas stay distinguishable
-   without light islands on a dark canvas. */
-/* Light theme: a soft tint plus a tone-coloured accent bar. Enough to tell the
-   areas apart without six saturated blocks competing with the page. */
+   always clears 4.5:1 — the title sits on the tint, the icon glyph on the fill.
+   A soft background tint plus the icon/title colour carries the tone; no
+   accent border stacked on top competing for the same signal. */
 .area-card { background: var(--sf-card); border-color: var(--sf-card-border); }
-.area-card.tone-blue { background: #f2f7fd; box-shadow: inset 3px 0 0 #2f6fd0; }
-.area-card.tone-green { background: #f0faf5; box-shadow: inset 3px 0 0 #0b7a5e; }
-.area-card.tone-cyan { background: #f0f8fc; box-shadow: inset 3px 0 0 #0b6f88; }
-.area-card.tone-orange { background: #fdf6ef; box-shadow: inset 3px 0 0 #a55a11; }
-.area-card.tone-violet { background: #f6f3fe; box-shadow: inset 3px 0 0 #6f4ed6; }
-.area-card.tone-rose { background: #fdf2f5; box-shadow: inset 3px 0 0 #b02a4d; }
+.area-card.tone-blue { background: #f2f7fd; }
+.area-card.tone-green { background: #f0faf5; }
+.area-card.tone-cyan { background: #f0f8fc; }
+.area-card.tone-orange { background: #fdf6ef; }
+.area-card.tone-violet { background: #f6f3fe; }
+.area-card.tone-rose { background: #fdf2f5; }
 
 .area-icon.tone-blue, .tone-swatch.tone-blue { background: #1d4ed8; }
 .area-icon.tone-green, .tone-swatch.tone-green { background: #047857; }

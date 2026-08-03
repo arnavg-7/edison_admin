@@ -340,7 +340,7 @@ export function DevelopmentAreasEditor({
                 ) : (
                   <button
                     type="button"
-                    className="link-btn area-add-skill"
+                    className="sf-link-btn area-add-skill"
                     onClick={() => {
                       setSkillDraft("");
                       setEditingSkill(null);

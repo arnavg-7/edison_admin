@@ -5,13 +5,6 @@ import type { UserRole } from "./userRoles";
 
 export const gradeLevels: ListEditorItem[] = [
   {
-    id: "gl-k",
-    title: "Kindergarten",
-    detail: "Edison Kindergarten Center",
-    status: { tone: "ok", label: "Active" },
-    meta: "1 school · 118 students"
-  },
-  {
     id: "gl-1-5",
     title: "Grades 1–5",
     detail: "Lincoln Elementary, Franklin Elementary",

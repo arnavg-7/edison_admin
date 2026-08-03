@@ -4,11 +4,13 @@
 // it was one dataset per school level (HS / KG); an admin now picks a school,
 // then a grade within it, and edits that grade's areas and skills.
 //
-// SCOPE FLAG — the committed scope names HS and KG only (brief §8 item 6), and
-// that has not changed. Genesis lists five schools, so all five appear in the
-// picker, but only Edison High School and the Kindergarten Center have seeded
-// content. Grades at the elementary and middle schools open empty and say so.
-// They are out of scope, not broken, and filling them is a scope decision.
+// SCOPE FLAG — the committed scope now names HS only (brief §8 item 6). The
+// Kindergarten Center and its seeded content were removed on request
+// (2026-08-03) along with the school itself in schools.ts. Genesis lists four
+// schools now, so all four appear in the picker, but only Edison High School
+// has seeded content. Grades at the elementary and middle schools open empty
+// and say so. They are out of scope, not broken, and filling them is a scope
+// decision.
 //
 // Two things previously in this section were removed on request and are not
 // gaps to fill: the HS/KG layout & branding editors (2026-07-17) and the
@@ -100,8 +102,8 @@ export type GradeScope = {
   inScope: boolean;
 };
 
-/** HS and KG only — confirmed 2026-07-17, unchanged by the per-grade rework. */
-const IN_SCOPE_SCHOOLS = new Set(["edison-hs", "edison-kg"]);
+/** HS only — Kindergarten removed 2026-08-03 along with the school itself. */
+const IN_SCOPE_SCHOOLS = new Set(["edison-hs"]);
 
 export function isSchoolInScope(schoolId: string): boolean {
   return IN_SCOPE_SCHOOLS.has(schoolId);
@@ -356,41 +358,6 @@ const HS_GROUPS: GroupSeed[] = [
   }
 ];
 
-const KG_AREAS: AreaSeed[] = [
-  {
-    key: "strengths",
-    title: "Strengths",
-    tone: "blue",
-    icon: "check",
-    skills: ["Shares Willingly", "Listens Well"]
-  },
-  {
-    key: "grow",
-    title: "Room To Grow",
-    tone: "green",
-    icon: "bolt",
-    published: false,
-    skills: ["Pencil Grip"]
-  }
-];
-
-const KG_GROUPS: GroupSeed[] = [
-  {
-    key: "social",
-    title: "Social Readiness",
-    subSkills: [
-      ["Sharing", "high", "Shares materials and takes turns with peers."],
-      ["Following Routines", "middle", "Moves through the daily routine with light prompting."]
-    ]
-  },
-  {
-    key: "motor",
-    title: "Fine Motor Skills",
-    published: false,
-    subSkills: [["Pencil Grip", "elementary", "Holds a pencil with a developing tripod grip."]]
-  }
-];
-
 function hsAreasFor(grade: string): DevelopmentArea[] {
   const scope = scopeKey("edison-hs", grade);
   return buildAreas(scope, [...HS_SHARED_AREAS, ...(HS_GRADE_AREAS[grade] ?? [])]);
@@ -416,16 +383,14 @@ export const developmentAreasByGrade: Record<string, DevelopmentArea[]> = {
   [scopeKey("edison-hs", "9")]: hsAreasFor("9"),
   [scopeKey("edison-hs", "10")]: hsAreasFor("10"),
   [scopeKey("edison-hs", "11")]: hsAreasFor("11"),
-  [scopeKey("edison-hs", "12")]: hsAreasFor("12"),
-  [scopeKey("edison-kg", "K")]: buildAreas(scopeKey("edison-kg", "K"), KG_AREAS)
+  [scopeKey("edison-hs", "12")]: hsAreasFor("12")
 };
 
 export const skillsProfileByGrade: Record<string, SkillGroup[]> = {
   [scopeKey("edison-hs", "9")]: hsGroupsFor("9"),
   [scopeKey("edison-hs", "10")]: hsGroupsFor("10"),
   [scopeKey("edison-hs", "11")]: hsGroupsFor("11"),
-  [scopeKey("edison-hs", "12")]: hsGroupsFor("12"),
-  [scopeKey("edison-kg", "K")]: buildGroups(scopeKey("edison-kg", "K"), KG_GROUPS)
+  [scopeKey("edison-hs", "12")]: hsGroupsFor("12")
 };
 
 export function developmentAreasFor(schoolId: string, grade: string): DevelopmentArea[] {
@@ -437,18 +402,31 @@ export function skillsProfileFor(schoolId: string, grade: string): SkillGroup[] 
 }
 
 /**
- * Deep link from a student's 360 to the grade that configures their content.
- * `group` on a Person is a display string ("Grade 10"), so it is parsed back to
- * a grade key here. Falls back to the school list when it cannot be resolved
- * rather than producing a 404.
+ * Resolve a student's 360 (school name + display group, e.g. "Grade 10") back
+ * to the school/grade scope that configures their skills and development
+ * content. Returns null when it cannot be resolved — a school with no grades
+ * data, or a faculty member with no grade at all.
  */
-export function gradeConfigHref(schoolName: string, group: string): string {
+export function resolveGradeScope(schoolName: string, group: string): { schoolId: string; grade: string } | null {
   const school = schools.find((entry) => entry.name === schoolName);
   const grade = group.replace(/^grade\s+/i, "").trim();
   if (!school || !school.grades.includes(grade)) {
+    return null;
+  }
+  return { schoolId: school.id, grade };
+}
+
+/**
+ * Deep link from a student's 360 to the grade that configures their content.
+ * Falls back to the school list when it cannot be resolved rather than
+ * producing a 404.
+ */
+export function gradeConfigHref(schoolName: string, group: string): string {
+  const scope = resolveGradeScope(schoolName, group);
+  if (!scope) {
     return "/skills-development";
   }
-  return `/skills-development/${school.id}/${encodeURIComponent(grade)}`;
+  return `/skills-development/${scope.schoolId}/${encodeURIComponent(scope.grade)}`;
 }
 
 /** Counts for the school and grade pickers, so an admin can see what is set up. */

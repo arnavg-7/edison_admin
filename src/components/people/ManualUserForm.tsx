@@ -37,11 +37,9 @@ const LEVEL_OPTIONS: ComboOption[] = SCHOOL_LEVELS.map((option) => ({
  */
 export function ManualUserForm({
   onBack,
-  onCancel,
   onCreate
 }: {
   onBack: () => void;
-  onCancel: () => void;
   onCreate: (person: Person) => void;
 }) {
   const [name, setName] = useState("");
@@ -107,7 +105,8 @@ export function ManualUserForm({
   };
 
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto auto-rows-min">
       <label className="sf-field">
         <span>Full name</span>
         <input
@@ -177,8 +176,9 @@ export function ManualUserForm({
       <p className="sf-panel-note">
         Their profile opens next, where you can complete the remaining details.
       </p>
+      </div>
 
-      <div className="list-editor-form-actions">
+      <div className="list-editor-form-actions list-editor-form-actions--drawer">
         <Button
           size="sm"
           onClick={save}
@@ -190,10 +190,7 @@ export function ManualUserForm({
         <Button color="secondary" size="sm" onClick={onBack}>
           Back
         </Button>
-        <Button color="tertiary" size="sm" onClick={onCancel}>
-          Cancel
-        </Button>
       </div>
-    </>
+    </div>
   );
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Calendar01Icon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, Calendar01Icon } from "@hugeicons/core-free-icons";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -93,17 +93,35 @@ export function DateRangePicker({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
+      {/* Same trigger as the app's one dropdown control (.sf-combobox): border,
+          radius, padding, type and caret all come from that class, so a filter
+          bar mixing this with School/Grade/Status reads as one row of matching
+          controls rather than an outline button parked among comboboxes. */}
       <PopoverTrigger
         render={
-          <Button variant="outline" size="sm" className="justify-start font-normal" aria-label={ariaLabel}>
+          <button
+            type="button"
+            className="sf-combobox"
+            aria-label={ariaLabel}
+            aria-haspopup="dialog"
+            aria-expanded={open}
+          >
+            <span className="sf-combobox-value">
+              <HugeiconsIcon
+                icon={Calendar01Icon}
+                size={15}
+                strokeWidth={2}
+                className="sf-combobox-lead"
+              />
+              {triggerLabel}
+            </span>
             <HugeiconsIcon
-              icon={Calendar01Icon}
-              size={14}
+              icon={ArrowDown01Icon}
+              size={15}
               strokeWidth={2}
-              data-icon="inline-start"
+              className="sf-combobox-caret"
             />
-            {triggerLabel}
-          </Button>
+          </button>
         }
       />
 
@@ -135,6 +153,10 @@ export function DateRangePicker({
                  its defaultMonth jumps to that span — otherwise picking "Last
                  year" would highlight dates on a month the reader can't see. */
               key={draftPreset === "custom" ? "custom" : draftPreset}
+              /* No padding of its own — .sf-daterange-body owns the popover's
+                 inset, so the grid shares a left edge with the span above it and
+                 the buttons below. */
+              className="p-0"
               mode="range"
               selected={draftRange}
               defaultMonth={draftRange?.from}

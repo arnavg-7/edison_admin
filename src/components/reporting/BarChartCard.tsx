@@ -149,6 +149,79 @@ function CategoryAxisInner({
 }
 
 /**
+ * Squares off the left end of every horizontal bar.
+ *
+ * Every bar primitive here draws an SVG <rect> with a single `rx`, so a radius
+ * always applies to all four corners — there is no per-side option. A bar
+ * measured from zero should meet its axis flush, so this refills the two left
+ * corner notches with a BAR_RADIUS-wide block of the same colour, leaving only
+ * the value end rounded.
+ *
+ * Unlike RatioBarCard's version this has to handle grouped series: a category's
+ * band is split between them, so each bar's own thickness and offset are
+ * recomputed the same way `<Bar>` does (bandWidth minus the inter-bar gaps,
+ * divided by the series count). Series with no numeric value at a category draw
+ * no bar, so they get no patch either — otherwise a block would float at the
+ * axis with nothing attached to it.
+ */
+function SquareBarStarts({ series }: { series: SeriesKey[] }) {
+  const { containerRef, barScale } = useChartStable();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  const container = containerRef.current;
+  if (!mounted || !container || !barScale) return null;
+
+  return <SquareBarStartsInner series={series} container={container} />;
+}
+
+function SquareBarStartsInner({
+  series,
+  container
+}: {
+  series: SeriesKey[];
+  container: HTMLDivElement;
+}) {
+  const { margin, barScale, bandWidth, barXAccessor, data, hoveredBarIndex } = useChart();
+  if (!barScale || !bandWidth || !barXAccessor) return null;
+
+  const count = series.length;
+  const gap = count > 1 ? GROUP_GAP : 0;
+  const thickness = (bandWidth - gap * (count - 1)) / count;
+  if (thickness <= 0) return null;
+
+  return createPortal(
+    <div className="pointer-events-none absolute inset-0">
+      {data.map((row, rowIndex) => {
+        const bandTop = (barScale(barXAccessor(row)) ?? 0) + margin.top;
+        return series.map((item, seriesIndex) => {
+          if (typeof row[item.label] !== "number") return null;
+          return (
+            <div
+              key={`${rowIndex}-${item.label}`}
+              className="absolute"
+              style={{
+                top: bandTop + seriesIndex * (thickness + gap),
+                left: margin.left,
+                width: BAR_RADIUS,
+                height: thickness,
+                background: SERIES_VARS[item.colorIndex % SERIES_VARS.length],
+                // Tracks the library's own hover dimming, or a patch would stay
+                // full-strength while its bar faded and read as a bright tab.
+                opacity: hoveredBarIndex !== null && hoveredBarIndex !== rowIndex ? 0.3 : 1,
+                transition: "opacity 0.15s ease-in-out"
+              }}
+            />
+          );
+        });
+      })}
+    </div>,
+    container
+  );
+}
+
+/**
  * Value-axis ticks along the bottom of a horizontal chart. Bklit ships no
  * value axis for this orientation (`BarXAxis` positions along the category
  * band — it's the *vertical* chart's category axis), so this reads the same
@@ -392,6 +465,10 @@ export function BarChartCard({
                      off the axis they're measured from. Same value RatioBarCard
                      uses, so the two cards sharing a row agree. */
                   lineCap={BAR_RADIUS}
+                  /* The grow animation runs bar width up from 0 while the
+                     square-start patches are fixed width, so mid-animation they
+                     showed as coloured stubs at the axis ahead of their bars. */
+                  animate={false}
                 />
               ))}
               {isVertical ? (
@@ -410,6 +487,10 @@ export function BarChartCard({
                 <>
                   <CategoryAxis hrefs={Object.keys(hrefs).length ? hrefs : undefined} />
                   <ValueAxisTicks />
+                  {/* Horizontal only: for columns the equivalent flat edge is the
+                      bottom baseline, which is a different patch geometry and
+                      isn't in use on any card today. */}
+                  <SquareBarStarts series={series} />
                 </>
               )}
               <ChartTooltip

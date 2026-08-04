@@ -118,11 +118,9 @@ function downloadSample() {
  */
 export function CsvUserImport({
   onBack,
-  onCancel,
   onImport
 }: {
   onBack: () => void;
-  onCancel: () => void;
   onImport: (people: Person[]) => void;
 }) {
   const [rows, setRows] = useState<ParsedRow[] | null>(null);
@@ -139,7 +137,8 @@ export function CsvUserImport({
   const errorCount = (rows ?? []).filter((row) => row.error).length;
 
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto auto-rows-min">
       <p className="sf-panel-note">
         Columns: <code>name, type, school, grade, status</code>. Type is <code>student</code> or{" "}
         <code>faculty</code>; grade is a grade number (or <code>K</code>) for students, a department
@@ -187,8 +186,9 @@ export function CsvUserImport({
           ) : null}
         </div>
       ) : null}
+      </div>
 
-      <div className="list-editor-form-actions">
+      <div className="list-editor-form-actions list-editor-form-actions--drawer">
         <Button size="sm" isDisabled={validPeople.length === 0} onClick={() => onImport(validPeople)}>
           Add {validPeople.length > 0 ? validPeople.length : ""} User
           {validPeople.length === 1 ? "" : "s"}
@@ -196,10 +196,7 @@ export function CsvUserImport({
         <Button color="secondary" size="sm" onClick={onBack}>
           Back
         </Button>
-        <Button color="tertiary" size="sm" onClick={onCancel}>
-          Cancel
-        </Button>
       </div>
-    </>
+    </div>
   );
 }

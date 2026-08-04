@@ -795,6 +795,20 @@ input[type="checkbox"]:disabled {
   min-width: 0;
 }
 
+/* A trigger that carries a leading icon as well as its value (the date range
+   picker). Only that case becomes a flex row — a plain combobox value stays a
+   text node so its ellipsis truncation is untouched. */
+.sf-combobox-value:has(> .sf-combobox-lead) {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.sf-combobox-lead {
+  flex: 0 0 auto;
+  color: var(--sf-text-dim);
+}
+
 .sf-combobox-value.is-placeholder {
   color: var(--sf-text-dim);
 }
@@ -926,16 +940,19 @@ input[type="checkbox"]:disabled {
   gap: 2px;
   flex: 0 0 auto;
   min-width: 148px;
-  padding: 10px;
+  /* Vertical inset matches the body's so the first preset and the span beside it
+     sit on one line; the rail is inset less horizontally because its rows carry
+     their own 10px of padding. */
+  padding: 14px 12px;
   border-right: 1px solid var(--sf-card-border);
 }
 
 .sf-daterange-preset {
   border: 0;
   background: transparent;
-  /* Concentric with the popover minus the rail's 10px padding — the full control
-     radius on a 32px-tall row would clamp to a lozenge. */
-  border-radius: calc(var(--sf-radius-control) - 10px);
+  /* Concentric with the popover minus the rail's 12px horizontal padding — the
+     full control radius on a 32px-tall row would clamp to a lozenge. */
+  border-radius: calc(var(--sf-radius-control) - 12px);
   padding: 7px 10px;
   font: inherit;
   font-size: 13px;
@@ -958,9 +975,16 @@ input[type="checkbox"]:disabled {
   font-weight: 600;
 }
 
+/* One inset for the whole right-hand column, and sibling rhythm from `gap`
+   rather than per-child padding: the span, the calendar and the actions used to
+   set their own 12/14px paddings while the calendar added a third value of its
+   own (p-3), so nothing on this surface shared an edge. The calendar's padding is
+   zeroed at the call site; this owns the frame. */
 .sf-daterange-body {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+  padding: 14px;
   min-width: 0;
 }
 
@@ -968,17 +992,20 @@ input[type="checkbox"]:disabled {
    don't tell the reader which end is which, or the year, at a glance. */
 .sf-daterange-span {
   margin: 0;
-  padding: 12px 14px 0;
+  padding: 0;
   font-size: 13px;
   font-weight: 500;
   color: var(--sf-text);
 }
 
+/* Tight inside the pair, a wider interval above it: the commit row is a
+   different kind of thing from the grid it applies to. */
 .sf-daterange-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  padding: 0 14px 14px;
+  padding: 0;
+  margin-top: 4px;
 }
 
 /* Under ~760px the rail plus two months can't fit side by side: stack them and
@@ -1871,7 +1898,7 @@ nav.sf-pagination {
 .sf-choice-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 16px;
 }
 
 /* Side by side these get too narrow to read before the modal itself is
@@ -1902,19 +1929,19 @@ nav.sf-pagination {
     transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Keyboard focus earns the same treatment as hover, not just the global ring. */
+/* Keyboard focus earns the same treatment as hover, not just the global ring.
+   Border + shadow only — no lift. These cards sit in a drawer alongside
+   plain, un-lifted controls, and a floating card there read as detached
+   from the page rather than as an emphasised option. */
 .sf-choice-card:hover,
 .sf-choice-card:focus-visible {
   border-color: var(--sf-accent);
   box-shadow:
     0 1px 2px rgba(19, 26, 43, 0.06),
     0 8px 20px rgba(79, 70, 229, 0.14);
-  transform: translateY(-2px);
 }
 
-/* Presses down like every other control in the app (.sf-btn, shadcn Button). */
 .sf-choice-card:active {
-  transform: translateY(0);
   box-shadow: 0 1px 2px rgba(19, 26, 43, 0.06);
 }
 
@@ -1980,11 +2007,6 @@ nav.sf-pagination {
   .sf-choice-icon,
   .sf-choice-card-go {
     transition: none;
-  }
-
-  .sf-choice-card:hover,
-  .sf-choice-card:focus-visible {
-    transform: none;
   }
 
   .sf-choice-card:hover .sf-choice-card-go,

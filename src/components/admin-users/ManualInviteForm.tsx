@@ -56,7 +56,8 @@ export function ManualInviteForm({
   };
 
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto auto-rows-min">
       <label className="sf-field">
         <span>Full name</span>
         <input
@@ -94,8 +95,9 @@ export function ManualInviteForm({
         {hasRoles ? `${summary} ` : ""}
         They&rsquo;ll get an email invite. The account stays Pending until they accept it.
       </p>
+      </div>
 
-      <div className="list-editor-form-actions">
+      <div className="list-editor-form-actions list-editor-form-actions--drawer">
         <Button
           size="sm"
           onClick={send}
@@ -110,6 +112,6 @@ export function ManualInviteForm({
           Back
         </Button>
       </div>
-    </>
+    </div>
   );
 }

@@ -158,7 +158,8 @@ export function CsvInviteImport({
   const errorCount = (rows ?? []).filter((row) => row.error).length;
 
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto auto-rows-min">
       <p className="sf-panel-note">
         Columns: <code>name, email, roles, scope</code>. Roles are one or more of{" "}
         <code>leadership</code>, <code>portal_administrator</code>, <code>it_administrator</code>,
@@ -205,8 +206,9 @@ export function CsvInviteImport({
           ) : null}
         </div>
       ) : null}
+      </div>
 
-      <div className="list-editor-form-actions">
+      <div className="list-editor-form-actions list-editor-form-actions--drawer">
         <Button
           size="sm"
           isDisabled={validUsers.length === 0}
@@ -220,6 +222,6 @@ export function CsvInviteImport({
           Back
         </Button>
       </div>
-    </>
+    </div>
   );
 }

@@ -33,6 +33,12 @@ const categoryOptions: ComboOption[] = goalCategories.map((category) => ({
   label: category.title
 }));
 
+/** Published templates, offered as a starting point for a new goal's name. */
+const templateOptions: ComboOption[] = goalTemplates.map((template) => ({
+  value: template.title,
+  label: template.title
+}));
+
 let seq = 0;
 const nextId = (scope: string) => `gg-local-${scope}-${Date.now()}-${seq++}`;
 
@@ -183,21 +189,33 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
 
   const fields = (
     <div className="list-editor-form list-editor-form--drawer">
+      {/* Templates are a Combobox, not the `list=`/<datalist> this used to be.
+          A datalist is drawn by the browser: Chrome hangs its own caret on the
+          input on hover, so the field looked like a dropdown the app doesn't
+          have anywhere else, and the list it opened matched nothing in the
+          filter bar. Picking a template fills the name below, which stays a
+          plain text field — the name is still free text, the template is only a
+          starting point. */}
+      <label className="sf-field sf-field--prestep">
+        <span>Start from a template</span>
+        <Combobox
+          options={templateOptions}
+          value=""
+          onChange={(title) => setDraft({ ...draft, title })}
+          placeholder="Optional — pick a published template"
+          ariaLabel="Start from a goal template"
+        />
+      </label>
+
       <label className="sf-field">
         <span>Goal name</span>
         <input
           type="text"
-          list="goal-template-options"
           autoFocus
           value={draft.title}
           placeholder="e.g. Attendance improvement plan"
           onChange={(event) => setDraft({ ...draft, title: event.target.value })}
         />
-        <datalist id="goal-template-options">
-          {goalTemplates.map((template) => (
-            <option key={template.id} value={template.title} />
-          ))}
-        </datalist>
       </label>
 
       <label className="sf-field">

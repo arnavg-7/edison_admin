@@ -73,10 +73,13 @@
 
   /* Geometry */
   --sf-radius-card: 10px;
-  --sf-radius-control: 6px;
+  /* Inputs, comboboxes/dropdowns and their popups — i.e. every filter control.
+     Matches --sf-radius-cta so a filter bar of fields, dropdowns and buttons
+     reads as one family of shapes. */
+  --sf-radius-control: 20px;
   /* Every CTA, both .sf-btn and the shadcn Button (button.tsx reads this
      variable directly via rounded-(--sf-radius-cta)). */
-  --sf-radius-cta: 8px;
+  --sf-radius-cta: 20px;
   --sf-radius-pill: 999px;
 }
 
@@ -106,6 +109,59 @@ body {
  */
 [data-slot="input-group-control"]:focus-visible {
   outline: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Corner smoothing (squircles).
+
+   `border-radius` draws circular arcs, which meet the straight edge at a visible
+   break in curvature. `corner-shape: squircle` keeps the same radius but draws a
+   superellipse, so curvature ramps in continuously — the iOS/Figma
+   "corner smoothing" look. Applied to everything (the property is inherited by
+   nothing, so it has to be a universal rule, not a :root one) and every radius
+   in the app follows automatically.
+
+   Chromium-only as of mid-2026, with no Safari/Firefox timeline. That's fine as
+   progressive enhancement: browsers that don't know the property ignore it and
+   keep the plain rounded corner, so nothing needs a fallback.
+   --------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  corner-shape: squircle;
+}
+
+/* Pills, dots and circular avatars stay true arcs. At a radius of 50% or more a
+   squircle stops reading as a smoothed rectangle: a pill's ends turn into a
+   lozenge's points, and a circle becomes an app-icon shape. These are the
+   app's 999px-radius and rounded-full cases. */
+.sf-role-badge,
+.sf-role-fixed-note,
+.sf-status,
+.sf-back-btn,
+.bar-track,
+.bar-fill,
+.area-icon,
+.skill-dot,
+.skill-pill,
+.admin-status,
+.alert-avatar,
+.alert-tag-chip,
+.alert-card-avatar,
+[class*="rounded-full"],
+/* shadcn parts whose radius (rounded-4xl = 26px) exceeds half their height, so
+   they're pills in practice: status badges, the default tab strip, progress
+   bars and slider tracks. Their wider rounded-4xl siblings — dialogs, tooltips,
+   popovers — keep the squircle, where 26px really is a corner. */
+[data-slot="badge"],
+[data-slot="tabs-list"],
+[data-slot="progress"],
+[data-slot="progress-track"],
+[data-slot="progress-indicator"],
+[data-slot="slider-track"],
+[data-slot="slider-range"],
+[data-slot="slider-thumb"] {
+  corner-shape: round;
 }
 
 /* Shell — the sidebar chrome itself (frame, nav item look, off-canvas
@@ -448,6 +504,70 @@ body {
   min-width: 0;
 }
 
+/* ---------------------------------------------------------------------------
+   Checkboxes.
+
+   A native checkbox is painted by the OS, so neither `border-radius` nor
+   `corner-shape` reaches it — the only way to get the app's smoothed corner is
+   to take over the box with `appearance: none` and draw it here. Sized and
+   radiused to match the shadcn Checkbox (18px, 8px) so the two are
+   indistinguishable, and small enough that the radius stays well under half the
+   box: at 50% a squircle reads as a lozenge rather than a smoothed square.
+   --------------------------------------------------------------------------- */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-content: center;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1px solid #d3d8e5;
+  /* 8px on an 18px box — visibly rounder, and still under the 9px (50%) point
+     where a squircle stops reading as a smoothed square and turns lozenge. */
+  border-radius: 8px;
+  background: var(--sf-card);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+input[type="checkbox"]:hover:not(:disabled) {
+  border-color: var(--sf-accent);
+}
+
+input[type="checkbox"]:checked,
+input[type="checkbox"]:indeterminate {
+  background: var(--sf-accent);
+  border-color: var(--sf-accent);
+}
+
+/* Drawn from two borders rather than a glyph: a text checkmark would inherit
+   the page font and shift with it. */
+input[type="checkbox"]:checked::after {
+  content: "";
+  width: 8px;
+  height: 4px;
+  margin-top: -2px;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: rotate(-45deg);
+}
+
+/* Partial selection (e.g. some rows on the page selected, not all). */
+input[type="checkbox"]:indeterminate::after {
+  content: "";
+  width: 8px;
+  height: 2px;
+  border-radius: 1px;
+  background: #ffffff;
+}
+
+input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Roles as a checkbox group — an account can hold more than one at once, so
    this is never a single-select dropdown. */
 .sf-checkbox-group {
@@ -704,7 +824,11 @@ body {
   justify-content: space-between;
   gap: 8px;
   padding: 7px 9px;
-  border-radius: 4px;
+  /* Concentric with the popup: the popup's own radius less its 4px padding, so
+     a highlighted row's corners sit parallel to the panel's instead of cutting
+     across them. Inherits the global squircle corner shape like every other
+     radius in the app. */
+  border-radius: calc(var(--sf-radius-control) - 4px);
   font-size: 13px;
   line-height: 18px;
   color: var(--sf-text);
@@ -809,7 +933,9 @@ body {
 .sf-daterange-preset {
   border: 0;
   background: transparent;
-  border-radius: var(--sf-radius-control);
+  /* Concentric with the popover minus the rail's 10px padding — the full control
+     radius on a 32px-tall row would clamp to a lozenge. */
+  border-radius: calc(var(--sf-radius-control) - 10px);
   padding: 7px 10px;
   font: inherit;
   font-size: 13px;
@@ -1000,12 +1126,13 @@ nav.sf-pagination {
   height: 22px;
   padding: 0;
   border: 1px solid var(--sf-card-border);
-  border-radius: 4px;
+  border-radius: var(--sf-radius-pill);
   background: var(--sf-card);
   color: var(--sf-text-muted);
   cursor: pointer;
-  /* Rotates to point down when open, so the caret itself signals state. */
-  transition: transform 120ms ease, color 120ms ease, border-color 120ms ease;
+  /* Rotates to point down when open, so the caret itself signals state. A
+     longer duration + ease-out reads as a smooth swing rather than a snap. */
+  transition: transform 220ms ease-out, color 180ms ease, border-color 180ms ease;
 }
 
 .sf-row-toggle:hover {
@@ -2099,8 +2226,11 @@ nav.sf-pagination {
   color: var(--sf-text);
 }
 
+/* accent-color no longer applies: the checkbox above is drawn by this stylesheet
+   rather than by the UA, so its fill is set there. Kept as a selector only for
+   the layout the builder rows need. */
 .builder-checkbox input {
-  accent-color: var(--sf-accent);
+  flex: 0 0 auto;
 }
 
 .builder-note {

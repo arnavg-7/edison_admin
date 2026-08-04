@@ -45,9 +45,16 @@ export function Sidebar() {
 
                 return (
                   <SidebarMenuItem key={section.id}>
+                    {/* The shadcn default is rounded-lg, which resolves to 10px
+                        here and left the active nav pill noticeably squarer than
+                        every other control on screen — theme.css puts both
+                        --sf-radius-control and --sf-radius-cta at 20px. Reading
+                        the token rather than hardcoding keeps the nav in step if
+                        that value moves again. */}
                     <SidebarMenuButton
                       isActive={isActive}
                       tooltip={section.label}
+                      className="rounded-(--sf-radius-control)"
                       render={<Link href={section.href} aria-current={isActive ? "page" : undefined} />}
                     >
                       <NavIcon name={section.id} />

@@ -78,9 +78,11 @@ const AXIS_TICK_COUNT = 4;
  * option), and "round" derives that radius from bar thickness — 8px on these
  * 34px bars. At 8px the curve at the zero end was pronounced enough to lift
  * every bar off the axis it is measured from, so a bar at 0 looked like a bar
- * at 1. 4px still softens the corners without breaking contact with the axis.
+ * at 1. 10px is a pronounced round on these 34px bars — under a third of their
+ * thickness — and the zero end stays flush because the masking block below
+ * squares it off regardless of how large this gets.
  */
-const BAR_RADIUS = 4;
+const BAR_RADIUS = 10;
 
 /**
  * Why a stack gap exists on a chart with nothing actually stacked.

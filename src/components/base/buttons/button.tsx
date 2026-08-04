@@ -10,7 +10,14 @@ import { isReactComponent } from "@/lib/utils/is-react-component";
 export const styles = sortCx({
     common: {
         root: [
-            "group relative inline-flex h-max cursor-pointer items-center justify-center whitespace-nowrap outline-[var(--sf-focus)] transition duration-100 ease-linear before:absolute focus-visible:outline-2 focus-visible:outline-offset-2",
+            // border-transparent (not just omitting border) so every color —
+            // bordered (secondary) or not (primary/tertiary) — reserves the
+            // same 2px of vertical space. Without this, a borderless button
+            // measured 2px shorter than a bordered one at the same padding,
+            // which is what pushed row actions like Edit toward "secondary"
+            // for everything just to keep heights aligned — losing the color
+            // difference between e.g. Edit and View/Cancel in the process.
+            "group relative inline-flex h-max cursor-pointer items-center justify-center whitespace-nowrap border border-transparent outline-[var(--sf-focus)] transition duration-100 ease-linear before:absolute focus-visible:outline-2 focus-visible:outline-offset-2",
             // When button is used within `InputGroup`
             "in-data-input-wrapper:shadow-xs in-data-input-wrapper:focus:!z-50 in-data-input-wrapper:in-data-leading:-mr-px in-data-input-wrapper:in-data-leading:rounded-r-none in-data-input-wrapper:in-data-leading:before:rounded-r-none in-data-input-wrapper:in-data-trailing:-ml-px in-data-input-wrapper:in-data-trailing:rounded-l-none in-data-input-wrapper:in-data-trailing:before:rounded-l-none",
             // Disabled styles
@@ -23,7 +30,7 @@ export const styles = sortCx({
     sizes: {
         xs: {
             root: [
-                "gap-1 rounded-lg px-2.5 py-1.5 text-sm font-semibold before:rounded-[7px] data-icon-only:p-2",
+                "gap-1 rounded-(--sf-radius-cta) px-2.5 py-1.5 text-sm font-semibold before:rounded-[calc(var(--sf-radius-cta)-1px)] data-icon-only:p-2",
                 "in-data-input-wrapper:px-3.5 in-data-input-wrapper:py-2.5 in-data-input-wrapper:data-icon-only:p-2.5",
                 "*:data-icon:size-4 *:data-icon:stroke-[2.25px]",
             ].join(" "),
@@ -31,24 +38,24 @@ export const styles = sortCx({
         },
         sm: {
             root: [
-                "gap-1 rounded-lg px-3 py-2 text-sm font-semibold before:rounded-[7px] data-icon-only:p-2",
+                "gap-1 rounded-(--sf-radius-cta) px-3 py-2 text-sm font-semibold before:rounded-[calc(var(--sf-radius-cta)-1px)] data-icon-only:p-2",
                 "in-data-input-wrapper:px-3.5 in-data-input-wrapper:py-2.5 in-data-input-wrapper:data-icon-only:p-2.5",
             ].join(" "),
             linkRoot: "gap-1 *:data-text:underline-offset-3",
         },
         md: {
             root: [
-                "gap-1 rounded-lg px-3.5 py-2.5 text-sm font-semibold before:rounded-[7px] data-icon-only:p-2.5",
+                "gap-1 rounded-(--sf-radius-cta) px-3.5 py-2.5 text-sm font-semibold before:rounded-[calc(var(--sf-radius-cta)-1px)] data-icon-only:p-2.5",
                 "in-data-input-wrapper:gap-1.5 in-data-input-wrapper:px-4 in-data-input-wrapper:text-md in-data-input-wrapper:data-icon-only:p-3",
             ].join(" "),
             linkRoot: "gap-1 *:data-text:underline-offset-4",
         },
         lg: {
-            root: "gap-1.5 rounded-lg px-4 py-2.5 text-md font-semibold before:rounded-[7px] data-icon-only:p-3",
+            root: "gap-1.5 rounded-(--sf-radius-cta) px-4 py-2.5 text-md font-semibold before:rounded-[calc(var(--sf-radius-cta)-1px)] data-icon-only:p-3",
             linkRoot: "gap-1.5 *:data-text:underline-offset-4",
         },
         xl: {
-            root: "gap-1.5 rounded-lg px-4.5 py-3 text-md font-semibold before:rounded-[7px] data-icon-only:p-3.5",
+            root: "gap-1.5 rounded-(--sf-radius-cta) px-4.5 py-3 text-md font-semibold before:rounded-[calc(var(--sf-radius-cta)-1px)] data-icon-only:p-3.5",
             linkRoot: "gap-1.5 *:data-text:underline-offset-4",
         },
     },

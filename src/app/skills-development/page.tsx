@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import { Button } from "@/components/base/buttons/button";
 import { schools } from "@/lib/data/schools";
 import { gradeConfigSummary, isSchoolInScope, schoolConfigSummary } from "@/lib/data/skillsDevelopment";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -75,13 +76,17 @@ export default function SchoolPickerPage() {
                 // The grade page is where the editors live, so this is the real
                 // edit entry point.
                 <div className="sf-row-actions" key="actions">
-                  <Link
-                    className="sf-btn sf-btn--sm sf-btn--primary"
+                  {/* secondary + a 16px icon, matching every other table's row
+                      actions. As the default solid variant with a 14px icon this
+                      measured 32px against the 34px used everywhere else. */}
+                  <Button
+                    color="secondary"
+                    size="xs"
                     href={`/skills-development/${school.id}/${grade}`}
+                    iconLeading={<HugeiconsIcon icon={PencilEdit02Icon} size={16} strokeWidth={2} />}
                   >
-                    <HugeiconsIcon icon={PencilEdit02Icon} size={14} strokeWidth={2} />
                     Edit
-                  </Link>
+                  </Button>
                 </div>
               ]
             };

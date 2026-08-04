@@ -71,8 +71,11 @@ function bandHeightFor(seriesCount: number): number {
     formula to size it by. */
 const VERTICAL_CHART_HEIGHT = 280;
 
-/** Bar corner radius, matching RatioBarCard — see the note at its <Bar>. */
-const BAR_RADIUS = 4;
+/** Bar corner radius, matching RatioBarCard — see the note at its <Bar>.
+    10px reads as a properly rounded end on the 27px single-series bars. It is
+    past half the thickness of the 14px grouped bars, so those clamp to 7px and
+    render as pills — the radius can't exceed half a bar's thickness. */
+const BAR_RADIUS = 10;
 
 /** Strip along the bottom holding the horizontal chart's value-axis ticks —
     matches RatioBarCard's own axis strip height. */

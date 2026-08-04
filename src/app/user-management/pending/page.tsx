@@ -7,6 +7,7 @@ import { useMounted } from "@/lib/use-mounted";
 import { formatDateTime } from "@/lib/format";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { AdminRoleBadges } from "@/components/admin-users/AdminRoleBadges";
+import { Button } from "@/components/base/buttons/button";
 
 /** Invites sent but not yet accepted — a filtered slice of the same admin
     user list, the same way Alert History is a filtered slice of alerts. */
@@ -71,16 +72,16 @@ export default function PendingInvitationsPage() {
                   <td>{formatDateTime(user.dateAdded)}</td>
                   <td>
                     <div className="sf-row-actions">
-                      <button type="button" className="sf-btn sf-btn--sm" onClick={() => resend(user.id)}>
+                      <Button color="secondary" size="xs" onClick={() => resend(user.id)}>
                         Resend
-                      </button>
-                      <button
-                        type="button"
-                        className="sf-btn sf-btn--sm sf-btn--danger"
+                      </Button>
+                      <Button
+                        color="secondary-destructive"
+                        size="xs"
                         onClick={() => removeUser(user.id)}
                       >
                         Revoke
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>

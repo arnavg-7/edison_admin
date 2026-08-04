@@ -14,6 +14,14 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/base/buttons/button";
 import { Combobox } from "@/components/shared/Combobox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle
+} from "@/components/ui/sheet";
 
 // TODO: local state only — persist through the Admin DB Academic Goals
 // contract when it exists.
@@ -163,11 +171,18 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
   const current = goals.filter((goal) => !isPastSemester(goal));
   const history = goals.filter((goal) => isPastSemester(goal));
 
-  /** No active goals and not already adding — the empty state owns the CTA. */
-  const hasNoCurrentGoals = current.length === 0 && !isAdding;
+  /* No active goals — the empty state owns the CTA, so the panel head hides its
+     own. This used to also require `!isAdding`, because the inline form replaced
+     the empty state; the drawer opens over it, so the empty state should stay. */
+  const hasNoCurrentGoals = current.length === 0;
 
-  const form = (
-    <div className="list-editor-form">
+  /* Add and edit are one form in one drawer, so `isAdding` and `editingId` share
+     a single open state — they were already mutually exclusive (each setter
+     clears the other), and a drawer can only show one of them at a time. */
+  const isFormOpen = isAdding || editingId !== null;
+
+  const fields = (
+    <div className="list-editor-form list-editor-form--drawer">
       <label className="sf-field">
         <span>Goal name</span>
         <input
@@ -235,15 +250,52 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
         </label>
       </div>
 
-      <div className="list-editor-form-actions">
-        <Button size="sm" onClick={save} isDisabled={!canSave}>
-          {editingId ? "Save goal" : "Submit goal"}
-        </Button>
-        <Button color="secondary" size="sm" onClick={cancel}>
-          Cancel
-        </Button>
-      </div>
     </div>
+  );
+
+  /**
+   * The form lives in a right-side drawer rather than inline in the panel. Inline,
+   * it pushed the goals table down the page on add and swallowed a row whole on
+   * edit, so the list you were working against moved or disappeared underneath
+   * you. A drawer leaves the table in place.
+   *
+   * Actions sit in the drawer's own footer, not in the field list, so they stay
+   * reachable at the bottom edge while the fields above scroll.
+   */
+  const formDrawer = (
+    <Sheet
+      open={isFormOpen}
+      onOpenChange={(open) => {
+        if (!open) cancel();
+      }}
+    >
+      {/* The variant-prefixed form of the width, matching SheetContent's own
+          `data-[side=right]:sm:max-w-sm`. A plain `sm:max-w-lg` is a different
+          key to tailwind-merge, so both survive and the data-variant one wins —
+          the drawer stayed 384px, too narrow for the two-column date row. */}
+      <SheetContent side="right" className="data-[side=right]:sm:max-w-lg">
+        <SheetHeader>
+          <SheetTitle>{editingId ? "Edit goal" : "Set a goal"}</SheetTitle>
+          <SheetDescription>
+            {editingId
+              ? "Update this goal's details, category or semester."
+              : "Name the goal, tag a category, and assign it to a semester."}
+          </SheetDescription>
+        </SheetHeader>
+
+        {/* min-h-0 so this scrolls instead of forcing the footer off-screen. */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-6">{fields}</div>
+
+        <SheetFooter className="flex-row">
+          <Button size="sm" onClick={save} isDisabled={!canSave}>
+            {editingId ? "Save goal" : "Submit goal"}
+          </Button>
+          <Button color="secondary" size="sm" onClick={cancel}>
+            Cancel
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 
   return (
@@ -277,8 +329,6 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
               </Button>}
           </div>
 
-          {isAdding ? form : null}
-
           {hasNoCurrentGoals ? (
             <EmptyState
               title="No current goals"
@@ -304,13 +354,11 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
                   </tr>
                 </thead>
                 <tbody>
-                  {current.map((goal) =>
-                    editingId === goal.id ? (
-                      <tr key={goal.id}>
-                        <td colSpan={5}>{form}</td>
-                      </tr>
-                    ) : (
-                      <tr key={goal.id}>
+                  {/* Editing no longer swaps the row out for the form — the row
+                      stays put and the drawer opens over it, so you can still
+                      see the goal you're editing and the ones around it. */}
+                  {current.map((goal) => (
+                      <tr key={goal.id} data-editing={editingId === goal.id || undefined}>
                         <td>
                           <div className="list-editor-item-title">{goal.title}</div>
                           <div className="list-editor-item-detail">{goal.description}</div>
@@ -320,29 +368,26 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
                         <td>{formatDateRange(goal.semester.from, goal.semester.to)}</td>
                         <td>
                           <div className="sf-row-actions">
-                            <button
-                              type="button"
-                              className="sf-btn sf-btn--sm"
-                              onClick={() => startEdit(goal)}
-                            >
+                            <Button color="secondary" size="xs" onClick={() => startEdit(goal)}>
                               Edit<span className="sf-sr-only"> {goal.title}</span>
-                            </button>
-                            <button
-                              type="button"
-                              className="sf-btn sf-btn--sm sf-btn--danger"
+                            </Button>
+                            <Button
+                              color="secondary-destructive"
+                              size="xs"
                               onClick={() => remove(goal.id)}
                             >
                               Delete<span className="sf-sr-only"> {goal.title}</span>
-                            </button>
+                            </Button>
                           </div>
                         </td>
                       </tr>
-                    )
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
           )}
+
+          {formDrawer}
         </div>
       ) : (
         <div className="sf-panel">

@@ -83,21 +83,21 @@ export default function AcademicCalendarPage() {
                 <td>
                   {editingId === term.id ? (
                     <div className="setting-actions">
-                      <Button size="sm" onClick={() => save(term.id)}>
+                      <Button size="xs" onClick={() => save(term.id)}>
                         Save
                       </Button>
-                      <button type="button" className="sf-btn sf-btn--sm" onClick={() => setEditingId(null)}>
+                      <Button color="secondary" size="xs" onClick={() => setEditingId(null)}>
                         Cancel
-                      </button>
+                      </Button>
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      className="sf-btn sf-btn--sm"
+                    <Button
+                      color="secondary"
+                      size="xs"
                       onClick={() => startEdit(term.id, term.start, term.end)}
                     >
                       Edit
-                    </button>
+                    </Button>
                   )}
                 </td>
               </tr>

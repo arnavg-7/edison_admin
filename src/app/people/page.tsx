@@ -302,6 +302,12 @@ export default function PeopleSearchPage() {
                           >
                             View
                           </Button>
+                          {/* Solid accent, not secondary like View beside it —
+                              the two need to read as different actions, not a
+                              pair of identical gray buttons. (Button's base
+                              class reserves border-width for every color now,
+                              solid included, so this stays the same height as
+                              View instead of 2px shorter.) */}
                           <Button
                             size="xs"
                             href={href}

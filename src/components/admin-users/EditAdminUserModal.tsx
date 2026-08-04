@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { AdminRole, AdminScope, AdminUser } from "@/lib/data/adminUsers";
+import { accessSummary, type AdminRoleAssignment, type AdminScope, type AdminUser } from "@/lib/data/adminUsers";
 import { useAdminUsers } from "@/lib/admin-users-store";
 import { Modal } from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
@@ -20,14 +20,17 @@ import { ScopeSelect } from "./ScopeSelect";
  */
 export function EditAdminUserModal({ user, onClose }: { user: AdminUser; onClose: () => void }) {
   const { updateUser } = useAdminUsers();
-  const [roles, setRoles] = useState<AdminRole[]>(user.roles);
+  const [roles, setRoles] = useState<AdminRoleAssignment[]>(user.roles);
   const [scope, setScope] = useState<AdminScope>(user.scope);
   const [resetRequested, setResetRequested] = useState(false);
 
   const isInactive = user.status === "Inactive";
   const isPending = user.status === "Pending Invite";
 
+  const hasRoles = roles.length > 0;
+
   const save = () => {
+    if (!hasRoles) return;
     updateUser(user.id, { roles, scope });
     onClose();
   };
@@ -46,16 +49,26 @@ export function EditAdminUserModal({ user, onClose }: { user: AdminUser; onClose
     <Modal title={`Edit ${user.name}`} onClose={onClose}>
       <p className="sf-panel-note">{user.email}</p>
 
-      <RoleCheckboxes value={roles} onChange={setRoles} />
+      <RoleCheckboxes
+        value={roles}
+        onChange={setRoles}
+        error={hasRoles ? undefined : "Select at least one role"}
+      />
 
       <label className="sf-field">
         <span>Scope</span>
         <ScopeSelect value={scope} onChange={setScope} />
       </label>
 
+      {hasRoles ? (
+        <p className="sf-panel-note" aria-live="polite">
+          {accessSummary(user.name, roles)}
+        </p>
+      ) : null}
+
       {isPending ? (
         <p className="sf-card-hint">
-          This invite hasn&rsquo;t been accepted yet — activate/deactivate applies once they sign
+          This invite hasn&rsquo;t been accepted yet. Activate/deactivate applies once they sign
           in. Use Pending Invitations to resend or revoke it instead.
         </p>
       ) : (
@@ -75,7 +88,7 @@ export function EditAdminUserModal({ user, onClose }: { user: AdminUser; onClose
           Force password reset
         </button>
         {resetRequested ? (
-          <span className="sf-panel-note">Reset requested — they&rsquo;ll be asked to set a new password next sign-in.</span>
+          <span className="sf-panel-note">Reset requested. They&rsquo;ll be asked to set a new password next sign-in.</span>
         ) : null}
       </div>
 
@@ -84,7 +97,9 @@ export function EditAdminUserModal({ user, onClose }: { user: AdminUser; onClose
       </Link>
 
       <div className="list-editor-form-actions">
-        <Button onClick={save}>Save Changes</Button>
+        <Button onClick={save} disabled={!hasRoles}>
+          Save Changes
+        </Button>
         <button type="button" className="sf-btn sf-btn--quiet" onClick={onClose}>
           Cancel
         </button>

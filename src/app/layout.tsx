@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
-import { Inter, Figtree } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import "../styles/theme.css";
 import "../styles/pages/admin.css";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { ContextBar } from "@/components/shell/ContextBar";
+import { ScrollReset } from "@/components/shell/ScrollReset";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { UsersProvider } from "@/lib/users-store";
 import { AdminUsersProvider } from "@/lib/admin-users-store";
 import { cn } from "@/lib/utils";
 
-const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
-
-const inter = Inter({ subsets: ["latin"] });
+/** The app's only typeface. `--font-inter` feeds Tailwind's font-sans/font-mono
+ *  in globals.css, so utilities and plain CSS both resolve to Inter. */
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "Edison360 Admin",
@@ -26,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("font-sans", figtree.variable)}>
+    <html lang="en" className={cn("font-sans", inter.variable)}>
       <body className={inter.className}>
         <TooltipProvider>
           <UsersProvider>
@@ -40,6 +41,7 @@ export default function RootLayout({
                   <ContextBar />
                   <div id="main-content">{children}</div>
                 </SidebarInset>
+                <ScrollReset />
               </SidebarProvider>
             </AdminUsersProvider>
           </UsersProvider>

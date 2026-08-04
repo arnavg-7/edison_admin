@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { schools, gradeLabel } from "@/lib/data/schools";
 import { GradeGoalsEditor } from "@/components/academic-goals/GradeGoalsEditor";
 
@@ -25,22 +27,17 @@ export default async function GoalsForGradePage({
 
   return (
     <>
-      <nav className="sf-crumbs" aria-label="Breadcrumb">
-        <Link href="/academic-goals">Academic Goals</Link>
-        <span aria-hidden>/</span>
-        <Link href={`/academic-goals/${school.id}`}>{school.name}</Link>
-        <span aria-hidden>/</span>
-        <span>{gradeLabel(grade)}</span>
-      </nav>
-
       <div className="sf-scope-head">
-        <h2>
+        <h1 className="sf-page-title sf-page-title--with-back">
+          <Link
+            href={`/academic-goals/${school.id}`}
+            className="sf-back-btn"
+            aria-label={`Back to ${school.name} grades`}
+          >
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={2} />
+          </Link>
           {gradeLabel(grade)} · {school.name}
-        </h2>
-        <p className="sf-page-sub">
-          Set a goal for this grade's semester, and edit it here. Goals move to this grade's goal
-          history once their semester's end date has passed.
-        </p>
+        </h1>
       </div>
 
       <GradeGoalsEditor schoolId={school.id} grade={grade} />

@@ -1,16 +1,61 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { schools } from "@/lib/data/schools";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator
+} from "@/components/ui/breadcrumb";
+
 /**
  * Goal setting is the main admin function here, so the section is a
  * school → grade drill-down rather than sibling tabs (2026-08-03). Goal
  * templates and categories still exist as reference data, offered as
  * options when an admin sets a goal for a grade.
+ *
+ * The breadcrumb trail lives here, above every page's own heading, so each
+ * page only has to render its own title — not a title plus a repeated crumb.
+ * Mirrors the Skills & Development layout, which has the identical drill-down.
  */
 export default function AcademicGoalsLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const [, schoolId, grade] = pathname.split("/").filter(Boolean);
+  const school = schoolId ? schools.find((entry) => entry.id === schoolId) : undefined;
+
   return (
     <section className="sf-main">
-      <h1>Academic Goals</h1>
-      <p className="sf-page-sub">
-        Goals set for students, configured per grade. Pick a school, then a grade.
-      </p>
+      {school ? (
+        <Breadcrumb className="mb-5">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink render={<Link href="/academic-goals" />}>Academic Goals</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              {grade ? (
+                <BreadcrumbLink render={<Link href={`/academic-goals/${schoolId}`} />}>
+                  {school.name}
+                </BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage>{school.name}</BreadcrumbPage>
+              )}
+            </BreadcrumbItem>
+            {grade ? (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Grade {grade}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
+            ) : null}
+          </BreadcrumbList>
+        </Breadcrumb>
+      ) : null}
 
       {children}
     </section>

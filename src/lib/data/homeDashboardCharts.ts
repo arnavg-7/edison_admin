@@ -1,12 +1,11 @@
 /**
- * Fresh data for the Home screen's three rebuilt shadcn/Recharts cards
- * (Teacher-Student Ratio, Student Count By School, Students' Status).
- *
- * Deliberately separate from `dashboard.ts`'s teacherStudentRatio /
- * studentCountBySchool / studentsStatus — Reporting & Analytics still reads
- * those through the legacy StackRow/DonutSlice/FunnelStage shapes in
- * `sf/charts.tsx`, so this file owns its own shape instead of reworking a
- * type both screens depend on.
+ * Data for the shadcn/Recharts Teacher-Student Ratio and Student Count By
+ * School cards. Both Home (HomeMetrics.tsx) and the Reporting & Analytics
+ * catalog (app/reporting/page.tsx) render the same figures from here now —
+ * Reporting used to keep its own legacy StackRow/DonutSlice versions in
+ * dashboard.ts, which read as the same two report titles with different,
+ * uncorrelated numbers; that duplication has been retired in favor of this
+ * one shared source.
  *
  * TODO: same as the rest of dashboard.ts — display data, not a live
  * Salesforce/Genesis pull yet (brief open item 5).
@@ -59,12 +58,13 @@ export const studentCountBySchoolDistribution: DistributionSlice[] = [
   { label: "Unassigned", value: 12 }
 ];
 
-export const STUDENTS_STATUS_ASOF = "2026-07-17T12:12:00-04:00";
-
-/** Segments sum to numberOfStudents (1702). "Unassigned" = no status
-    determination yet, not a fourth outcome bucket. */
-export const studentsStatusDistribution: DistributionSlice[] = [
-  { label: "On Track", value: 1201 },
-  { label: "At Risk", value: 460 },
-  { label: "Unassigned", value: 41 }
-];
+/*
+ * A `studentsStatusDistribution` (On Track 1201 / At Risk 460 / Unassigned 41)
+ * lived here for Home's Students' Status donut. That card was removed from Home
+ * — see the note in components/home/HomeMetrics.tsx — so these exports went with
+ * it rather than lingering as dead data.
+ *
+ * The figures themselves are not lost: Reporting & Analytics renders the same
+ * breakdown from `studentsStatus` in dashboard.ts, which is where the full
+ * report catalog belongs.
+ */

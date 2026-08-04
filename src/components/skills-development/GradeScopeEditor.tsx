@@ -22,16 +22,8 @@ export function GradeScopeEditor({ scope }: { scope: GradeScope }) {
 
   return (
     <>
-      <nav className="sf-crumbs" aria-label="Breadcrumb">
-        <Link href="/skills-development">Skills &amp; Development</Link>
-        <span aria-hidden>/</span>
-        <Link href={`/skills-development/${scope.schoolId}`}>{scope.schoolName}</Link>
-        <span aria-hidden>/</span>
-        <span>{gradeLabel}</span>
-      </nav>
-
       <div className="sf-scope-head">
-        <h2 className="sf-page-title--with-back">
+        <h1 className="sf-page-title sf-page-title--with-back">
           <Link
             href={`/skills-development/${scope.schoolId}`}
             className="sf-back-btn"
@@ -40,20 +32,21 @@ export function GradeScopeEditor({ scope }: { scope: GradeScope }) {
             <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={2} />
           </Link>
           {gradeLabel} · {scope.schoolName}
-        </h2>
-        <p className="sf-page-sub">
-          Edits apply to this grade only. Every other grade keeps its own areas and skills.
-        </p>
+        </h1>
       </div>
 
       {!scope.inScope ? (
         <p className="sf-scope-flag">
-          Outside the committed HS-only scope — nothing has been configured for this grade. The
+          Outside the committed HS-only scope. Nothing has been configured for this grade. The
           editors below work, but adding content here extends the agreed scope.
         </p>
       ) : null}
 
-      <Tabs value={tab} onValueChange={(value) => setTab(value as (typeof TABS)[number])}>
+      <Tabs
+        value={tab}
+        onValueChange={(value) => setTab(value as (typeof TABS)[number])}
+        className="sf-section-tabs"
+      >
         <TabsList variant="line" aria-label="Configuration view">
           {TABS.map((label) => (
             <TabsTrigger key={label} value={label}>

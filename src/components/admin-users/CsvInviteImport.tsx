@@ -4,8 +4,11 @@ import { useState } from "react";
 import { schools } from "@/lib/data/schools";
 import {
   ADMIN_ROLE_LABELS,
+  FIXED_ROLE_PERMISSION,
+  defaultRolePermission,
   newAdminUserId,
   type AdminRole,
+  type AdminRoleAssignment,
   type AdminUser
 } from "@/lib/data/adminUsers";
 import { ADMIN_ROLE_LABEL } from "@/lib/nav";
@@ -22,8 +25,27 @@ const ROLE_KEYS: Record<string, AdminRole> = {
 
 const SAMPLE_CSV =
   "name,email,roles,scope\n" +
-  'Dana Whitfield,dwhitfield@edison.example.org,"leadership;portal_administrator",Edison High School\n' +
-  "Sam Rivera,srivera@edison.example.org,it_administrator,district\n";
+  'Dana Whitfield,dwhitfield@edison.example.org,"leadership;portal_administrator:edit",Edison High School\n' +
+  "Sam Rivera,srivera@edison.example.org,it_administrator:view,district\n";
+
+/**
+ * `it_administrator:view` — the optional `:view`/`:edit` suffix sets that
+ * role's permission level. Omitted, it falls back to the same default the
+ * manual form uses, so pre-permission CSVs still import.
+ */
+function parseRoleEntry(raw: string): AdminRoleAssignment | null {
+  const [roleRaw, levelRaw] = raw.split(":").map((part) => part.trim());
+  const role = ROLE_KEYS[roleRaw];
+  if (!role) return null;
+
+  const fixed = FIXED_ROLE_PERMISSION[role];
+  if (fixed) return { role, permission: fixed };
+
+  if (!levelRaw) return { role, permission: defaultRolePermission(role) };
+  if (levelRaw === "view" || levelRaw === "view only") return { role, permission: "view" };
+  if (levelRaw === "edit" || levelRaw === "can edit") return { role, permission: "edit" };
+  return null;
+}
 
 type ParsedRow = { line: number; user?: AdminUser; error?: string };
 
@@ -66,12 +88,12 @@ function toAdminUser(row: Record<string, string>, line: number): ParsedRow {
     .split(/[;|]/)
     .map((entry) => entry.trim().toLowerCase())
     .filter(Boolean)
-    .map((entry) => ROLE_KEYS[entry]);
+    .map(parseRoleEntry);
 
   if (roles.length === 0 || roles.some((role) => !role)) {
     return {
       line,
-      error: `roles must be one or more of ${Object.values(ADMIN_ROLE_LABELS).join(", ")}, separated by ";"`
+      error: `roles must be one or more of ${Object.values(ADMIN_ROLE_LABELS).join(", ")}, separated by ";", each optionally suffixed ":view" or ":edit"`
     };
   }
 
@@ -88,7 +110,7 @@ function toAdminUser(row: Record<string, string>, line: number): ParsedRow {
       id: `${newAdminUserId(name)}-${line}`,
       name,
       email,
-      roles,
+      roles: roles as AdminRoleAssignment[],
       scope,
       status: "Pending Invite",
       lastLogin: null,
@@ -115,11 +137,9 @@ function downloadSample() {
  */
 export function CsvInviteImport({
   onBack,
-  onCancel,
   onImport
 }: {
   onBack: () => void;
-  onCancel: () => void;
   onImport: (users: AdminUser[]) => void;
 }) {
   const [rows, setRows] = useState<ParsedRow[] | null>(null);
@@ -140,7 +160,9 @@ export function CsvInviteImport({
       <p className="sf-panel-note">
         Columns: <code>name, email, roles, scope</code>. Roles are one or more of{" "}
         <code>leadership</code>, <code>portal_administrator</code>, <code>it_administrator</code>,
-        separated by <code>;</code>. Scope is <code>district</code> or an exact school name.
+        separated by <code>;</code>. Add <code>:view</code> or <code>:edit</code> to a role to set
+        its permission level (defaults to edit; Leadership is always view only). Scope is{" "}
+        <code>district</code> or an exact school name, and applies to every role on the account.
       </p>
 
       <button type="button" className="sf-inline-btn" onClick={downloadSample}>
@@ -162,7 +184,7 @@ export function CsvInviteImport({
       {rows ? (
         <div>
           <p className="sf-panel-note">
-            {fileName} — {validUsers.length} ready to invite
+            {fileName}: {validUsers.length} ready to invite
             {errorCount > 0 ? `, ${errorCount} skipped` : ""}
           </p>
           {rows.length > 0 ? (
@@ -173,7 +195,7 @@ export function CsvInviteImport({
                     {row.error ? "Skipped" : "Ready"}
                   </StatusBadge>
                   <span>
-                    Line {row.line}: {row.user ? `${row.user.name} — ${row.user.email}` : row.error}
+                    Line {row.line}: {row.user ? `${row.user.name} · ${row.user.email}` : row.error}
                   </span>
                 </li>
               ))}
@@ -189,9 +211,6 @@ export function CsvInviteImport({
         </Button>
         <button type="button" className="sf-btn" onClick={onBack}>
           Back
-        </button>
-        <button type="button" className="sf-btn sf-btn--quiet" onClick={onCancel}>
-          Cancel
         </button>
       </div>
     </>

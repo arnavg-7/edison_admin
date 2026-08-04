@@ -45,7 +45,6 @@ export function InviteAdminUserModal({ onClose }: { onClose: () => void }) {
       ) : step === "manual" ? (
         <ManualInviteForm
           onBack={() => setStep("choice")}
-          onCancel={onClose}
           onInvite={(user) => {
             addUser(user);
             onClose();
@@ -54,7 +53,6 @@ export function InviteAdminUserModal({ onClose }: { onClose: () => void }) {
       ) : (
         <CsvInviteImport
           onBack={() => setStep("choice")}
-          onCancel={onClose}
           onImport={(users) => {
             addUsers(users);
             onClose();

@@ -89,21 +89,23 @@ export default function SchoolPickerPage() {
   });
 
   return (
-    <div className="sf-panel">
-      <div className="sf-panel-head">
-        <h2>Schools</h2>
-        <span className="sf-panel-note">Expand a school, or open it to pick a grade</span>
-      </div>
-
-      <ExpandableSchoolTable
-        head={["School", "Level", "Grades", "Configured", "Status"]}
-        rows={rows}
-      />
-
-      <p className="sf-panel-foot">
-        Elementary and middle school are outside the committed scope (brief §8 item 6), so their
-        grades open empty. That is a scope decision, not missing data.
+    <>
+      <h1 className="sf-page-title">Skills &amp; Development</h1>
+      <p className="sf-page-sub">
+        Development areas and skills profiles, configured per grade. Pick a school, then a grade.
       </p>
-    </div>
+
+      <div className="sf-panel">
+        <div className="sf-panel-head">
+          <h2>Schools</h2>
+          <span className="sf-panel-note">Expand a school, or open it to pick a grade</span>
+        </div>
+
+        <ExpandableSchoolTable
+          head={["School", "Level", "Grades", "Configured", "Status"]}
+          rows={rows}
+        />
+      </div>
+    </>
   );
 }

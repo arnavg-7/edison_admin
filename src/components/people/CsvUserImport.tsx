@@ -168,7 +168,7 @@ export function CsvUserImport({
       {rows ? (
         <div>
           <p className="sf-panel-note">
-            {fileName} — {validPeople.length} ready to add
+            {fileName}: {validPeople.length} ready to add
             {errorCount > 0 ? `, ${errorCount} skipped` : ""}
           </p>
           {rows.length > 0 ? (
@@ -179,7 +179,7 @@ export function CsvUserImport({
                     {row.error ? "Skipped" : "Ready"}
                   </StatusBadge>
                   <span>
-                    Line {row.line}: {row.person ? `${row.person.name} — ${row.person.school}` : row.error}
+                    Line {row.line}: {row.person ? `${row.person.name} · ${row.person.school}` : row.error}
                   </span>
                 </li>
               ))}

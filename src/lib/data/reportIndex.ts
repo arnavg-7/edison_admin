@@ -20,14 +20,14 @@ export const REPORT_ENTRIES: ReportEntry[] = [
     id: "metrics",
     label: "Metrics",
     href: "/reporting",
-    description: "The full Salesforce-sourced metrics catalog.",
-    highlight: "15 metrics"
+    description: "District and faculty-level metrics, Salesforce-sourced.",
+    highlight: "6 metrics"
   },
   {
     id: "student-progress",
     label: "Student Progress",
     href: "/reporting/student-progress",
-    description: "Goal and attendance rollups per cohort.",
+    description: "Student counts, status and attendance, plus goal rollups per cohort.",
     highlight: "By cohort"
   },
   {

@@ -252,7 +252,7 @@ export const people: Person[] = [
       { label: "Home language", value: "English" }
     ],
     academic: [
-      { label: "Primary academic program", value: "Grade 10 — General" },
+      { label: "Primary academic program", value: "Grade 10, General" },
       { label: "Enrolled since", value: "02 Sep 2024" },
       { label: "Homeroom", value: "Awaiting Genesis data" },
       { label: "Counselor", value: "K. Blekeski" },
@@ -412,7 +412,7 @@ export const people: Person[] = [
       { label: "Home language", value: "English" }
     ],
     academic: [
-      { label: "Primary academic program", value: "Grade 9 — General" },
+      { label: "Primary academic program", value: "Grade 9, General" },
       { label: "Enrolled since", value: "03 Sep 2025" },
       { label: "Homeroom", value: "Awaiting Genesis data" },
       { label: "Counselor", value: "A. Chen" },
@@ -518,12 +518,12 @@ export const people: Person[] = [
       { label: "Home language", value: "Hindi" }
     ],
     academic: [
-      { label: "Primary academic program", value: "Grade 8 — General" },
+      { label: "Primary academic program", value: "Grade 8, General" },
       { label: "Enrolled since", value: "05 Sep 2023" },
       { label: "Homeroom", value: "Awaiting Genesis data" },
       { label: "Counselor", value: "P. Nair" },
       { label: "Current GPA", value: "2.8" },
-      { label: "Credits earned", value: "n/a — middle school" }
+      { label: "Credits earned", value: "n/a (middle school)" }
     ],
     grades: [
       { subject: "Mathematics", teacher: "P. Nair", grade: "C+", percent: 78, assignmentsComplete: 12, assignmentsSet: 18 },
@@ -605,7 +605,7 @@ export const people: Person[] = [
       { label: "Home language", value: "Hindi" }
     ],
     academic: [
-      { label: "Primary academic program", value: "Grade 10 — General" },
+      { label: "Primary academic program", value: "Grade 10, General" },
       { label: "Homeroom", value: "Awaiting Genesis data" },
       { label: "Current GPA", value: "3.4" }
     ],
@@ -645,7 +645,7 @@ export const people: Person[] = [
       { label: "Home language", value: "Khasi" }
     ],
     academic: [
-      { label: "Primary academic program", value: "Grade 9 — General" },
+      { label: "Primary academic program", value: "Grade 9, General" },
       { label: "Homeroom", value: "Awaiting Genesis data" },
       { label: "Current GPA", value: "3.6" }
     ],
@@ -682,7 +682,7 @@ export const people: Person[] = [
       { label: "Home language", value: "English" }
     ],
     academic: [
-      { label: "Primary academic program", value: "Grade 8 — General" },
+      { label: "Primary academic program", value: "Grade 8, General" },
       { label: "Homeroom", value: "Awaiting Genesis data" },
       { label: "Current GPA", value: "3.1" }
     ],
@@ -722,7 +722,7 @@ export const people: Person[] = [
       { label: "Home language", value: "English" }
     ],
     academic: [
-      { label: "Primary academic program", value: "Grade 10 — General" },
+      { label: "Primary academic program", value: "Grade 10, General" },
       { label: "Homeroom", value: "Awaiting Genesis data" },
       { label: "Current GPA", value: "3.5" }
     ],
@@ -829,8 +829,8 @@ export const people: Person[] = [
       { date: "14 Jul 2026", submitted: 2, expected: 4, missing: ["Calculus · Section A", "Algebra I · Section B"] }
     ],
     alerts: [
-      { id: "fa-1", rule: "Attendance below 80% — Michael Andrew (Algebra II · Section C)", raised: "2026-07-15T06:00:00-04:00", status: "Open", raisedBy: "System", overdue: true },
-      { id: "fa-2", rule: "Grade drop of one letter — Michael Andrew", raised: "2026-06-05T06:00:00-04:00", status: "Acknowledged", raisedBy: "K. Blekeski" }
+      { id: "fa-1", rule: "Attendance below 80%: Michael Andrew (Algebra II · Section C)", raised: "2026-07-15T06:00:00-04:00", status: "Open", raisedBy: "System", overdue: true },
+      { id: "fa-2", rule: "Grade drop of one letter: Michael Andrew", raised: "2026-06-05T06:00:00-04:00", status: "Acknowledged", raisedBy: "K. Blekeski" }
     ],
   },
   {
@@ -871,7 +871,7 @@ export const people: Person[] = [
       { date: "15 Jul 2026", submitted: 3, expected: 3, missing: [] }
     ],
     alerts: [
-      { id: "fa-3", rule: "Two or more missing assignments — Nick Johnson (ELA)", raised: "2026-07-16T06:00:00-04:00", status: "Acknowledged", raisedBy: "A. Chen" }
+      { id: "fa-3", rule: "Two or more missing assignments: Nick Johnson (ELA)", raised: "2026-07-16T06:00:00-04:00", status: "Acknowledged", raisedBy: "A. Chen" }
     ],
   },
   {
@@ -914,8 +914,8 @@ export const people: Person[] = [
       { date: "15 Jul 2026", submitted: 4, expected: 4, missing: [] }
     ],
     alerts: [
-      { id: "fa-4", rule: "Attendance below 80% — Biology 2 · Class 4", raised: "2026-07-15T06:00:00-04:00", status: "Open", raisedBy: "System", overdue: true },
-      { id: "fa-5", rule: "Goal checkpoint missed — R.K. Sharma", raised: "2026-07-15T06:00:00-04:00", status: "Open", raisedBy: "System" }
+      { id: "fa-4", rule: "Attendance below 80%: Biology 2 · Class 4", raised: "2026-07-15T06:00:00-04:00", status: "Open", raisedBy: "System", overdue: true },
+      { id: "fa-5", rule: "Goal checkpoint missed: R.K. Sharma", raised: "2026-07-15T06:00:00-04:00", status: "Open", raisedBy: "System" }
     ],
   },
   {
@@ -931,7 +931,7 @@ export const people: Person[] = [
       { label: "Staff ID", value: "123457044" },
       { label: "Email", value: "dosei@edison.example.org" },
       { label: "Room", value: "RM-115" },
-      { label: "Employment type", value: "Full time — on leave" }
+      { label: "Employment type", value: "Full time (on leave)" }
     ],
     academic: [
       { label: "Department", value: "Computer Science" },

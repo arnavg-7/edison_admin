@@ -54,6 +54,15 @@ export function DevelopmentAreasEditor({
 
   const resetAreaDraft = () => setAreaDraft({ title: "", tone: "blue", icon: "check" });
 
+  /** Nothing configured and not already adding — the empty state owns the CTA. */
+  const isEmpty = areas.length === 0 && !addingArea;
+
+  const startAddArea = () => {
+    resetAreaDraft();
+    setEditingAreaId(null);
+    setAddingArea(true);
+  };
+
   const saveNewArea = () => {
     if (!areaDraft.title.trim()) return;
     setAreas((current) => [
@@ -208,26 +217,23 @@ export function DevelopmentAreasEditor({
         </span>
       </div>
 
-      <div className="list-editor-head">
-        <Button
-          onClick={() => {
-            resetAreaDraft();
-            setEditingAreaId(null);
-            setAddingArea(true);
-          }}
-        >
-          Add area
-        </Button>
-      </div>
+      {/* While empty, the only call to action lives inside the empty state, so
+          there aren't two "Add area" buttons competing on one screen. */}
+      {isEmpty ? null : (
+        <div className="list-editor-head">
+          <Button onClick={startAddArea}>Add area</Button>
+        </div>
+      )}
 
       {addingArea
         ? areaForm(saveNewArea, () => setAddingArea(false), "Create area")
         : null}
 
-      {areas.length === 0 && !addingArea ? (
+      {isEmpty ? (
         <EmptyState
           title="No development areas yet"
           message="Add an area such as Strengths, then list the skills that belong under it."
+          action={<Button onClick={startAddArea}>Add area</Button>}
         />
       ) : (
         <div className="area-grid">

@@ -1,7 +1,11 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { adminUsers as seededAdminUsers, type AdminUser } from "@/lib/data/adminUsers";
+import {
+  adminUsers as seededAdminUsers,
+  normalizeRoleAssignments,
+  type AdminUser
+} from "@/lib/data/adminUsers";
 
 /**
  * Admin-account store, separate from `users-store` (the Genesis-synced
@@ -30,7 +34,14 @@ function readStorage(): PersistedState {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     const users = raw ? (JSON.parse(raw) as AdminUser[]) : seededAdminUsers;
     const require2fa = window.localStorage.getItem(REQUIRE_2FA_KEY) === "true";
-    return { adminUsers: Array.isArray(users) ? users : seededAdminUsers, require2fa };
+    if (!Array.isArray(users)) return { adminUsers: seededAdminUsers, require2fa };
+
+    // Accounts stored before roles carried a permission level are upgraded on
+    // read rather than dropped, so an existing session keeps its users.
+    return {
+      adminUsers: users.map((user) => ({ ...user, roles: normalizeRoleAssignments(user.roles) })),
+      require2fa
+    };
   } catch {
     // Corrupt or unavailable storage shouldn't take the page down — start clean.
     return { adminUsers: seededAdminUsers, require2fa: false };

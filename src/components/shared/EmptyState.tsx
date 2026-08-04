@@ -34,7 +34,7 @@ export function AwaitingGenesisData({
   return (
     <EmptyState
       tone="gap"
-      title={`Awaiting data from Genesis — ${subject.toLowerCase()}`}
+      title={`Awaiting data from Genesis: ${subject.toLowerCase()}`}
       message={
         detail ??
         "Genesis has homeroom courses for 1 of 5 schools and no homeroom enrollments in any school. This screen will populate once the district's Genesis export includes homeroom courses and enrollments."

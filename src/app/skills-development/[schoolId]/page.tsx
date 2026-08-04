@@ -27,23 +27,17 @@ export default async function GradePickerPage({
 
   return (
     <>
-      <nav className="sf-crumbs" aria-label="Breadcrumb">
-        <Link href="/skills-development">Skills &amp; Development</Link>
-        <span aria-hidden>/</span>
-        <span>{school.name}</span>
-      </nav>
+      <h1 className="sf-page-title sf-page-title--with-back">
+        <Link href="/skills-development" className="sf-back-btn" aria-label="Back to Schools">
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={2} />
+        </Link>
+        {school.name}
+      </h1>
 
       <div className="sf-panel">
         <div className="sf-panel-head">
-          <h2 className="sf-page-title--with-back">
-            <Link href="/skills-development" className="sf-back-btn" aria-label="Back to Schools">
-              <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={2} />
-            </Link>
-            {school.name}
-          </h2>
-          <span className="sf-panel-note">
-            Pick a grade to view and edit its development areas and skills profile
-          </span>
+          <h2>Grades</h2>
+          <span className="sf-panel-note">Pick a grade to configure</span>
         </div>
 
         <div className="sf-table-wrap">
@@ -92,7 +86,7 @@ export default async function GradePickerPage({
         {!inScope ? (
           <p className="sf-panel-foot">
             {school.name} is outside the committed HS-only scope, so no content has been seeded for
-            its grades. The editors still work — anything added here is a scope extension.
+            its grades. The editors still work, but anything added here is a scope extension.
           </p>
         ) : null}
       </div>

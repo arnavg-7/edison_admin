@@ -20,7 +20,7 @@ const faculty = taggableFaculty();
 
 const studentOptions: ComboOption[] = students.map((student) => ({
   value: student.id,
-  label: `${student.name} — ${student.school}`
+  label: `${student.name} · ${student.school}`
 }));
 
 const categoryOptions: ComboOption[] = CATEGORIES.map((option) => ({ value: option, label: option }));

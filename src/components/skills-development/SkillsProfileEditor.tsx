@@ -41,6 +41,15 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
   const [editingSub, setEditingSub] = useState<{ groupId: string; subId: string } | null>(null);
   const [subDraft, setSubDraft] = useState<SubSkillDraft>(emptyDraft);
 
+  /** Nothing configured and not already adding — the empty state owns the CTA. */
+  const isEmpty = groups.length === 0 && !addingGroup;
+
+  const startAddGroup = () => {
+    setGroupTitle("");
+    setEditingGroupId(null);
+    setAddingGroup(true);
+  };
+
   const saveNewGroup = () => {
     if (!groupTitle.trim()) return;
     setGroups((current) => [
@@ -195,17 +204,13 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
         ))}
       </div>
 
-      <div className="list-editor-head">
-        <Button
-          onClick={() => {
-            setGroupTitle("");
-            setEditingGroupId(null);
-            setAddingGroup(true);
-          }}
-        >
-          Add skill
-        </Button>
-      </div>
+      {/* While empty, the only call to action lives inside the empty state, so
+          there aren't two "Add skill" buttons competing on one screen. */}
+      {isEmpty ? null : (
+        <div className="list-editor-head">
+          <Button onClick={startAddGroup}>Add skill</Button>
+        </div>
+      )}
 
       {addingGroup ? (
         <div className="area-form">
@@ -232,10 +237,11 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
         </div>
       ) : null}
 
-      {groups.length === 0 && !addingGroup ? (
+      {isEmpty ? (
         <EmptyState
           title="No skills configured yet"
           message="Add a skill such as Resilience, then add the sub-skills rated under it."
+          action={<Button onClick={startAddGroup}>Add skill</Button>}
         />
       ) : (
         <div className="skill-group-grid">

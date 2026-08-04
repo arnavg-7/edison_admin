@@ -74,7 +74,7 @@ export default function NeedsAttentionPage() {
         configuration still blocking rollout. Worst first.
       </p>
 
-      <div className="sf-filter-bar">
+      <div className="sf-filter-bar sf-filter-bar--flush sf-filter-bar--top-spaced">
         <label className="sf-field">
           <span>Category</span>
           <Combobox
@@ -107,7 +107,7 @@ export default function NeedsAttentionPage() {
         <h2>At-risk rules are placeholders</h2>
         <p>
           The thresholds below are invented so the queue can be built and reviewed. They are not
-          agreed logic — confirm the real rules before anyone acts on an at-risk flag.
+          agreed logic. Confirm the real rules before anyone acts on an at-risk flag.
         </p>
         <ul className="sf-rule-list">
           {AT_RISK_PLACEHOLDER_RULES.map((rule) => (

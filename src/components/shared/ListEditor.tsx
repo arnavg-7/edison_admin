@@ -158,14 +158,18 @@ export function ListEditor({
             ) : (
               <div className="list-editor-item" key={item.id}>
                 <div className="list-editor-item-main">
-                  <div className="list-editor-item-title">{item.title}</div>
+                  <div className="list-editor-item-title">
+                    {item.title}
+                    {/* Status sits with the title, not with Edit/Delete: it
+                        describes the item rather than being something to press. */}
+                    {item.status ? (
+                      <StatusBadge tone={item.status.tone}>{item.status.label}</StatusBadge>
+                    ) : null}
+                  </div>
                   <div className="list-editor-item-detail">{item.detail}</div>
                   {item.meta ? <div className="list-editor-item-meta">{item.meta}</div> : null}
                 </div>
                 <div className="list-editor-item-actions">
-                  {item.status ? (
-                    <StatusBadge tone={item.status.tone}>{item.status.label}</StatusBadge>
-                  ) : null}
                   <button type="button" className="sf-btn sf-btn--sm" onClick={() => startEdit(item)}>
                     Edit
                   </button>

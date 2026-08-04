@@ -1,208 +1,104 @@
 "use client";
 
-import { MetricCard } from "@/components/sf/MetricCard";
-import { CoreMetricCard } from "@/components/sf/CoreMetricCard";
-import { Donut, Funnel, GroupedBars, StackedBars, StatValue } from "@/components/sf/charts";
+import { StatCard } from "@/components/home/charts/StatCard";
+import { TrendStatCard } from "@/components/home/charts/TrendStatCard";
+import { RatioBarCard } from "@/components/home/charts/RatioBarCard";
+import { BarChartCard } from "@/components/reporting/BarChartCard";
 import { REPORTS } from "@/lib/data/salesforce";
+import { assignmentSubmissions, numberOfStudents, totalFaculty } from "@/lib/data/dashboard";
 import {
-  ATTENDANCE_SERIES,
-  GRADE_SERIES,
-  RATIO_SERIES,
-  STATUS_SERIES,
-  assignmentSubmissions,
-  numberOfStudents,
-  studentAttendance,
-  studentAttendanceBySchool,
-  studentCountBySchool,
-  studentsByGrade,
-  studentsStatus,
-  teacherStudentRatio,
-  totalFaculty
-} from "@/lib/data/dashboard";
-import type { BarGroup } from "@/components/sf/charts";
+  TEACHER_STUDENT_RATIO_ASOF,
+  TEACHER_STUDENT_RATIO_TARGET,
+  teacherStudentRatioBySchool
+} from "@/lib/data/homeDashboardCharts";
 
 /**
- * The full metrics catalog. Every card is one Salesforce report with its own
- * refresh time, so a report lagging behind shows a stale stamp instead of
- * quietly presenting old numbers as current.
+ * The metrics catalog. Every card is one Salesforce report with its own refresh
+ * time, so a report lagging behind shows a stale stamp instead of quietly
+ * presenting old numbers as current.
+ *
+ * Cards run on the same shadcn/Bklit chart components Home's cards do
+ * (StatCard, TrendStatCard, RatioBarCard) rather than the pre-shadcn
+ * MetricCard/CoreMetricCard shell, so both screens look like one system.
+ *
+ * Number of Students stays here next to Total Faculty — the two enrollment/
+ * staffing headline figures belong together, same as Home. The distribution
+ * cards that explain the student figure (Student Count By School, Students'
+ * Status, Students By Grade, Student Attendance By School, Student
+ * Attendance) still live on Student Progress, next to the cohort rollups
+ * they break that figure down by.
  */
 export default function MetricsCatalogPage() {
-  /**
-   * Individual-level attendance. v2 reverses v1's class-level ceiling, so each
-   * contact links through to their Student 360 profile.
-   */
-  const attendanceGroups: BarGroup[] = studentAttendance.map((row) => ({
-    label: row.contact,
-    href: `/people/student/${row.contactId}`,
-    rows: [
-      { label: "Present", value: row.present, colorIndex: 0 },
-      { label: "Absent", value: row.absent, colorIndex: 1 },
-      ...(row.halfDay > 0
-        ? [{ label: "Attended half a day", value: row.halfDay, colorIndex: 2 }]
-        : [])
-    ]
-  }));
-
   return (
     <div className="sf-card-grid">
-      <CoreMetricCard
+      <TrendStatCard
         title="Attendance Rate"
-        report={REPORTS.attendanceRate.name}
-        asOf={REPORTS.attendanceRate.asOf}
         value="92.4%"
         delta="0.6 pts vs. last week"
         direction="down"
         series={[93.4, 92.8, 93.1, 92.2, 92.9, 92.5, 92.4]}
+        asOf={REPORTS.attendanceRate.asOf}
+        className="sf-col-4"
       />
-      <CoreMetricCard
+      <TrendStatCard
         title="Goal Completion %"
-        report={REPORTS.goalCompletion.name}
-        asOf={REPORTS.goalCompletion.asOf}
         value="68.1%"
         delta="2.3 pts vs. last week"
         direction="up"
         series={[63.2, 64.1, 65.0, 65.4, 66.8, 67.2, 68.1]}
+        asOf={REPORTS.goalCompletion.asOf}
+        className="sf-col-4"
       />
-      <CoreMetricCard
+      <TrendStatCard
         title="Assignment Completion Rate"
-        report={REPORTS.assignmentCompletion.name}
-        asOf={REPORTS.assignmentCompletion.asOf}
         value="84.7%"
         delta="1.1 pts vs. last week"
         direction="up"
         series={[82.1, 82.9, 83.4, 83.1, 84.0, 84.4, 84.7]}
+        asOf={REPORTS.assignmentCompletion.asOf}
+        className="sf-col-4"
       />
 
-      {/*
-       * col-6 pairs (not col-3 + col-3 + col-6) to match the same cards' sizing
-       * on Home. col-3 remaps to span 4 between 900-1280px while col-6 stays
-       * put, so a col-3 + col-3 + col-6 row overflowed the 12-column grid at
-       * that width and wrapped into two half-empty rows. col-6 pairs, plus
-       * Students' Status standalone at col-12 like its Home counterpart, hold
-       * at every breakpoint above the single-column mobile layout.
-       */}
-      <MetricCard
+      <StatCard
         title="Number of Students"
-        report={REPORTS.numberOfStudents.name}
+        value={numberOfStudents}
         asOf={REPORTS.numberOfStudents.asOf}
-        span="sf-col-6"
-      >
-        <StatValue value={numberOfStudents} label="Number of Students" />
-      </MetricCard>
+        className="sf-col-6"
+      />
 
-      <MetricCard
+      <StatCard
         title="Total Faculty"
-        report={REPORTS.totalFaculty.name}
+        value={totalFaculty}
         asOf={REPORTS.totalFaculty.asOf}
-        span="sf-col-6"
-      >
-        <StatValue value={totalFaculty} label="Total Faculty" />
-      </MetricCard>
+        className="sf-col-6"
+      />
 
-      <MetricCard
+      {/* The two charts share one row rather than stacking: both are
+          per-category breakdowns, and side by side they fit on screen together
+          instead of the second needing a scroll to reach. Both fall back to
+          full width below the grid's single-column breakpoint.
+
+          Both are horizontal bar charts. Column mode stacked five school names
+          into one strip under the plot and drew them overlapping into unreadable
+          fragments; rows give every category its own line, and a growing school
+          list scrolls instead of squeezing its bars thinner. */}
+      <RatioBarCard
         title="Teacher-Student Ratio"
-        report={REPORTS.teacherStudentRatio.name}
-        asOf={REPORTS.teacherStudentRatio.asOf}
-        span="sf-col-6"
-      >
-        <StackedBars
-          rows={teacherStudentRatio}
-          axisTitle="Record Count (%)"
-          legendTitle="Program Enrollment: Record Type"
-          series={RATIO_SERIES}
-        />
-      </MetricCard>
+        schools={teacherStudentRatioBySchool}
+        asOf={TEACHER_STUDENT_RATIO_ASOF}
+        target={TEACHER_STUDENT_RATIO_TARGET}
+        className="sf-col-6"
+      />
 
-      <MetricCard
-        title="Student Count By School"
-        report={REPORTS.studentCountBySchool.name}
-        asOf={REPORTS.studentCountBySchool.asOf}
-        span="sf-col-6"
-      >
-        <Donut
-          slices={studentCountBySchool}
-          legendTitle="Account Name"
-          caption="Record Count"
-          total={numberOfStudents}
-        />
-      </MetricCard>
-
-      <MetricCard
-        title="Students' Status"
-        report={REPORTS.studentsStatus.name}
-        asOf={REPORTS.studentsStatus.asOf}
-        span="sf-col-12"
-      >
-        <Funnel stages={studentsStatus} legendTitle="Status" total={numberOfStudents} />
-      </MetricCard>
-
-      {/*
-       * The four detail bar charts read coarse-to-fine: by grade, by school,
-       * then individual students, so the drill-down order matches how an
-       * admin actually narrows in. All four share sf-col-12 — Assignment
-       * Submissions used to be the odd sf-col-6 left dangling alone in the
-       * last row; matching its siblings' width closes that gap and reads as
-       * one consistent section instead of a mismatched trailing card.
-       */}
-      <MetricCard
-        title="Students By Grade"
-        report={REPORTS.studentsByGrade.name}
-        asOf={REPORTS.studentsByGrade.asOf}
-        span="sf-col-12"
-      >
-        <GroupedBars
-          groups={studentsByGrade}
-          axisTitle="Record Count"
-          legendTitle="Primary Business Organization"
-          series={GRADE_SERIES}
-        />
-      </MetricCard>
-
-      <MetricCard
-        title="Student Attendance By School"
-        report={REPORTS.studentAttendanceBySchool.name}
-        asOf={REPORTS.studentAttendanceBySchool.asOf}
-        span="sf-col-12"
-      >
-        <GroupedBars
-          groups={studentAttendanceBySchool}
-          axisTitle="Record Count"
-          legendTitle="Attendance Status"
-          series={ATTENDANCE_SERIES}
-        />
-      </MetricCard>
-
-      <MetricCard
-        title="Student Attendance"
-        report={REPORTS.studentAttendance.name}
-        asOf={REPORTS.studentAttendance.asOf}
-        span="sf-col-12"
-      >
-        <GroupedBars
-          groups={attendanceGroups}
-          axisTitle="Record Count"
-          legendTitle="Attendance Status"
-          series={ATTENDANCE_SERIES}
-        />
-        <p className="sf-card-hint">
-          Individual level — select a name to open their Student 360 profile.
-        </p>
-      </MetricCard>
-
-      <MetricCard
+      <BarChartCard
         title="Assignment Submissions"
-        report={REPORTS.assignmentSubmissions.name}
+        groups={assignmentSubmissions}
+        series={[{ label: "Submissions", colorIndex: 0 }]}
+        labelWidth={110}
         asOf={REPORTS.assignmentSubmissions.asOf}
-        span="sf-col-12"
-      >
-        <GroupedBars
-          groups={assignmentSubmissions}
-          axisTitle="Assignment Submission - Record Count"
-          legendTitle="Contact: Primary Academic Program"
-          series={[{ label: "Submissions", colorIndex: 0 }]}
-          groupLabelIsCategory
-        />
-      </MetricCard>
+        className="sf-col-6"
+      />
+
     </div>
   );
 }

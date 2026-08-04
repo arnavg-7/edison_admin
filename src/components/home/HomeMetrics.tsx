@@ -5,21 +5,32 @@ import { TrendStatCard } from "@/components/home/charts/TrendStatCard";
 import { REPORTS } from "@/lib/data/salesforce";
 import { coreMetrics, numberOfStudents, totalFaculty } from "@/lib/data/dashboard";
 import {
-  STUDENTS_STATUS_ASOF,
   STUDENT_COUNT_BY_SCHOOL_ASOF,
   TEACHER_STUDENT_RATIO_ASOF,
   TEACHER_STUDENT_RATIO_TARGET,
   studentCountBySchoolDistribution,
-  studentsStatusDistribution,
   teacherStudentRatioBySchool
 } from "@/lib/data/homeDashboardCharts";
 
 /**
  * Enrollment/staffing, distribution and academic performance grouped into
- * three rows instead of one flat interleaved grid, so a Super Admin's eye
- * lands on one theme at a time during the morning scan rather than jumping
- * between unrelated figures. The two distribution donuts sit side by side at
- * equal width — a ring doesn't need the full row a table or list would.
+ * rows instead of one flat interleaved grid, so a Super Admin's eye lands on
+ * one theme at a time during the morning scan rather than jumping between
+ * unrelated figures.
+ *
+ * A "Students' Status" donut (On Track / At Risk / Unassigned) used to sit
+ * beside Student Count By School and was removed, for three reasons:
+ *
+ *  1. It was already on Reporting & Analytics with identical figures, and Home
+ *     is the curated set — the full catalog lives there (PRODUCT.md).
+ *  2. Both donuts totalled 1,702 and both carried a slice labelled
+ *     "Unassigned", worth 41 here and 12 there. Same label, same population,
+ *     adjacent cards, different numbers — it read as a contradiction rather
+ *     than as the two different things it actually meant (no status vs no
+ *     school).
+ *  3. Its "At Risk · 460" had nowhere to go. Needs Attention is Home's
+ *     actionable surface and it lists individual flagged students, so the 460
+ *     was a figure a Super Admin could read but not act on.
  */
 export function HomeMetrics() {
   return (
@@ -38,30 +49,23 @@ export function HomeMetrics() {
         className="sf-col-6"
       />
 
-      {/* Full width, own row: a per-school bar list scales with the district's
-          school count and needs the Y-axis labels and bar length room a
-          six-column card can't give it — pairing it next to two short stat
-          numbers just stretched them to match its height instead. */}
+      {/* The two per-school breakdowns sit side by side rather than stacked:
+          they answer the same question ("how is the district distributed across
+          schools?") from two angles, and reading them together beats scrolling
+          one past the other. Both drop to full width below the grid's
+          single-column breakpoint, where the ratio chart gets its room back. */}
       <RatioBarCard
         title="Teacher-Student Ratio"
         schools={teacherStudentRatioBySchool}
         asOf={TEACHER_STUDENT_RATIO_ASOF}
         target={TEACHER_STUDENT_RATIO_TARGET}
-        className="sf-col-12"
+        className="sf-col-6"
       />
 
       <DistributionDonutCard
         title="Student Count By School"
         data={studentCountBySchoolDistribution}
         asOf={STUDENT_COUNT_BY_SCHOOL_ASOF}
-        totalLabel="Students"
-        className="sf-col-6"
-      />
-
-      <DistributionDonutCard
-        title="Students' Status"
-        data={studentsStatusDistribution}
-        asOf={STUDENTS_STATUS_ASOF}
         totalLabel="Students"
         className="sf-col-6"
       />

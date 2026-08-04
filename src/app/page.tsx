@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import { NeedsAttentionBanner } from "@/components/home/NeedsAttentionBanner";
+import { HomeFilterBar } from "@/components/home/HomeFilterBar";
 import { HomeMetrics } from "@/components/home/HomeMetrics";
 
 /**
@@ -16,14 +18,31 @@ import { HomeMetrics } from "@/components/home/HomeMetrics";
 export default function HomePage() {
   return (
     <section className="sf-main">
-      <h1 className="sf-page-title">Home</h1>
-      <p className="sf-page-sub">
-        District-wide overview. Every card carries its own refresh time, because Salesforce reports
-        refresh on their own schedules.
-      </p>
+      <div className="sf-page-head">
+        <div>
+          <h1 className="sf-page-title">Home</h1>
+          {/* Kept to one line. The trailing clause — "because Salesforce reports
+              refresh on their own schedules" — was the reason for the per-card
+              stamps, but each card already shows its own "As of …", so the
+              explanation was spending a second line on something the cards
+              demonstrate themselves. */}
+          <p className="sf-page-sub">
+            District-wide overview. Every card carries its own refresh time.
+          </p>
+        </div>
+
+        {/* Suspense because it reads the URL through useSearchParams, which
+            opts a route into dynamic rendering unless it sits behind a boundary. */}
+        <Suspense fallback={null}>
+          <HomeFilterBar />
+        </Suspense>
+      </div>
 
       <HomeMetrics />
-      <NeedsAttentionBanner />
+
+      <Suspense fallback={null}>
+        <NeedsAttentionBanner />
+      </Suspense>
     </section>
   );
 }

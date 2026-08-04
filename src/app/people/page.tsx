@@ -145,7 +145,7 @@ export default function PeopleSearchPage() {
   const pagedResults = results.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
-    <section className="sf-main">
+    <section className="sf-main sf-main--footer-bar">
       <div className="sf-page-head">
         <div>
           <h1 className="sf-page-title">Student &amp; Faculty 360</h1>
@@ -158,7 +158,7 @@ export default function PeopleSearchPage() {
         <Button onClick={() => setIsAddingUser(true)}>Add User</Button>
       </div>
 
-      <div className="sf-filter-bar">
+      <div className="sf-filter-bar sf-filter-bar--flush sf-filter-bar--top-spaced">
         <label className="sf-field sf-field--search">
           <span>Search</span>
           <input
@@ -220,7 +220,6 @@ export default function PeopleSearchPage() {
         <div className="sf-panel-head">
           <h2>Results</h2>
           <div className="sf-row-actions">
-            <span className="sf-panel-note">Select a name to open their 360 profile</span>
             {/* Full CTA size, but `outline` rather than the solid accent: the
                 page's primary action is Add User in the header, and two solid
                 accent buttons on one screen would compete for it. */}
@@ -291,8 +290,17 @@ export default function PeopleSearchPage() {
             </table>
           </div>
         )}
+      </div>
 
-        {results.length > 0 ? (
+      {/* Outside the results panel: page controls live in the page's bottom
+          area, not inside the table card. */}
+      {results.length > 0 ? (
+        <div className="sf-pagination-bar">
+          <p className="sf-panel-note">
+            Showing {(currentPage - 1) * PAGE_SIZE + 1}&ndash;
+            {Math.min(currentPage * PAGE_SIZE, results.length)} of {results.length}
+          </p>
+
           <Pagination className="sf-pagination">
             <PaginationContent>
               <PaginationItem>
@@ -335,8 +343,8 @@ export default function PeopleSearchPage() {
               </PaginationItem>
             </PaginationContent>
           </Pagination>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
       {isAddingUser ? (
         <AddUserModal

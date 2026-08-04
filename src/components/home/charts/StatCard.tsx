@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { RefreshIcon } from "@hugeicons/core-free-icons";
-import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatNumber, formatSalesforceStamp } from "@/lib/format";
 
 /**
  * A single steady-state figure with no trend to report yet (Number of
- * Students, Total Faculty) — shadcn's own stat-card anatomy (description,
- * big title, footer), without inventing a delta badge no data backs.
+ * Students, Total Faculty) — shadcn's own stat-card anatomy (description over
+ * a big title), without inventing a delta badge no data backs.
  */
 export function StatCard({
   title,
@@ -50,7 +50,7 @@ export function StatCard({
             className="sf-card-tool"
             onClick={refresh}
             disabled={isRefreshing}
-            title={`Refresh ${title}`}
+            title={`Refresh ${title}, last updated ${formatSalesforceStamp(currentAsOf)}`}
           >
             <HugeiconsIcon
               icon={RefreshIcon}
@@ -62,14 +62,6 @@ export function StatCard({
           </button>
         </CardAction>
       </CardHeader>
-
-      {/* mt-auto: this card sits beside taller cards in the grid (the row
-          stretches every card to match), and without it the footer would
-          stay pinned right under the header, leaving a dead gap below it
-          instead of anchoring to the card's actual bottom edge. */}
-      <CardFooter className="mt-auto">
-        <span className="sf-card-stamp">As of {formatSalesforceStamp(currentAsOf)}</span>
-      </CardFooter>
     </Card>
   );
 }

@@ -16,11 +16,13 @@ import {
 } from "@/lib/data/people";
 import { useUsers } from "@/lib/users-store";
 import { gradeConfigHref, resolveGradeScope } from "@/lib/data/skillsDevelopment";
+import { academicGoalsHref } from "@/lib/data/academicGoals";
 import { DevelopmentAreasEditor } from "@/components/skills-development/DevelopmentAreasEditor";
 import { SkillsProfileEditor } from "@/components/skills-development/SkillsProfileEditor";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Combobox } from "@/components/shared/Combobox";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatSalesforceStamp } from "@/lib/format";
 
@@ -176,7 +178,7 @@ export function ProfileShell({ person }: { person: Person }) {
         </div>
       ) : null}
 
-      <Tabs value={tab} onValueChange={(value) => setTab(value as TabId)}>
+      <Tabs value={tab} onValueChange={(value) => setTab(value as TabId)} className="sf-section-tabs">
         <TabsList variant="line" aria-label="Profile sections">
           {tabs.map((item) => (
             <TabsTrigger key={item.id} value={item.id}>
@@ -338,7 +340,15 @@ export function ProfileShell({ person }: { person: Person }) {
             template. TODO: local state only until the Admin DB contract exists.
           </p>
           {!goals.length ? (
-            <EmptyState title="No goals recorded" message="No active or historic goals for this student." />
+            <EmptyState
+              title="No goals recorded"
+              message="No active or historic goals for this student."
+              action={
+                <Button size="sm" render={<Link href={academicGoalsHref(person.school, person.group)} />}>
+                  Add Goal
+                </Button>
+              }
+            />
           ) : (
             <Table
               head={["Goal", "Category", "Checkpoints", "Status", "Target", "Last updated"]}
@@ -395,7 +405,7 @@ export function ProfileShell({ person }: { person: Person }) {
         gradeScope ? (
           <>
             <p className="sf-page-sub">
-              Shared configuration for every {person.group} student at {person.school} — the same
+              Shared configuration for every {person.group} student at {person.school}, using the same
               editor as Skills &amp; Development. Changes here are grade-wide, not just for {person.name}.
             </p>
             <SkillsProfileEditor schoolId={gradeScope.schoolId} grade={gradeScope.grade} />
@@ -418,7 +428,7 @@ export function ProfileShell({ person }: { person: Person }) {
         gradeScope ? (
           <>
             <p className="sf-page-sub">
-              Shared configuration for every {person.group} student at {person.school} — the same
+              Shared configuration for every {person.group} student at {person.school}, using the same
               editor as Skills &amp; Development. Changes here are grade-wide, not just for {person.name}.
             </p>
             <DevelopmentAreasEditor schoolId={gradeScope.schoolId} grade={gradeScope.grade} />
@@ -502,6 +512,13 @@ export function ProfileShell({ person }: { person: Person }) {
             <EmptyState
               title="No alerts"
               message={isStudent ? "No alerts raised for this student." : "No alerts involving this teacher's students."}
+              action={
+                isStudent ? (
+                  <Button size="sm" render={<Link href="/alerts?create=1" />}>
+                    Add Alert
+                  </Button>
+                ) : undefined
+              }
             />
           ) : (
             <Table

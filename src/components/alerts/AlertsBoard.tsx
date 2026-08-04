@@ -86,7 +86,7 @@ export function AlertsBoard() {
 
   return (
     <>
-      <div className="sf-filter-bar">
+      <div className="sf-filter-bar sf-filter-bar--flush">
         <label className="sf-field sf-field--search">
           <span>Search</span>
           <input

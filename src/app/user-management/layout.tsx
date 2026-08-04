@@ -27,7 +27,7 @@ export default function UserManagementLayout({ children }: { children: React.Rea
         <div>
           <h1 className="sf-page-title">User Management</h1>
           <p className="sf-page-sub">
-            Admin-level portal access — Leadership, Portal Administrator and IT Administrator
+            Admin-level portal access: Leadership, Portal Administrator and IT Administrator
             roles. Student and faculty accounts sync in from Genesis and don&rsquo;t appear here.
           </p>
         </div>

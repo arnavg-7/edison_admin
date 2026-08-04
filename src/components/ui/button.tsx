@@ -23,14 +23,15 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        // Padding sits a step above Tailwind's stock px-3/px-4 scale. It was
-        // originally bumped to clear a stadium radius; at 12px the corners no
-        // longer demand it, but the roomier label spacing is kept on purpose.
+        // A fixed h-* with no vertical padding read as flat and cramped
+        // next to .sf-btn (which does carry real top/bottom padding) — every
+        // text size below now sizes off padding instead, so the label has
+        // real breathing room rather than being squeezed into a fixed box.
         default:
-          "h-9 gap-1.5 px-5 has-data-[icon=inline-end]:pr-4 has-data-[icon=inline-start]:pl-4",
-        xs: "h-6 gap-1 px-3.5 text-xs has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-8 gap-1 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
-        lg: "h-10 gap-1.5 px-6 has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5",
+          "h-auto gap-1.5 py-2.5 px-5 has-data-[icon=inline-end]:pr-4 has-data-[icon=inline-start]:pl-4",
+        xs: "h-auto gap-1 py-1.5 px-3.5 text-xs has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-auto gap-1 py-2 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+        lg: "h-auto gap-1.5 py-3 px-6 has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5",
         icon: "size-9",
         "icon-xs": "size-6 [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-8",

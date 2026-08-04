@@ -1,4 +1,4 @@
-import type { BarGroup, DonutSlice, FunnelStage, StackRow } from "@/components/sf/charts";
+import type { BarGroup, FunnelStage } from "@/components/sf/charts";
 
 /**
  * District metric figures.
@@ -18,20 +18,6 @@ import type { BarGroup, DonutSlice, FunnelStage, StackRow } from "@/components/s
 
 export const numberOfStudents = 1702;
 export const totalFaculty = 82;
-
-/** Teacher-Student Ratio — stacked 100% bars per program. */
-export const teacherStudentRatio: StackRow[] = [
-  { label: "Elementary A-K", segments: [{ value: 4, colorIndex: 4 }, { value: 96, colorIndex: 0 }] },
-  { label: "Elementary L-Z", segments: [{ value: 5, colorIndex: 4 }, { value: 95, colorIndex: 0 }] }
-];
-
-export const studentCountBySchool: DonutSlice[] = [
-  { label: "Benjamin Franklin Elementary School", value: 307, colorIndex: 0 },
-  { label: "James Madison Intermediate School", value: 165, colorIndex: 2 },
-  { label: "James Madison Primary School", value: 85, colorIndex: 1 },
-  { label: "James Monroe Elementary School", value: 235, colorIndex: 1 },
-  { label: "Other", value: 34, colorIndex: 3 }
-];
 
 export const studentsByGrade: BarGroup[] = [
   {
@@ -178,15 +164,4 @@ export const GRADE_SERIES = [
   { label: "Grade 10", colorIndex: 0 },
   { label: "Grade 8", colorIndex: 2 },
   { label: "Grade 9", colorIndex: 1 }
-];
-
-export const RATIO_SERIES = [
-  { label: "Faculty", colorIndex: 4 },
-  { label: "Student", colorIndex: 0 }
-];
-
-export const STATUS_SERIES = [
-  { label: "On Track", colorIndex: 0 },
-  { label: "At Risk", colorIndex: 2 },
-  { label: "Other", colorIndex: 1 }
 ];

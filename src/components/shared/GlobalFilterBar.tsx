@@ -4,6 +4,7 @@ import { DATE_RANGE_OPTIONS, useReportFilters, type DateRangePreset } from "@/li
 import { classesForGrade, gradesForSchool, schools } from "@/lib/data/schools";
 import { currentTerm } from "@/lib/data/academicCalendar";
 import { Combobox } from "@/components/shared/Combobox";
+import { DateRangeField } from "@/components/shared/DateRangeField";
 
 type ComboOption = { value: string; label: string };
 
@@ -33,7 +34,7 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
   ];
 
   return (
-    <div className="sf-filter-bar">
+    <div className="sf-filter-bar sf-filter-bar--flush">
       <label className="sf-field">
         <span>Date Range</span>
         <Combobox
@@ -45,24 +46,14 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
       </label>
 
       {filters.range === "custom" ? (
-        <>
-          <label className="sf-field">
-            <span>From</span>
-            <input
-              type="date"
-              value={filters.from ?? ""}
-              onChange={(event) => setFilters({ from: event.target.value || null })}
-            />
-          </label>
-          <label className="sf-field">
-            <span>To</span>
-            <input
-              type="date"
-              value={filters.to ?? ""}
-              onChange={(event) => setFilters({ to: event.target.value || null })}
-            />
-          </label>
-        </>
+        <label className="sf-field">
+          <span>Dates</span>
+          <DateRangeField
+            from={filters.from}
+            to={filters.to}
+            onChange={({ from, to }) => setFilters({ from, to })}
+          />
+        </label>
       ) : null}
 
       <label className="sf-field">

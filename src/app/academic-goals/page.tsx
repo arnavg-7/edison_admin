@@ -29,13 +29,9 @@ export default function GoalsSchoolPickerPage() {
           <StatusBadge key="status" tone="neutral">
             No goals yet
           </StatusBadge>
-        ),
-        // Goals are set per grade, so a school row only views its grade list.
-        <div className="sf-row-actions" key="actions">
-          <Link className="sf-btn sf-btn--sm" href={`/academic-goals/${school.id}`}>
-            View
-          </Link>
-        </div>
+        )
+        // No school-level action: the school name opens its grade list, and goals
+        // are only ever set per grade.
       ],
       detail: (
         <GradeDetailTable
@@ -80,16 +76,23 @@ export default function GoalsSchoolPickerPage() {
   });
 
   return (
-    <div className="sf-panel">
-      <div className="sf-panel-head">
-        <h2>Schools</h2>
-        <span className="sf-panel-note">Expand a school, or open it to pick a grade</span>
-      </div>
+    <>
+      <h1 className="sf-page-title">Academic Goals</h1>
+      <p className="sf-page-sub">
+        Goals set for students, configured per grade. Pick a school, then a grade.
+      </p>
 
-      <ExpandableSchoolTable
-        head={["School", "Level", "Grades", "Active goals", "Status", "Actions"]}
-        rows={rows}
-      />
-    </div>
+      <div className="sf-panel">
+        <div className="sf-panel-head">
+          <h2>Schools</h2>
+          <span className="sf-panel-note">Expand a school, or open it to pick a grade</span>
+        </div>
+
+        <ExpandableSchoolTable
+          head={["School", "Level", "Grades", "Active goals", "Status"]}
+          rows={rows}
+        />
+      </div>
+    </>
   );
 }

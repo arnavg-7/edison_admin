@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   ADMIN_ROLE_LABELS,
   ADMIN_ROLE_ORDER,
+  roleAssignmentsInclude,
   scopeLabel,
   type AdminRole,
   type AdminUser,
@@ -16,7 +16,6 @@ import { formatDateTime } from "@/lib/format";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Combobox, type ComboboxOption } from "@/components/shared/Combobox";
-import { Switch } from "@/components/ui/switch";
 import { AdminRoleBadges } from "@/components/admin-users/AdminRoleBadges";
 import { EditAdminUserModal } from "@/components/admin-users/EditAdminUserModal";
 import { BulkRoleReassignModal } from "@/components/admin-users/BulkRoleReassignModal";
@@ -53,7 +52,7 @@ const STATUS_TONE: Record<AdminUserStatus, "ok" | "warn" | "neutral"> = {
 };
 
 export default function AdminUsersPage() {
-  const { adminUsers, require2fa, setRequire2fa, updateUsers } = useAdminUsers();
+  const { adminUsers, updateUsers } = useAdminUsers();
 
   const [query, setQuery] = useState("");
   const [role, setRole] = useState("all");
@@ -73,7 +72,7 @@ export default function AdminUsersPage() {
   const results = useMemo(() => {
     const term = query.trim().toLowerCase();
     const filtered = adminUsers
-      .filter((user) => (role === "all" ? true : user.roles.includes(role as AdminRole)))
+      .filter((user) => (role === "all" ? true : roleAssignmentsInclude(user.roles, role as AdminRole)))
       .filter((user) => (status === "all" ? true : user.status === status))
       .filter(matchesScope)
       .filter((user) =>
@@ -109,7 +108,7 @@ export default function AdminUsersPage() {
 
   return (
     <>
-      <div className="sf-filter-bar">
+      <div className="sf-filter-bar sf-filter-bar--flush">
         <label className="sf-field sf-field--search">
           <span>Search</span>
           <input
@@ -196,7 +195,7 @@ export default function AdminUsersPage() {
                   <th scope="col">Scope</th>
                   <th scope="col">Status</th>
                   <th scope="col">Last Login</th>
-                  <th scope="col">Date Added</th>
+                  {/* dateAdded stays on the record — it just isn't a column here. */}
                   <th scope="col">Actions</th>
                 </tr>
               </thead>
@@ -221,7 +220,6 @@ export default function AdminUsersPage() {
                       <StatusBadge tone={STATUS_TONE[user.status]}>{user.status}</StatusBadge>
                     </td>
                     <td>{user.lastLogin ? formatDateTime(user.lastLogin) : "—"}</td>
-                    <td>{formatDateTime(user.dateAdded)}</td>
                     <td>
                       <button type="button" className="sf-btn sf-btn--sm" onClick={() => setEditingUser(user)}>
                         Edit
@@ -233,27 +231,6 @@ export default function AdminUsersPage() {
             </table>
           </div>
         )}
-      </div>
-
-      <div className="sf-panel">
-        <div className="sf-panel-head">
-          <h2>Governance</h2>
-        </div>
-
-        <label className="sf-switch-field">
-          <span>
-            <strong>Require 2FA / SSO for admin accounts</strong>
-            <span className="sf-panel-note">
-              Applies to every account on this screen. TODO: no identity provider is wired up yet —
-              this only records the district&rsquo;s intent locally.
-            </span>
-          </span>
-          <Switch checked={require2fa} onCheckedChange={setRequire2fa} />
-        </label>
-
-        <Link className="sf-inline-link" href="/system-settings/audit-log">
-          Open Data Privacy &amp; Audit Log →
-        </Link>
       </div>
 
       {editingUser ? (

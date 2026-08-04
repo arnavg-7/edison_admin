@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { newAdminUserId, type AdminRole, type AdminScope, type AdminUser } from "@/lib/data/adminUsers";
+import {
+  accessSummary,
+  newAdminUserId,
+  type AdminRoleAssignment,
+  type AdminScope,
+  type AdminUser
+} from "@/lib/data/adminUsers";
 import { ADMIN_ROLE_LABEL } from "@/lib/nav";
 import { Button } from "@/components/ui/button";
 import { RoleCheckboxes } from "./RoleCheckboxes";
@@ -17,19 +23,19 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  */
 export function ManualInviteForm({
   onBack,
-  onCancel,
   onInvite
 }: {
   onBack: () => void;
-  onCancel: () => void;
   onInvite: (user: AdminUser) => void;
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [roles, setRoles] = useState<AdminRole[]>([]);
+  const [roles, setRoles] = useState<AdminRoleAssignment[]>([]);
   const [scope, setScope] = useState<AdminScope>({ type: "district" });
 
-  const canSave = name.trim() !== "" && EMAIL_PATTERN.test(email.trim()) && roles.length > 0;
+  const hasRoles = roles.length > 0;
+  const canSave = name.trim() !== "" && EMAIL_PATTERN.test(email.trim()) && hasRoles;
+  const summary = accessSummary(name, roles);
 
   const send = () => {
     if (!canSave) return;
@@ -69,14 +75,21 @@ export function ManualInviteForm({
         />
       </label>
 
-      <RoleCheckboxes value={roles} onChange={setRoles} />
+      <RoleCheckboxes
+        value={roles}
+        onChange={setRoles}
+        error={hasRoles ? undefined : "Select at least one role"}
+      />
 
+      {/* Scope is deliberately outside the role group: it applies across every
+          role the account holds, not per role. */}
       <label className="sf-field">
         <span>Scope</span>
         <ScopeSelect value={scope} onChange={setScope} />
       </label>
 
-      <p className="sf-panel-note">
+      <p className="sf-panel-note" aria-live="polite">
+        {hasRoles ? `${summary} ` : ""}
         They&rsquo;ll get an email invite. The account stays Pending until they accept it.
       </p>
 
@@ -84,11 +97,10 @@ export function ManualInviteForm({
         <Button onClick={send} disabled={!canSave}>
           Send Invite
         </Button>
+        {/* No Cancel button: Back is the only other move from here, and the
+            modal's own ✕ already dismisses. */}
         <button type="button" className="sf-btn" onClick={onBack}>
           Back
-        </button>
-        <button type="button" className="sf-btn sf-btn--quiet" onClick={onCancel}>
-          Cancel
         </button>
       </div>
     </>

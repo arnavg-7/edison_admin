@@ -1,3 +1,5 @@
+import { isWithinWindow, type DateWindow } from "@/lib/date-range";
+
 // TODO: replace with real sources. Categories map to: at-risk (derived from
 // Salesforce attendance, goals, assignments and grades), overdue alerts (Alerts
 // SLA field), pending config (unconfigured items across Portal Config /
@@ -99,7 +101,7 @@ export const attentionItems: AttentionItem[] = [
     id: "na-4",
     category: "overdue-alert",
     severity: "high",
-    subject: "Attendance below 80% — 12 unresolved alerts",
+    subject: "Attendance below 80%: 12 unresolved alerts",
     reason: "Past the 48-hour response SLA on the Attendance below 80% rule",
     flaggedAt: "2026-07-15T06:00:00-04:00",
     href: "/alerts",
@@ -109,7 +111,7 @@ export const attentionItems: AttentionItem[] = [
     id: "na-5",
     category: "overdue-alert",
     severity: "medium",
-    subject: "Goal overdue by 14 days — 5 unresolved alerts",
+    subject: "Goal overdue by 14 days: 5 unresolved alerts",
     reason: "Advisors have not acknowledged within the SLA window",
     flaggedAt: "2026-07-14T06:00:00-04:00",
     href: "/alerts",
@@ -119,7 +121,7 @@ export const attentionItems: AttentionItem[] = [
     id: "na-10",
     category: "pending-config",
     severity: "medium",
-    subject: "Academic calendar — term dates unconfirmed",
+    subject: "Academic calendar: term dates unconfirmed",
     reason: "Reporting date presets still resolve against placeholder term boundaries",
     flaggedAt: "2026-07-08T10:00:00-04:00",
     href: "/system-settings/calendar",
@@ -129,7 +131,7 @@ export const attentionItems: AttentionItem[] = [
     id: "na-11",
     category: "pending-config",
     severity: "medium",
-    subject: "Visual & Performing Arts — subject unmapped",
+    subject: "Visual & Performing Arts: subject unmapped",
     reason: "Subject has 6 courses but no grade-level mapping",
     flaggedAt: "2026-07-06T10:00:00-04:00",
     href: "/system-settings/subjects",
@@ -137,14 +139,24 @@ export const attentionItems: AttentionItem[] = [
   }
 ];
 
-export function needsAttentionOpenCount(): number {
-  return attentionItems.filter((item) => !item.resolved).length;
+/** Open items, optionally narrowed to when they were flagged. */
+function openItems(window?: DateWindow): AttentionItem[] {
+  const open = attentionItems.filter((item) => !item.resolved);
+  return window ? open.filter((item) => isWithinWindow(item.flaggedAt, window)) : open;
 }
 
-/** Worst-first, most-recent-first slice for the Home page teaser banner. */
-export function topAttentionItems(limit: number): AttentionItem[] {
-  return attentionItems
-    .filter((item) => !item.resolved)
+export function needsAttentionOpenCount(window?: DateWindow): number {
+  return openItems(window).length;
+}
+
+/**
+ * Worst-first, most-recent-first slice for the Home page teaser banner.
+ *
+ * `window` is optional so the triage queue and anything else reading the full
+ * set is unaffected; Home passes its date range through.
+ */
+export function topAttentionItems(limit: number, window?: DateWindow): AttentionItem[] {
+  return openItems(window)
     .slice()
     .sort(
       (a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || b.flaggedAt.localeCompare(a.flaggedAt)

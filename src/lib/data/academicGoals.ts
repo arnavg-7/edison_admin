@@ -6,7 +6,7 @@ import { schools, scopeKey } from "./schools";
 export const goalTemplates: ListEditorItem[] = [
   {
     id: "gt-1",
-    title: "Personalized Own Academic Goal (POAG) — Semester",
+    title: "Personalized Own Academic Goal (POAG): Semester",
     detail: "Student-authored goal reviewed with an advisor at the start of each semester.",
     status: { tone: "ok", label: "Published" },
     meta: "Used by 4 schools · 1,204 active goals"
@@ -111,7 +111,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
   [scopeKey("edison-hs", "9")]: buildGradeGoals(scopeKey("edison-hs", "9"), [
     {
       key: "poag",
-      title: "Personalized Own Academic Goal — Semester",
+      title: "Personalized Own Academic Goal: Semester",
       description: "Student-authored goal reviewed with an advisor at the start of the semester.",
       category: "Academic achievement",
       semester: FALL_2026
@@ -125,7 +125,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
     },
     {
       key: "poag-past",
-      title: "Personalized Own Academic Goal — Semester",
+      title: "Personalized Own Academic Goal: Semester",
       description: "Student-authored goal reviewed with an advisor at the start of the semester.",
       category: "Academic achievement",
       semester: SPRING_2026
@@ -134,7 +134,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
   [scopeKey("edison-hs", "10")]: buildGradeGoals(scopeKey("edison-hs", "10"), [
     {
       key: "poag",
-      title: "Personalized Own Academic Goal — Semester",
+      title: "Personalized Own Academic Goal: Semester",
       description: "Student-authored goal reviewed with an advisor at the start of the semester.",
       category: "Academic achievement",
       semester: FALL_2026
@@ -157,7 +157,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
   [scopeKey("edison-hs", "11")]: buildGradeGoals(scopeKey("edison-hs", "11"), [
     {
       key: "poag",
-      title: "Personalized Own Academic Goal — Semester",
+      title: "Personalized Own Academic Goal: Semester",
       description: "Student-authored goal reviewed with an advisor at the start of the semester.",
       category: "Academic achievement",
       semester: FALL_2026
@@ -180,7 +180,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
   [scopeKey("edison-hs", "12")]: buildGradeGoals(scopeKey("edison-hs", "12"), [
     {
       key: "poag",
-      title: "Personalized Own Academic Goal — Semester",
+      title: "Personalized Own Academic Goal: Semester",
       description: "Student-authored goal reviewed with an advisor at the start of the semester.",
       category: "Academic achievement",
       semester: FALL_2026
@@ -238,4 +238,20 @@ export function schoolGoalsSummary(schoolId: string) {
   const configured = grades.filter((grade) => gradeGoalsSummary(schoolId, grade).configured);
   const goals = grades.reduce((sum, grade) => sum + gradeGoalsSummary(schoolId, grade).goals, 0);
   return { grades: grades.length, configuredGrades: configured.length, goals };
+}
+
+/**
+ * Deep link from a student's 360 to the grade that sets their goals — goals
+ * are authored per grade here, not per student on the profile, so "Add Goal"
+ * on an empty 360 panel has to land on this screen rather than open a form
+ * inline. Falls back to the school list when it cannot be resolved rather
+ * than producing a 404.
+ */
+export function academicGoalsHref(schoolName: string, group: string): string {
+  const school = schools.find((entry) => entry.name === schoolName);
+  const grade = group.replace(/^grade\s+/i, "").trim();
+  if (!school || !school.grades.includes(grade)) {
+    return "/academic-goals";
+  }
+  return `/academic-goals/${school.id}/${encodeURIComponent(grade)}`;
 }

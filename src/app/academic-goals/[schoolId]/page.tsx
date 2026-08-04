@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { schools, gradeLabel } from "@/lib/data/schools";
 import { gradeGoalsSummary } from "@/lib/data/academicGoals";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -23,16 +25,17 @@ export default async function GoalsGradePickerPage({
 
   return (
     <>
-      <nav className="sf-crumbs" aria-label="Breadcrumb">
-        <Link href="/academic-goals">Academic Goals</Link>
-        <span aria-hidden>/</span>
-        <span>{school.name}</span>
-      </nav>
+      <h1 className="sf-page-title sf-page-title--with-back">
+        <Link href="/academic-goals" className="sf-back-btn" aria-label="Back to Schools">
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={2} />
+        </Link>
+        {school.name}
+      </h1>
 
       <div className="sf-panel">
         <div className="sf-panel-head">
-          <h2>{school.name}</h2>
-          <span className="sf-panel-note">Pick a grade to view and set its goals</span>
+          <h2>Grades</h2>
+          <span className="sf-panel-note">Pick a grade to set its goals</span>
         </div>
 
         <div className="sf-table-wrap">

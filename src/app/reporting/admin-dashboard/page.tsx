@@ -1,8 +1,6 @@
 "use client";
 
 import { adoptionBySchool, lastSyncByIntegration } from "@/lib/data/reporting";
-import { REPORTS } from "@/lib/data/salesforce";
-import { FreshnessStamp } from "@/components/shared/FreshnessStamp";
 import { formatNumber, formatSalesforceStamp } from "@/lib/format";
 
 export default function AdminDashboardPage() {
@@ -43,13 +41,6 @@ export default function AdminDashboardPage() {
             ))}
           </tbody>
         </table>
-
-        {/* TODO: adoption and login counts need a real Admin DB usage contract. */}
-        <FreshnessStamp
-          asOf={REPORTS.numberOfStudents.asOf}
-          report="Portal Adoption"
-          note="Usage rollup"
-        />
       </div>
 
       <div className="sf-panel">

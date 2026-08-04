@@ -30,9 +30,9 @@ export default async function GoalsForGradePage({
       <div className="sf-scope-head">
         <h1 className="sf-page-title sf-page-title--with-back">
           <Link
-            href={`/academic-goals/${school.id}`}
+            href="/academic-goals"
             className="sf-back-btn"
-            aria-label={`Back to ${school.name} grades`}
+            aria-label="Back to Academic Goals"
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={2} />
           </Link>

@@ -2,24 +2,37 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { SEVERITY_TONE, needsAttentionOpenCount, topAttentionItems } from "@/lib/data/needsAttention";
 import { resolveDateWindow } from "@/lib/date-range";
 import { useReportFilters } from "@/lib/filters";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 /**
- * The first thing a Super Admin sees each morning: what needs a response
- * today, not a curated count buried among steady-state enrollment cards.
+ * The first thing a Super Admin sees each morning: what needs a response,
+ * not a curated count buried among steady-state enrollment cards.
  *
  * Client-side because it reads Home's date range straight from the URL, the
  * same `useReportFilters` state HomeFilterBar writes. Items are scoped by
  * `flaggedAt` — the one field on Home with a real timestamp to filter on.
+ *
+ * Unfiltered (every open item, any date) until the admin explicitly picks a
+ * range from HomeFilterBar. `useReportFilters` always resolves a *default*
+ * range ("Today") even with no `range` param in the URL, and every one of
+ * the shared presets — including "Today" — is a narrow, completed-feeling
+ * window; defaulting the banner to one made it read as empty on a normal
+ * morning where nothing happens to be flagged in the last 24 hours. Checking
+ * the raw search param (not `filters.range`) is what tells "no selection
+ * yet" apart from "admin picked Today".
  */
 export function NeedsAttentionBanner() {
   const { filters } = useReportFilters();
+  const searchParams = useSearchParams();
+  const hasExplicitRange = searchParams.has("range");
+
   const window = useMemo(
-    () => resolveDateWindow(filters.range, filters.from, filters.to),
-    [filters.range, filters.from, filters.to]
+    () => (hasExplicitRange ? resolveDateWindow(filters.range, filters.from, filters.to) : undefined),
+    [hasExplicitRange, filters.range, filters.from, filters.to]
   );
 
   const open = needsAttentionOpenCount(window);

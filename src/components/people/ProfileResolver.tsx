@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { PersonKind } from "@/lib/data/people";
 import { useUsers } from "@/lib/users-store";
+import { useMounted } from "@/lib/use-mounted";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ProfileShell } from "./ProfileShell";
 
@@ -14,14 +15,18 @@ import { ProfileShell } from "./ProfileShell";
  */
 export function ProfileResolver({ kind, id }: { kind: PersonKind; id: string }) {
   const { findUser, isLoaded } = useUsers();
+  const mounted = useMounted();
   const person = findUser(kind, id);
 
-  if (person) {
+  // `mounted` as well as `isLoaded`: the provider can load storage before this
+  // component hydrates, and rendering a resolved profile against the server's
+  // loading state would be a hydration mismatch. See useMounted.
+  if (mounted && person) {
     return <ProfileShell person={person} />;
   }
 
   // Storage hasn't been read yet — don't claim "not found" before we know.
-  if (!isLoaded) {
+  if (!mounted || !isLoaded) {
     return (
       <section className="sf-main">
         <p className="sf-page-sub">Loading profile…</p>

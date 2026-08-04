@@ -3,15 +3,27 @@
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-export type DateRangePreset = "today" | "week" | "month" | "term" | "custom";
+export type DateRangePreset =
+  | "today"
+  | "yesterday"
+  | "last-week"
+  | "last-month"
+  | "last-year"
+  | "custom";
 
+/** Order is the order they appear in the picker's preset rail. */
 export const DATE_RANGE_OPTIONS: { value: DateRangePreset; label: string }[] = [
   { value: "today", label: "Today" },
-  { value: "week", label: "This Week" },
-  { value: "month", label: "This Month" },
-  { value: "term", label: "This Term" },
-  { value: "custom", label: "Custom" }
+  { value: "yesterday", label: "Yesterday" },
+  { value: "last-week", label: "Last week" },
+  { value: "last-month", label: "Last month" },
+  { value: "last-year", label: "Last year" },
+  { value: "custom", label: "Custom range" }
 ];
+
+export function dateRangeLabel(range: DateRangePreset): string {
+  return DATE_RANGE_OPTIONS.find((option) => option.value === range)?.label ?? "Today";
+}
 
 export type ReportFilters = {
   range: DateRangePreset;
@@ -23,7 +35,7 @@ export type ReportFilters = {
 };
 
 export const DEFAULT_FILTERS: ReportFilters = {
-  range: "month",
+  range: "today",
   from: null,
   to: null,
   school: null,

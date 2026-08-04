@@ -2,8 +2,10 @@
 
 import { Suspense, useState } from "react";
 import { usePathname } from "next/navigation";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { MailAdd01Icon } from "@hugeicons/core-free-icons";
 import { SectionTabs } from "@/components/shared/SectionTabs";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/base/buttons/button";
 import { InviteAdminUserModal } from "@/components/admin-users/InviteAdminUserModal";
 
 const TABS = [
@@ -33,7 +35,13 @@ export default function UserManagementLayout({ children }: { children: React.Rea
         </div>
 
         {pathname === "/user-management" ? (
-          <Button onClick={() => setIsInviting(true)}>Invite User</Button>
+          <Button
+            size="sm"
+            onClick={() => setIsInviting(true)}
+            iconLeading={<HugeiconsIcon icon={MailAdd01Icon} strokeWidth={2} className="size-4 shrink-0" />}
+          >
+            Invite User
+          </Button>
         ) : null}
       </div>
 

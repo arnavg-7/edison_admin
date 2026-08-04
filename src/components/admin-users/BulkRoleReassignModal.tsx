@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { AdminRoleAssignment } from "@/lib/data/adminUsers";
 import { useAdminUsers } from "@/lib/admin-users-store";
 import { Modal } from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/base/buttons/button";
 import { RoleCheckboxes } from "./RoleCheckboxes";
 
 /**
@@ -45,12 +45,12 @@ export function BulkRoleReassignModal({
       />
 
       <div className="list-editor-form-actions">
-        <Button onClick={apply} disabled={roles.length === 0}>
+        <Button size="sm" onClick={apply} isDisabled={roles.length === 0}>
           Apply to {count} User{count === 1 ? "" : "s"}
         </Button>
-        <button type="button" className="sf-btn sf-btn--quiet" onClick={onClose}>
+        <Button color="tertiary" size="sm" onClick={onClose}>
           Cancel
-        </button>
+        </Button>
       </div>
     </Modal>
   );

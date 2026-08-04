@@ -9,7 +9,9 @@ import {
   type PersonKind
 } from "@/lib/data/people";
 import { SCHOOL_LEVELS, gradeLabel, gradesForSchool, schools, type SchoolLevel } from "@/lib/data/schools";
-import { Button } from "@/components/ui/button";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { UserAdd02Icon } from "@hugeicons/core-free-icons";
+import { Button } from "@/components/base/buttons/button";
 import { Combobox, type ComboboxOption } from "@/components/shared/Combobox";
 
 type ComboOption = ComboboxOption;
@@ -177,15 +179,20 @@ export function ManualUserForm({
       </p>
 
       <div className="list-editor-form-actions">
-        <Button onClick={save} disabled={!canSave}>
+        <Button
+          size="sm"
+          onClick={save}
+          isDisabled={!canSave}
+          iconLeading={<HugeiconsIcon icon={UserAdd02Icon} size={16} />}
+        >
           Create User
         </Button>
-        <button type="button" className="sf-btn" onClick={onBack}>
+        <Button color="secondary" size="sm" onClick={onBack}>
           Back
-        </button>
-        <button type="button" className="sf-btn sf-btn--quiet" onClick={onCancel}>
+        </Button>
+        <Button color="tertiary" size="sm" onClick={onCancel}>
           Cancel
-        </button>
+        </Button>
       </div>
     </>
   );

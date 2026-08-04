@@ -1,8 +1,7 @@
 "use client";
 
-import { DATE_RANGE_OPTIONS, useReportFilters, type DateRangePreset } from "@/lib/filters";
-import { Combobox } from "@/components/shared/Combobox";
-import { DateRangeField } from "@/components/shared/DateRangeField";
+import { useReportFilters } from "@/lib/filters";
+import { DateRangePicker } from "@/components/shared/DateRangePicker";
 
 /**
  * Home's date scope. Deliberately just the range — the school/grade/section
@@ -18,7 +17,7 @@ import { DateRangeField } from "@/components/shared/DateRangeField";
  * multi-field bar (like Reporting's) needs to stay legible.
  *
  * Two explanatory lines used to sit under the head and were removed as clutter:
- * which term "This Term" resolves to, and the caveat that the range currently
+ * which term the old "This Term" preset resolved to, and the caveat that the range currently
  * only scopes Needs Attention (the one dataset carrying a date, `flaggedAt`) —
  * the metric cards are fixed snapshots with their own refresh stamps and have no
  * date field to filter on. That limitation is still true; it just isn't worth a
@@ -29,21 +28,12 @@ export function HomeFilterBar() {
 
   return (
     <div className="sf-filter-bar sf-filter-bar--compact">
-      <Combobox
-        options={DATE_RANGE_OPTIONS}
-        value={filters.range}
-        onChange={(range) => setFilters({ range: range as DateRangePreset })}
-        placeholder="Select a range"
-        ariaLabel="Date range"
+      <DateRangePicker
+        range={filters.range}
+        from={filters.from}
+        to={filters.to}
+        onChange={setFilters}
       />
-
-      {filters.range === "custom" ? (
-        <DateRangeField
-          from={filters.from}
-          to={filters.to}
-          onChange={({ from, to }) => setFilters({ from, to })}
-        />
-      ) : null}
     </div>
   );
 }

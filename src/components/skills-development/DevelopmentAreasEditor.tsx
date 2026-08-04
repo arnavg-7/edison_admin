@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { PlusSignIcon } from "@hugeicons/core-free-icons";
 import {
   DEV_AREA_ICONS,
   DEV_AREA_TONES,
@@ -12,7 +14,7 @@ import {
 import { DevAreaIcon } from "./DevAreaIcon";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/base/buttons/button";
 import { Combobox } from "@/components/shared/Combobox";
 
 // TODO: local state only — persist through the Admin DB skills-and-development
@@ -197,10 +199,10 @@ export function DevelopmentAreasEditor({
       </label>
 
       <div className="list-editor-form-actions">
-        <Button onClick={onSave}>{saveLabel}</Button>
-        <button type="button" className="sf-btn" onClick={onCancel}>
+        <Button size="sm" onClick={onSave}>{saveLabel}</Button>
+        <Button color="secondary" size="sm" onClick={onCancel}>
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -221,7 +223,13 @@ export function DevelopmentAreasEditor({
           there aren't two "Add area" buttons competing on one screen. */}
       {isEmpty ? null : (
         <div className="list-editor-head">
-          <Button onClick={startAddArea}>Add area</Button>
+          <Button
+            size="sm"
+            onClick={startAddArea}
+            iconLeading={<HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} className="size-4 shrink-0" />}
+          >
+            Add area
+          </Button>
         </div>
       )}
 
@@ -233,7 +241,13 @@ export function DevelopmentAreasEditor({
         <EmptyState
           title="No development areas yet"
           message="Add an area such as Strengths, then list the skills that belong under it."
-          action={<Button onClick={startAddArea}>Add area</Button>}
+          action={<Button
+            size="sm"
+            onClick={startAddArea}
+            iconLeading={<HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} className="size-4 shrink-0" />}
+          >
+            Add area
+          </Button>}
         />
       ) : (
         <div className="area-grid">
@@ -345,7 +359,8 @@ export function DevelopmentAreasEditor({
                       setSkillDraftFor(area.id);
                     }}
                   >
-                    + Add skill<span className="sf-sr-only"> to {area.title}</span>
+                    <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} className="size-3.5 shrink-0" />
+                    Add skill<span className="sf-sr-only"> to {area.title}</span>
                   </button>
                 )}
 

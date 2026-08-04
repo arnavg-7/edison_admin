@@ -117,6 +117,17 @@ body {
   border-bottom: 1px solid var(--sf-card-border);
 }
 
+/* Brand text on the left, the sidebar collapse toggle on the right — the
+   toggle used to live in its own strip above the canvas (removed along with
+   that strip's "As of / Viewing as" text), so it needs a new home that stays
+   reachable whether the sidebar is expanded or collapsed to icons. */
+.sf-brand-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .sf-brand-name {
   font-size: 17px;
   font-weight: 600;
@@ -130,6 +141,26 @@ body {
   color: var(--sf-text-dim);
   text-transform: uppercase;
   letter-spacing: 0.09em;
+}
+
+/* Collapsed to the icon rail: with the brand text gone, the toggle is the only
+   thing left in the header and has to sit on the same vertical axis as the nav
+   icons below it. Two things pushed it off that axis — .sf-brand's own 8px side
+   padding (on top of the header's) squeezed the row to 15px, and the
+   space-between above beat Tailwind's group-data-[collapsible=icon]:justify-center
+   (unlayered CSS wins over utilities), so the 32px button was laid out from the
+   row's left edge and overflowed to the right. Drop the padding and centre it. */
+[data-collapsible="icon"] .sf-brand {
+  padding-inline: 0;
+}
+
+/* flex-start, not center: the nav buttons below are a forced 32px inside the
+   same 31px content box, so they start at the box's left edge. Starting the
+   toggle there too puts both on the identical axis — centring it instead splits
+   that 1px overflow and leaves the toggle half a pixel off. */
+[data-collapsible="icon"] .sf-brand-head {
+  justify-content: flex-start;
+  gap: 0;
 }
 
 /* Main region + the Salesforce-style context strip above the canvas */
@@ -152,18 +183,6 @@ body {
      to the bottom of the screen on a short page. */
   display: flex;
   flex-direction: column;
-}
-
-.sf-context-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 24px;
-  background: var(--sf-card);
-  border-bottom: 1px solid var(--sf-card-border);
-  font-size: 12px;
-  color: var(--sf-text-muted);
 }
 
 .sf-context-sep {
@@ -215,6 +234,29 @@ body {
    title + subtitle; give it room to breathe instead of hugging the copy. */
 .sf-section-tabs {
   margin: 18px 0 20px;
+}
+
+/* Grey track running behind the active tab's underline, so that 2px mark reads
+   as a segment of a continuous rule rather than a stripe floating in space.
+   Drawn on the Tabs root, not the tab list: the list is content-width, and
+   stretching it to carry a full-width border would restretch the tabs
+   themselves — this leaves their layout completely untouched. The root is
+   full width already, and since the line list is h-9 (2.25rem) its bottom edge
+   is 2.25rem from the root's top, which is inside the band the active
+   indicator occupies (35-37px) — so the dark mark paints over the line exactly
+   where it lands. */
+[data-slot="tabs"]:has(> [data-variant="line"]) {
+  position: relative;
+}
+
+[data-slot="tabs"]:has(> [data-variant="line"])::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 2.25rem;
+  height: 1px;
+  background: var(--sf-card-border);
 }
 
 .sf-skip-link {
@@ -359,7 +401,12 @@ body {
   cursor: not-allowed;
 }
 
+/* inline-flex so a leading Hugeicons glyph sits on the text's centre line
+   instead of the baseline (e.g. the "Add skill" link inside a dev-area card). */
 .sf-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   border: none;
   background: none;
   padding: 0;
@@ -728,11 +775,109 @@ body {
   border: 0;
   padding: 0;
   margin-top: 0;
+  /* The preset and its "Custom" date field belong on one line. The base bar
+     wraps because it expects a wide labeled field set; here there are only two
+     small controls, and wrapping stacked them next to the page title. */
+  flex-wrap: nowrap;
 }
 
 .sf-filter-bar--compact .sf-field select,
 .sf-filter-bar--compact input {
   min-width: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Date range picker popover: preset rail on the left, two-month range calendar
+   and the Cancel/Save pair on the right.
+   --------------------------------------------------------------------------- */
+
+.sf-daterange {
+  display: flex;
+  align-items: stretch;
+}
+
+.sf-daterange-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 0 0 auto;
+  min-width: 148px;
+  padding: 10px;
+  border-right: 1px solid var(--sf-card-border);
+}
+
+.sf-daterange-preset {
+  border: 0;
+  background: transparent;
+  border-radius: var(--sf-radius-control);
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--sf-text-muted);
+  cursor: pointer;
+}
+
+.sf-daterange-preset:hover {
+  background: var(--sf-raised);
+  color: var(--sf-text);
+}
+
+/* The staged preset, not a committed filter — hence the soft accent fill rather
+   than the solid one a live CTA gets. */
+.sf-daterange-preset.is-active {
+  background: var(--sf-accent-soft);
+  color: var(--sf-accent-hover);
+  font-weight: 600;
+}
+
+.sf-daterange-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Echoes the staged span in words above the grid: two highlighted month cells
+   don't tell the reader which end is which, or the year, at a glance. */
+.sf-daterange-span {
+  margin: 0;
+  padding: 12px 14px 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sf-text);
+}
+
+.sf-daterange-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 14px 14px;
+}
+
+/* Under ~760px the rail plus two months can't fit side by side: stack them and
+   let the presets run as a wrapping row above the calendar. */
+@media (max-width: 760px) {
+  .sf-daterange {
+    flex-direction: column;
+  }
+
+  .sf-daterange-presets {
+    flex-direction: row;
+    flex-wrap: wrap;
+    min-width: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--sf-card-border);
+  }
+}
+
+/* Now that the compact bar refuses to wrap internally, a narrow screen has to
+   give it a line of its own rather than push it past the viewport edge. The two
+   controls still sit side by side — only the title/controls row stacks. */
+@media (max-width: 640px) {
+  .sf-page-head {
+    flex-wrap: wrap;
+  }
 }
 
 /* The card-free filter row: same labeled fields and result count as the
@@ -786,12 +931,11 @@ body {
   background: var(--sf-plot);
 }
 
-/* shadcn's Pagination root defaults to `w-full`, which would stretch this to
-   fill the rest of .sf-pagination-bar's row and defeat that bar's own
-   `justify-content: center` (the row count and the nav would still end up
-   pinned to opposite edges). Shrink-to-fit here so the two sit together as
-   one centered group. The element selector keeps this ahead of that
-   utility's specificity. */
+/* shadcn's Pagination root defaults to `w-full` and `mx-auto`, which would
+   stretch this across the rest of .sf-pagination-bar's row and then centre the
+   controls inside that stretched box — leaving them adrift in the middle rather
+   than at the bar's right edge. Shrink-to-fit so `space-between` can place them.
+   The element selector keeps this ahead of that utility's specificity. */
 nav.sf-pagination {
   width: auto;
   margin-inline: 0;
@@ -800,12 +944,17 @@ nav.sf-pagination {
 /* Sits in the page's bottom area, below the results card — never inside it.
    No surface of its own: a tinted band read as a separate boxed control, and
    an unfilled sticky bar would have let rows scroll through it, so this stays
-   in normal flow at the end of the page. The row count sits on the left so
-   "where am I" and "go elsewhere" read as one bar. */
+   in normal flow at the end of the page. The row count sits at the left edge
+   and the controls at the right, so "where am I" and "go elsewhere" each have
+   their own end of the bar. */
 .sf-pagination-bar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  /* The row count reads as a caption for the table above it, so it sits at the
+     table's own left edge; the controls go to the opposite edge. Centred, the
+     two ran together as one ambiguous cluster in the middle of an otherwise
+     empty band. `gap` still keeps them apart if the bar ever wraps. */
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 20px;
   margin-top: 16px;
@@ -1587,36 +1736,65 @@ nav.sf-pagination {
 
 /* Add User: choice between the manual form and a CSV bulk import */
 
+/* Branch picker inside a modal: two equal, mutually exclusive routes onward.
+   Each card is a button that opens a further step, so it needs the affordances
+   of one — forward cue, hover, keyboard focus and a press — while the surface
+   stays white so the title and description never shift contrast. */
+
 .sf-choice-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 
+/* Side by side these get too narrow to read before the modal itself is
+   uncomfortable, so they stack first. */
+@media (max-width: 560px) {
+  .sf-choice-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .sf-choice-card {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+  /* Tight: the title and its description are one group. The icon is separated
+     by its own larger margin below. */
+  gap: 4px;
   text-align: left;
   background: var(--sf-card);
-  color: var(--sf-text-muted);
   border: 1px solid var(--sf-card-border);
   border-radius: var(--sf-radius-card);
-  padding: 24px 20px;
+  padding: 20px;
   cursor: pointer;
   font-family: inherit;
+  transition:
+    border-color 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.sf-choice-card:hover {
+/* Keyboard focus earns the same treatment as hover, not just the global ring. */
+.sf-choice-card:hover,
+.sf-choice-card:focus-visible {
   border-color: var(--sf-accent);
-  background: var(--sf-accent-soft);
-  color: var(--sf-accent-hover);
+  box-shadow:
+    0 1px 2px rgba(19, 26, 43, 0.06),
+    0 8px 20px rgba(79, 70, 229, 0.14);
+  transform: translateY(-2px);
+}
+
+/* Presses down like every other control in the app (.sf-btn, shadcn Button). */
+.sf-choice-card:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(19, 26, 43, 0.06);
 }
 
 .sf-choice-icon {
   width: 44px;
   height: 44px;
+  margin-bottom: 12px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
@@ -1624,10 +1802,21 @@ nav.sf-pagination {
   background: var(--sf-accent-soft);
   color: var(--sf-accent);
   flex: 0 0 auto;
+  transition: color 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.sf-choice-card:hover .sf-choice-icon {
-  background: var(--sf-card);
+.sf-choice-card:hover .sf-choice-icon,
+.sf-choice-card:focus-visible .sf-choice-icon {
+  color: var(--sf-accent-hover);
+}
+
+/* Title left, forward cue right. */
+.sf-choice-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
 }
 
 .sf-choice-card-title {
@@ -1636,10 +1825,45 @@ nav.sf-pagination {
   color: var(--sf-text);
 }
 
+/* Dimmed by colour, not opacity: fading --sf-text-dim to 50% blends it to
+   roughly 2:1 on white, under the 3:1 a visible cue needs. The token itself
+   clears 4.9:1, and hover carries the emphasis instead. */
+.sf-choice-card-go {
+  flex: 0 0 auto;
+  color: var(--sf-text-dim);
+  transition:
+    transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sf-choice-card:hover .sf-choice-card-go,
+.sf-choice-card:focus-visible .sf-choice-card-go {
+  transform: translateX(2px);
+  color: var(--sf-accent);
+}
+
 .sf-choice-card-desc {
   font-size: 12.5px;
   color: var(--sf-text-muted);
-  line-height: 1.4;
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-choice-card,
+  .sf-choice-icon,
+  .sf-choice-card-go {
+    transition: none;
+  }
+
+  .sf-choice-card:hover,
+  .sf-choice-card:focus-visible {
+    transform: none;
+  }
+
+  .sf-choice-card:hover .sf-choice-card-go,
+  .sf-choice-card:focus-visible .sf-choice-card-go {
+    transform: none;
+  }
 }
 
 .sf-inline-btn {
@@ -2378,8 +2602,25 @@ nav.sf-pagination {
 /* Table-row View/Edit actions read as cramped at the base .sf-btn--sm size;
    widen just this case rather than every small button app-wide. */
 .sf-table .sf-row-actions .sf-btn {
-  min-width: 76px;
-  padding: 7px 16px;
+  min-width: 92px;
+  padding: 8px 32px;
   text-align: center;
+  /* inline-flex, not the default inline: these carry a leading icon, and only a
+     flex box can centre the icon against the label's cap height and space the
+     two with a gap. */
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  gap: 6px;
 }
+
+/* Every cell in every table starts at the left, Actions included — header and
+   buttons then share one edge, and the whole row reads down a single left
+   margin. The Actions cell was briefly right-aligned (to close the dead space
+   `table-layout: auto` hands the trailing column) with its header following it
+   over, but that alignment made each row's actions start at a different x than
+   every other column, and the `:has()` selector pairing the two mis-fired on
+   nested subtables — `:has()` matches at any depth, so an ExpandableSchoolTable
+   grade table's actions column right-aligned the *outer* table's last header
+   (Status) too. Left for everything is both simpler and what the app does
+   everywhere else. */

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
 
 /**
  * First modal primitive in the app — everything else uses inline forms, but
@@ -47,7 +49,7 @@ export function Modal({
         <div className="sf-modal-head">
           <h2>{title}</h2>
           <button type="button" className="sf-modal-close" aria-label="Close" onClick={onClose}>
-            ×
+            <HugeiconsIcon icon={Cancel01Icon} size={18} strokeWidth={2} />
           </button>
         </div>
         <div className="sf-modal-body">{children}</div>

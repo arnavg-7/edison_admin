@@ -4,15 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Download01Icon } from "@hugeicons/core-free-icons";
-import { type Person, type PersonKind } from "@/lib/data/people";
+import { Add01Icon, Download01Icon, PencilEdit02Icon, ViewIcon } from "@hugeicons/core-free-icons";
+import { people as seededPeople, type Person, type PersonKind } from "@/lib/data/people";
 import { SCHOOL_LEVELS, gradeLabel, schools, type SchoolLevel } from "@/lib/data/schools";
 import { useUsers } from "@/lib/users-store";
+import { useMounted } from "@/lib/use-mounted";
 import { formatDateTime } from "@/lib/format";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { AddUserModal } from "@/components/people/AddUserModal";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/base/buttons/button";
 import { Combobox, type ComboboxOption } from "@/components/shared/Combobox";
 import {
   Pagination,
@@ -68,7 +69,11 @@ const PAGE_SIZE = 10;
 /** Search and browse, then open an individual profile. */
 export default function PeopleSearchPage() {
   const router = useRouter();
-  const { users: allPeople, createUser, createUsers } = useUsers();
+  const { users: storedPeople, createUser, createUsers } = useUsers();
+  const mounted = useMounted();
+
+  // Seed until this page hydrates — see useMounted.
+  const allPeople = mounted ? storedPeople : seededPeople;
 
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState<PersonKind | "all">("all");
@@ -155,7 +160,13 @@ export default function PeopleSearchPage() {
           </p>
         </div>
 
-        <Button onClick={() => setIsAddingUser(true)}>Add User</Button>
+        <Button
+          size="sm"
+          onClick={() => setIsAddingUser(true)}
+          iconLeading={<HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} />}
+        >
+          Add User
+        </Button>
       </div>
 
       <div className="sf-filter-bar sf-filter-bar--flush sf-filter-bar--top-spaced">
@@ -224,11 +235,12 @@ export default function PeopleSearchPage() {
                 page's primary action is Add User in the header, and two solid
                 accent buttons on one screen would compete for it. */}
             <Button
-              variant="outline"
+              color="secondary"
+              size="sm"
               onClick={() => downloadResultsCsv(results)}
-              disabled={results.length === 0}
+              isDisabled={results.length === 0}
+              iconLeading={<HugeiconsIcon icon={Download01Icon} strokeWidth={2} className="size-4 shrink-0" />}
             >
-              <HugeiconsIcon icon={Download01Icon} strokeWidth={2} data-icon="inline-start" />
               Download CSV
             </Button>
           </div>
@@ -275,12 +287,30 @@ export default function PeopleSearchPage() {
                       <td>{person.lastLogin ? formatDateTime(person.lastLogin) : "—"}</td>
                       <td>
                         <div className="sf-row-actions">
-                          <Link className="sf-btn sf-btn--sm" href={href}>
+                          {/* Icons carry the row actions at a glance — down a
+                              long list the eye/pencil pair is picked out faster
+                              than two similar-length words. Labels stay: the
+                              actions are one click from editing a real person's
+                              record, not somewhere to make an icon-only guess. */}
+                          <Button
+                            color="secondary"
+                            size="xs"
+                            href={href}
+                            iconLeading={
+                              <HugeiconsIcon icon={ViewIcon} size={16} strokeWidth={2} />
+                            }
+                          >
                             View
-                          </Link>
-                          <Link className="sf-btn sf-btn--sm sf-btn--primary" href={href}>
+                          </Button>
+                          <Button
+                            size="xs"
+                            href={href}
+                            iconLeading={
+                              <HugeiconsIcon icon={PencilEdit02Icon} size={16} strokeWidth={2} />
+                            }
+                          >
                             Edit
-                          </Link>
+                          </Button>
                         </div>
                       </td>
                     </tr>

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { PlusSignIcon } from "@hugeicons/core-free-icons";
 import {
   goalCategories,
   goalTemplates,
@@ -9,7 +11,7 @@ import {
   type GradeGoal
 } from "@/lib/data/academicGoals";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/base/buttons/button";
 import { Combobox } from "@/components/shared/Combobox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -234,12 +236,12 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
       </div>
 
       <div className="list-editor-form-actions">
-        <Button onClick={save} disabled={!canSave}>
+        <Button size="sm" onClick={save} isDisabled={!canSave}>
           {editingId ? "Save goal" : "Submit goal"}
         </Button>
-        <button type="button" className="sf-btn" onClick={cancel}>
+        <Button color="secondary" size="sm" onClick={cancel}>
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -266,7 +268,13 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
             <h2>Current goals</h2>
             {/* While empty, the only call to action lives inside the empty state, so
                 there aren't two "Set a goal" buttons competing on one screen. */}
-            {hasNoCurrentGoals ? null : <Button onClick={startAdd}>Set a goal</Button>}
+            {hasNoCurrentGoals ? null : <Button
+                size="sm"
+                onClick={startAdd}
+                iconLeading={<HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} className="size-4 shrink-0" />}
+              >
+                Set a goal
+              </Button>}
           </div>
 
           {isAdding ? form : null}
@@ -275,7 +283,13 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
             <EmptyState
               title="No current goals"
               message="Set a goal for this grade's semester to get started."
-              action={<Button onClick={startAdd}>Set a goal</Button>}
+              action={<Button
+                size="sm"
+                onClick={startAdd}
+                iconLeading={<HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} className="size-4 shrink-0" />}
+              >
+                Set a goal
+              </Button>}
             />
           ) : (
             <div className="sf-table-wrap">

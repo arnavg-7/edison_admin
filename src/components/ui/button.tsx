@@ -9,18 +9,25 @@ const buttonVariants = cva(
   // resolves to 14px. Pointing at the token keeps this and .sf-btn identical.
   "group/button inline-flex shrink-0 items-center justify-center rounded-(--sf-radius-cta) border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
+    // Colors below are the same --sf-* arbitrary-value references the
+    // Untitled UI button (components/base/buttons/button.tsx) uses for its
+    // primary/secondary/tertiary/destructive/link-color looks — this Button
+    // still stays on Base UI underneath (it's composed via `render` inside
+    // AlertDialog, Dialog, Toast, Sidebar, etc., which Untitled's React-Aria
+    // button can't be), but reads the identical source values so every CTA
+    // looks like one family regardless of which engine renders it.
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        default: "bg-[var(--sf-accent)] text-white hover:bg-[var(--sf-accent-hover)]",
         outline:
-          "border-border hover:bg-input/50 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:bg-input/30",
+          "bg-[var(--sf-card)] text-[var(--sf-text)] border-[var(--sf-card-border)] hover:bg-[var(--sf-raised)] aria-expanded:bg-[var(--sf-raised)]",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "bg-[var(--sf-card)] text-[var(--sf-text)] border-[var(--sf-card-border)] hover:bg-[var(--sf-raised)] aria-expanded:bg-[var(--sf-raised)]",
         ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+          "text-[var(--sf-text)] hover:bg-[var(--sf-raised)] aria-expanded:bg-[var(--sf-raised)]",
         destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-[var(--sf-card)] text-[var(--sf-error-text)] border-[#f0c5ca] hover:bg-[var(--sf-error-bg)] focus-visible:border-[var(--sf-error-text)] focus-visible:ring-[var(--sf-error-text)]/20",
+        link: "text-[var(--sf-link)] underline-offset-4 hover:underline hover:text-[var(--sf-accent-hover)]",
       },
       size: {
         // A fixed h-* with no vertical padding read as flat and cramped

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -29,12 +29,42 @@ import {
 import { formatNumber, formatSalesforceStamp } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-/** One row's height and the chart's own top/bottom margin, outside the rows —
-    same constants RatioBarCard uses, so every horizontal bar card on this
-    screen keeps the same rhythm. */
+/** One category's height and the chart's own top/bottom margin, outside the
+    rows — same constants RatioBarCard uses, so every horizontal bar card on
+    this screen keeps the same rhythm. */
 const ROW_HEIGHT = 40;
 const CHART_VPAD = 16;
 const VISIBLE_ROWS = 8;
+
+/**
+ * Bar thickness is fixed and the *spacing* is derived from it, rather than the
+ * other way round.
+ *
+ * Bklit sizes a bar as a fraction of its category band, and the band as plot
+ * height ÷ category count — so with a filled plot, thickness swung with however
+ * tall the row made the card (90px bars on a three-category report next to 36px
+ * on a five-row neighbour). Overriding `barWidth` fixes thickness but draws each
+ * bar at the *top* of its band, dumping all the slack below it and leaving a gap
+ * between the last bar and the axis.
+ *
+ * Sizing the band to its bars and pushing the slack into the scale's `padding`
+ * instead gives a fixed thickness with even gaps and nothing left dangling at
+ * the bottom.
+ */
+const BAR_THICKNESS = 27;
+/** Thinner where a category is split between series, or a three-series report
+    would stand three times as tall as a single-series one for the same rows. */
+const BAR_THICKNESS_GROUPED = 14;
+/** Bklit's own default gap between bars within one category. */
+const GROUP_GAP = 4;
+/** Whitespace between one category and the next. */
+const ROW_GAP = 28;
+
+/** The bars of one category, stacked thickness only — no surrounding gap. */
+function bandHeightFor(seriesCount: number): number {
+  const thickness = seriesCount > 1 ? BAR_THICKNESS_GROUPED : BAR_THICKNESS;
+  return seriesCount * thickness + Math.max(0, seriesCount - 1) * GROUP_GAP;
+}
 
 /** Fixed height for the vertical (column) orientation: unlike the horizontal
     list, height here isn't driven by category count, so there's no row-count
@@ -240,10 +270,49 @@ export function BarChartCard({
   /* Vertical (column) mode has no row-count-driven height or scroll: category
      count grows the chart's width, not its height, so a fixed height and no
      scroll wrapper both apply regardless of how many groups there are. */
+  /*
+    One category's slot = its bars + the gap to the next. `barGap` is a fraction
+    of that slot, so handing the scale ROW_GAP / rowHeight leaves exactly
+    `bandHeight` for the bars themselves — fixed thickness, even spacing.
+  */
+  const bandHeight = bandHeightFor(series.length);
+  const rowHeight = bandHeight + ROW_GAP;
+
   const chartHeight = isVertical
     ? VERTICAL_CHART_HEIGHT
-    : sortedGroups.length * ROW_HEIGHT + CHART_VPAD;
+    : sortedGroups.length * rowHeight + CHART_VPAD;
   const scrolls = !isVertical && sortedGroups.length > VISIBLE_ROWS;
+
+  /*
+    ROW_GAP is the *minimum* gap. A card stretched by a taller neighbour in its
+    row used to keep the chart at `chartHeight` and dump all the slack into one
+    blank block under the axis; the rows now spread across the whole plot
+    instead, spending that slack on the gaps between categories. Thickness is
+    still `bandHeight`, so a three-row card's bars stay the same weight as its
+    eight-row neighbour's — only the whitespace between them differs.
+
+    The plot has to be measured for that: `barGap` is a fraction of the row, so
+    turning "fill the card" into a fraction needs the height flex actually
+    handed us. Until the first measurement lands, the minimum-gap fraction
+    renders (the same layout as before), so there's no flash of oversized bars.
+  */
+  const plotRef = useRef<HTMLDivElement>(null);
+  const [plotHeight, setPlotHeight] = useState(0);
+
+  useEffect(() => {
+    const element = plotRef.current;
+    if (!element || isVertical || scrolls) return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      setPlotHeight(entry.contentRect.height);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [isVertical, scrolls]);
+
+  const measuredRowHeight = plotHeight > 0 ? (plotHeight - CHART_VPAD) / Math.max(1, sortedGroups.length) : 0;
+  const effectiveRowHeight = Math.max(rowHeight, measuredRowHeight);
+  const barGap = (effectiveRowHeight - bandHeight) / effectiveRowHeight;
 
   return (
     <Card className={className}>
@@ -276,19 +345,15 @@ export function BarChartCard({
 
       <CardContent className="flex flex-1 flex-col">
         <div
+          ref={plotRef}
+          /* flex-1 (not a fixed height) so the plot takes the whole card and the
+             rows space themselves out inside it — see the barGap note above.
+             `minHeight` keeps the row-count floor: a card that is the tallest in
+             its row never squeezes its own gaps below ROW_GAP. */
           className={cn("w-full", scrolls ? "overflow-y-auto pr-1" : "flex-1")}
           style={
             scrolls
-              ? { maxHeight: VISIBLE_ROWS * ROW_HEIGHT + CHART_VPAD }
-              /*
-                minHeight, not height: this card's own row-count formula is
-                only a floor. A card stretched taller by a row sibling (this
-                screen's usual case) grows past it to fill the space instead
-                of leaving it blank below a fixed-height chart; a card with no
-                taller sibling to stretch against — alone in its row, flex-1
-                inside an auto-height column resolves to nothing — still gets
-                this floor instead of collapsing to zero height.
-              */
+              ? { maxHeight: VISIBLE_ROWS * rowHeight + CHART_VPAD }
               : { minHeight: chartHeight }
           }
         >
@@ -304,6 +369,15 @@ export function BarChartCard({
               }
               className="h-full w-full"
               aspectRatio="auto"
+              /*
+                barWidth pins the band to the bars' own thickness in pixels, so
+                bar weight no longer tracks however tall the row makes this card
+                — only the spacing between bars absorbs the extra height. barGap
+                still sets the rhythm when the plot is short enough that the
+                pixel band is the larger of the two.
+              */
+              barWidth={isVertical ? undefined : bandHeight}
+              barGap={isVertical ? undefined : barGap}
             >
               {series.map((item) => (
                 <Bar

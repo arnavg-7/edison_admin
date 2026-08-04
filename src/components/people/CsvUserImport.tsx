@@ -9,7 +9,7 @@ import {
   type PersonKind
 } from "@/lib/data/people";
 import { gradeLabel, schools } from "@/lib/data/schools";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/base/buttons/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 const SAMPLE_CSV =
@@ -189,16 +189,16 @@ export function CsvUserImport({
       ) : null}
 
       <div className="list-editor-form-actions">
-        <Button disabled={validPeople.length === 0} onClick={() => onImport(validPeople)}>
+        <Button size="sm" isDisabled={validPeople.length === 0} onClick={() => onImport(validPeople)}>
           Add {validPeople.length > 0 ? validPeople.length : ""} User
           {validPeople.length === 1 ? "" : "s"}
         </Button>
-        <button type="button" className="sf-btn" onClick={onBack}>
+        <Button color="secondary" size="sm" onClick={onBack}>
           Back
-        </button>
-        <button type="button" className="sf-btn sf-btn--quiet" onClick={onCancel}>
+        </Button>
+        <Button color="tertiary" size="sm" onClick={onCancel}>
           Cancel
-        </button>
+        </Button>
       </div>
     </>
   );

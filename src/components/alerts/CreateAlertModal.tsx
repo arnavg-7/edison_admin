@@ -6,7 +6,7 @@ import { taggableFaculty } from "@/lib/data/alerts";
 import { peopleOfKind } from "@/lib/data/people";
 import { schools } from "@/lib/data/schools";
 import { Modal } from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/base/buttons/button";
 import { Combobox } from "@/components/shared/Combobox";
 import { ADMIN_ROLE_LABEL } from "@/lib/nav";
 
@@ -140,12 +140,12 @@ export function CreateAlertModal({
       </label>
 
       <div className="list-editor-form-actions">
-        <Button onClick={save} disabled={!canSave}>
+        <Button size="sm" onClick={save} isDisabled={!canSave}>
           Create Alert
         </Button>
-        <button type="button" className="sf-btn" onClick={onClose}>
+        <Button color="secondary" size="sm" onClick={onClose}>
           Cancel
-        </button>
+        </Button>
       </div>
     </Modal>
   );

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { PlusSignIcon } from "@hugeicons/core-free-icons";
 import { StatusBadge } from "./StatusBadge";
 import { EmptyState } from "./EmptyState";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/base/buttons/button";
 
 export type ListEditorItem = {
   id: string;
@@ -131,10 +133,10 @@ export function ListEditor({
         </label>
       ))}
       <div className="list-editor-form-actions">
-        <Button onClick={save}>Save</Button>
-        <button type="button" className="sf-btn" onClick={cancel}>
+        <Button size="sm" onClick={save}>Save</Button>
+        <Button color="secondary" size="sm" onClick={cancel}>
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -143,7 +145,13 @@ export function ListEditor({
     <div className="list-editor">
       <div className="sf-panel-head">
         <h2>{heading}</h2>
-        <Button onClick={startAdd}>{addLabel}</Button>
+        <Button
+          size="sm"
+          onClick={startAdd}
+          iconLeading={<HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} className="size-4 shrink-0" />}
+        >
+          {addLabel}
+        </Button>
       </div>
 
       {isAdding ? form : null}

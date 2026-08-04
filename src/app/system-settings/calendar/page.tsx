@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { terms } from "@/lib/data/academicCalendar";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/base/buttons/button";
 
 /**
  * Source of truth for the "This Term" preset in the Reporting date filter.

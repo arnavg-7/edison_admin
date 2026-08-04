@@ -947,18 +947,35 @@
   color: var(--sf-text);
 }
 
+/* A real icon button, not a text glyph: 32px square so it is a reachable
+   target, with a tinted hover so the affordance is visible before the click. */
 .sf-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   border: none;
+  border-radius: var(--sf-radius-control);
   background: none;
-  font-size: 22px;
-  line-height: 1;
   color: var(--sf-text-muted);
   cursor: pointer;
-  padding: 4px;
+  transition:
+    background-color 140ms ease-out,
+    color 140ms ease-out;
 }
 
 .sf-modal-close:hover {
+  background: var(--sf-raised);
   color: var(--sf-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-modal-close {
+    transition: none;
+  }
 }
 
 .sf-modal-body {

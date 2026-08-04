@@ -1,10 +1,9 @@
 "use client";
 
-import { DATE_RANGE_OPTIONS, useReportFilters, type DateRangePreset } from "@/lib/filters";
+import { useReportFilters } from "@/lib/filters";
 import { classesForGrade, gradesForSchool, schools } from "@/lib/data/schools";
-import { currentTerm } from "@/lib/data/academicCalendar";
 import { Combobox } from "@/components/shared/Combobox";
-import { DateRangeField } from "@/components/shared/DateRangeField";
+import { DateRangePicker } from "@/components/shared/DateRangePicker";
 
 type ComboOption = { value: string; label: string };
 
@@ -16,7 +15,6 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
   const { filters, setFilters } = useReportFilters();
   const grades = gradesForSchool(filters.school);
   const sections = classesForGrade(filters.grade);
-  const term = currentTerm();
 
   const schoolOptions: ComboOption[] = [
     { value: "all", label: "All schools" },
@@ -37,24 +35,13 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
     <div className="sf-filter-bar sf-filter-bar--flush">
       <label className="sf-field">
         <span>Date Range</span>
-        <Combobox
-          options={DATE_RANGE_OPTIONS}
-          value={filters.range}
-          onChange={(range) => setFilters({ range: range as DateRangePreset })}
-          placeholder="Select a range"
+        <DateRangePicker
+          range={filters.range}
+          from={filters.from}
+          to={filters.to}
+          onChange={setFilters}
         />
       </label>
-
-      {filters.range === "custom" ? (
-        <label className="sf-field">
-          <span>Dates</span>
-          <DateRangeField
-            from={filters.from}
-            to={filters.to}
-            onChange={({ from, to }) => setFilters({ from, to })}
-          />
-        </label>
-      ) : null}
 
       <label className="sf-field">
         <span>School</span>
@@ -88,13 +75,6 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
             disabled={!filters.grade}
           />
         </label>
-      ) : null}
-
-      {filters.range === "term" ? (
-        <p className="sf-filter-note">
-          {/* TODO: validate against the real academic calendar. */}
-          This Term = {term.label} ({term.start} to {term.end})
-        </p>
       ) : null}
     </div>
   );

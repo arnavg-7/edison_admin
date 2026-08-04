@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ADMIN_ROLE_LABEL, SECTIONS } from "@/lib/nav";
 import { NavIcon } from "./NavIcon";
+import { Button } from "@/components/base/buttons/button";
 import {
   Sidebar as SidebarPrimitive,
   SidebarContent,
@@ -13,7 +14,8 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem
+  SidebarMenuItem,
+  SidebarTrigger
 } from "@/components/ui/sidebar";
 
 export function Sidebar() {
@@ -23,8 +25,13 @@ export function Sidebar() {
     <SidebarPrimitive collapsible="icon">
       <SidebarHeader>
         <div className="sf-brand">
-          <div className="sf-brand-name group-data-[collapsible=icon]:hidden">Edison360 Admin</div>
-          <div className="sf-brand-role group-data-[collapsible=icon]:hidden">{ADMIN_ROLE_LABEL}</div>
+          <div className="sf-brand-head group-data-[collapsible=icon]:justify-center">
+            <div className="group-data-[collapsible=icon]:hidden">
+              <div className="sf-brand-name">Edison360 Admin</div>
+              <div className="sf-brand-role">{ADMIN_ROLE_LABEL}</div>
+            </div>
+            <SidebarTrigger />
+          </div>
         </div>
       </SidebarHeader>
 
@@ -55,9 +62,9 @@ export function Sidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <button className="sf-btn sf-btn--quiet sf-btn--block" type="button">
+        <Button color="tertiary" size="sm" className="w-full justify-start">
           <span className="group-data-[collapsible=icon]:hidden">Log out</span>
-        </button>
+        </Button>
       </SidebarFooter>
     </SidebarPrimitive>
   );

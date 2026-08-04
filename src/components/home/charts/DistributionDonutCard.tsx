@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { RefreshIcon } from "@hugeicons/core-free-icons";
 import {
@@ -40,6 +40,9 @@ const SERIES_COLOR_VARS = [
     the explicit label. */
 const OTHER_TONE_VAR = "var(--sf-text-dim)";
 const OTHER_LABEL_PATTERN = /^(other|unassigned)\b/i;
+
+/** Hole-to-width ratio, taken from the ring's own 110px-in-340px proportions. */
+const INNER_RADIUS_RATIO = 110 / 340;
 
 /**
  * Total centered in the ring, largest segment first by default (re-orderable
@@ -84,6 +87,28 @@ export function DistributionDonutCard({
 
   /** One hover index drives the ring, the centre figure and the legend at once. */
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  /*
+    PieChart takes `innerRadius` in pixels and derives the outer radius from the
+    box it's given (`centre - padding`), so a hardcoded value only holds at one
+    width: now that the ring shares its row with the legend, a 110px hole in a
+    ~130px-wide box would exceed the outer radius and turn the donut inside out.
+    Measuring the wrapper and keeping the hole at the ratio the 340px version had
+    (110/340) preserves that ring thickness at any card width.
+  */
+  const ringRef = useRef<HTMLDivElement>(null);
+  const [ringWidth, setRingWidth] = useState(0);
+
+  useEffect(() => {
+    const element = ringRef.current;
+    if (!element) return;
+
+    const observer = new ResizeObserver(([entry]) => setRingWidth(entry.contentRect.width));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const innerRadius = Math.round((ringWidth || 340) * INNER_RADIUS_RATIO);
 
   const chartData = useMemo(() => {
     /*
@@ -139,20 +164,20 @@ export function DistributionDonutCard({
       </CardHeader>
 
       <CardContent>
-        {/* Ring and legend side by side, wrapping to stacked on a narrow card.
-            The legend is a vertical list, so it holds long school names on one
-            line each instead of the centred wrap-anywhere row it replaces. */}
-        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
-          {/* No fixed `size`: PieChart falls back to filling this wrapper's
-              width (ParentSize), so the ring actually grows to use a wide
-              card's real estate instead of sitting at one guessed pixel
-              value regardless of how much room the card has. Capped so it
-              doesn't overwhelm an ultra-wide card. */}
-          <div className="w-full max-w-[340px] shrink-0">
+        {/* Always one row — ring left, labels right. It used to be `flex-wrap`
+            with a `w-full` ring, which on any card narrower than the ring's own
+            340px cap took the whole line and pushed the legend underneath,
+            stacking the card vertically. A percentage width keeps the two side
+            by side at every card width instead. */}
+        <div className="flex items-center gap-5">
+          {/* No fixed `size`: PieChart fills this wrapper's width (ParentSize),
+              so the ring uses the room the card actually has rather than one
+              guessed pixel value. Capped so it doesn't overwhelm a wide card. */}
+          <div ref={ringRef} className="w-[46%] max-w-[340px] shrink-0">
             <PieChart
               data={chartData}
               hoveredIndex={hoveredIndex}
-              innerRadius={110}
+              innerRadius={innerRadius}
               onHoverChange={setHoveredIndex}
             >
               {chartData.map((slice, index) => (
@@ -163,7 +188,7 @@ export function DistributionDonutCard({
           </div>
 
           <Legend
-            className="min-w-0 flex-1 basis-64 gap-1.5"
+            className="min-w-0 flex-1 gap-1.5"
             hoveredIndex={hoveredIndex}
             items={legendItems}
             onHoverChange={setHoveredIndex}

@@ -1,9 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Delete02Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import {
   ADMIN_ROLE_LABELS,
   ADMIN_ROLE_ORDER,
+  adminUsers as seededAdminUsers,
   roleAssignmentsInclude,
   scopeLabel,
   type AdminRole,
@@ -12,13 +15,27 @@ import {
 } from "@/lib/data/adminUsers";
 import { schools } from "@/lib/data/schools";
 import { useAdminUsers } from "@/lib/admin-users-store";
+import { useMounted } from "@/lib/use-mounted";
 import { formatDateTime } from "@/lib/format";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Combobox, type ComboboxOption } from "@/components/shared/Combobox";
+import { Button, styles as buttonStyles } from "@/components/base/buttons/button";
+import { cx } from "@/lib/utils/cx";
 import { AdminRoleBadges } from "@/components/admin-users/AdminRoleBadges";
 import { EditAdminUserModal } from "@/components/admin-users/EditAdminUserModal";
 import { BulkRoleReassignModal } from "@/components/admin-users/BulkRoleReassignModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 
 type SortOrder = "recent" | "oldest";
 
@@ -52,7 +69,16 @@ const STATUS_TONE: Record<AdminUserStatus, "ok" | "warn" | "neutral"> = {
 };
 
 export default function AdminUsersPage() {
-  const { adminUsers, updateUsers } = useAdminUsers();
+  const { adminUsers: storedAdminUsers, updateUsers, removeUser } = useAdminUsers();
+  const mounted = useMounted();
+
+  /**
+   * The provider lives in the root layout, so it can commit — and swap the seed
+   * for localStorage data — before this page's boundary hydrates. Rendering the
+   * seed until this component has hydrated keeps the first client render
+   * identical to the server HTML; the stored accounts appear one render later.
+   */
+  const adminUsers = mounted ? storedAdminUsers : seededAdminUsers;
 
   const [query, setQuery] = useState("");
   const [role, setRole] = useState("all");
@@ -60,8 +86,15 @@ export default function AdminUsersPage() {
   const [scope, setScope] = useState("all");
   const [sort, setSort] = useState<SortOrder>("recent");
   const [selected, setSelected] = useState<string[]>([]);
-  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+  /* The id, not the record: the edit modal writes Active/Inactive straight to
+     the store, so holding a copy of the user here froze it against those writes
+     — the modal's own toggle rendered from a snapshot that could never change. */
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [isReassigning, setIsReassigning] = useState(false);
+
+  const editingUser = editingUserId
+    ? (adminUsers.find((user) => user.id === editingUserId) ?? null)
+    : null;
 
   const matchesScope = (user: AdminUser) => {
     if (scope === "all") return true;
@@ -155,12 +188,12 @@ export default function AdminUsersPage() {
           {selectedIds.length > 0 ? (
             <div className="sf-row-actions">
               <span className="sf-panel-note">{selectedIds.length} selected</span>
-              <button type="button" className="sf-btn sf-btn--sm" onClick={() => setIsReassigning(true)}>
+              <Button color="secondary" size="xs" onClick={() => setIsReassigning(true)}>
                 Reassign role
-              </button>
-              <button type="button" className="sf-btn sf-btn--sm sf-btn--danger" onClick={bulkDeactivate}>
+              </Button>
+              <Button color="secondary-destructive" size="xs" onClick={bulkDeactivate}>
                 Bulk deactivate
-              </button>
+              </Button>
             </div>
           ) : (
             <span className="sf-panel-note">Select a row to edit role, scope or status</span>
@@ -221,9 +254,62 @@ export default function AdminUsersPage() {
                     </td>
                     <td>{user.lastLogin ? formatDateTime(user.lastLogin) : "—"}</td>
                     <td>
-                      <button type="button" className="sf-btn sf-btn--sm" onClick={() => setEditingUser(user)}>
-                        Edit
-                      </button>
+                      <div className="sf-row-actions">
+                        <Button
+                          color="secondary"
+                          size="xs"
+                          onClick={() => setEditingUserId(user.id)}
+                          iconLeading={
+                            <HugeiconsIcon icon={PencilEdit02Icon} size={16} strokeWidth={2} />
+                          }
+                        >
+                          Edit
+                        </Button>
+
+                        <AlertDialog>
+                          {/* AlertDialogTrigger stays on Base UI (it can't be
+                              the Untitled Button — see the note on
+                              AlertDialogAction below), but borrows that
+                              button's exact classes via the shared `styles`
+                              export so it still looks like one. */}
+                          <AlertDialogTrigger
+                            className={cx(
+                              buttonStyles.common.root,
+                              buttonStyles.sizes.xs.root,
+                              buttonStyles.colors["secondary-destructive"].root
+                            )}
+                          >
+                            {/* A plain child, not `iconLeading`: this trigger is
+                                not the Untitled Button, only its classes, so it
+                                has no icon prop to pass. Those classes already
+                                lay the root out as a flex row with a gap, so the
+                                icon sits like the Edit button's. */}
+                            <HugeiconsIcon icon={Delete02Icon} size={16} strokeWidth={2} />
+                            Remove
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remove {user.name}?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This removes their admin access immediately — they&rsquo;ll no longer
+                                appear in this list. This can&rsquo;t be undone from here.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                variant="destructive"
+                                onClick={() => {
+                                  removeUser(user.id);
+                                  setSelected((current) => current.filter((id) => id !== user.id));
+                                }}
+                              >
+                                Remove
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -234,7 +320,7 @@ export default function AdminUsersPage() {
       </div>
 
       {editingUser ? (
-        <EditAdminUserModal user={editingUser} onClose={() => setEditingUser(null)} />
+        <EditAdminUserModal user={editingUser} onClose={() => setEditingUserId(null)} />
       ) : null}
 
       {isReassigning ? (

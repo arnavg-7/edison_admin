@@ -9,7 +9,9 @@ import {
   type AdminUser
 } from "@/lib/data/adminUsers";
 import { ADMIN_ROLE_LABEL } from "@/lib/nav";
-import { Button } from "@/components/ui/button";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { MailAdd01Icon } from "@hugeicons/core-free-icons";
+import { Button } from "@/components/base/buttons/button";
 import { RoleCheckboxes } from "./RoleCheckboxes";
 import { ScopeSelect } from "./ScopeSelect";
 
@@ -94,14 +96,19 @@ export function ManualInviteForm({
       </p>
 
       <div className="list-editor-form-actions">
-        <Button onClick={send} disabled={!canSave}>
+        <Button
+          size="sm"
+          onClick={send}
+          isDisabled={!canSave}
+          iconLeading={<HugeiconsIcon icon={MailAdd01Icon} strokeWidth={2} className="size-4 shrink-0" />}
+        >
           Send Invite
         </Button>
         {/* No Cancel button: Back is the only other move from here, and the
             modal's own ✕ already dismisses. */}
-        <button type="button" className="sf-btn" onClick={onBack}>
+        <Button color="secondary" size="sm" onClick={onBack}>
           Back
-        </button>
+        </Button>
       </div>
     </>
   );

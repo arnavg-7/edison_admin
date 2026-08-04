@@ -4,7 +4,6 @@ import "./globals.css";
 import "../styles/theme.css";
 import "../styles/pages/admin.css";
 import { Sidebar } from "@/components/shell/Sidebar";
-import { ContextBar } from "@/components/shell/ContextBar";
 import { ScrollReset } from "@/components/shell/ScrollReset";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -38,7 +37,6 @@ export default function RootLayout({
               <SidebarProvider>
                 <Sidebar />
                 <SidebarInset className="sf-main-region">
-                  <ContextBar />
                   <div id="main-content">{children}</div>
                 </SidebarInset>
                 <ScrollReset />

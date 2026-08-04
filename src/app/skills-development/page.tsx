@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { schools } from "@/lib/data/schools";
 import { gradeConfigSummary, isSchoolInScope, schoolConfigSummary } from "@/lib/data/skillsDevelopment";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -77,6 +79,7 @@ export default function SchoolPickerPage() {
                     className="sf-btn sf-btn--sm sf-btn--primary"
                     href={`/skills-development/${school.id}/${grade}`}
                   >
+                    <HugeiconsIcon icon={PencilEdit02Icon} size={14} strokeWidth={2} />
                     Edit
                   </Link>
                 </div>

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { PlusSignIcon } from "@hugeicons/core-free-icons";
 import {
   SKILL_LEVELS,
   skillsProfileFor,
@@ -9,7 +11,7 @@ import {
 } from "@/lib/data/skillsDevelopment";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/base/buttons/button";
 import { Combobox } from "@/components/shared/Combobox";
 
 const isLevelOptionEqual = (a: (typeof SKILL_LEVELS)[number], b: (typeof SKILL_LEVELS)[number]) =>
@@ -175,10 +177,10 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
       </label>
 
       <div className="list-editor-form-actions">
-        <Button onClick={onSave}>{saveLabel}</Button>
-        <button type="button" className="sf-btn" onClick={onCancel}>
+        <Button size="sm" onClick={onSave}>{saveLabel}</Button>
+        <Button color="secondary" size="sm" onClick={onCancel}>
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -208,7 +210,13 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
           there aren't two "Add skill" buttons competing on one screen. */}
       {isEmpty ? null : (
         <div className="list-editor-head">
-          <Button onClick={startAddGroup}>Add skill</Button>
+          <Button
+            size="sm"
+            onClick={startAddGroup}
+            iconLeading={<HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} className="size-4 shrink-0" />}
+          >
+            Add skill
+          </Button>
         </div>
       )}
 
@@ -229,10 +237,10 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
             />
           </label>
           <div className="list-editor-form-actions">
-            <Button onClick={saveNewGroup}>Create skill</Button>
-            <button type="button" className="sf-btn" onClick={() => setAddingGroup(false)}>
+            <Button size="sm" onClick={saveNewGroup}>Create skill</Button>
+            <Button color="secondary" size="sm" onClick={() => setAddingGroup(false)}>
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       ) : null}
@@ -241,7 +249,13 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
         <EmptyState
           title="No skills configured yet"
           message="Add a skill such as Resilience, then add the sub-skills rated under it."
-          action={<Button onClick={startAddGroup}>Add skill</Button>}
+          action={<Button
+            size="sm"
+            onClick={startAddGroup}
+            iconLeading={<HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} className="size-4 shrink-0" />}
+          >
+            Add skill
+          </Button>}
         />
       ) : (
         <div className="skill-group-grid">

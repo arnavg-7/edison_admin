@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { scopeLabel } from "@/lib/data/adminUsers";
+import { adminUsers as seededAdminUsers, scopeLabel } from "@/lib/data/adminUsers";
 import { useAdminUsers } from "@/lib/admin-users-store";
+import { useMounted } from "@/lib/use-mounted";
 import { formatDateTime } from "@/lib/format";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { AdminRoleBadges } from "@/components/admin-users/AdminRoleBadges";
@@ -10,7 +11,11 @@ import { AdminRoleBadges } from "@/components/admin-users/AdminRoleBadges";
 /** Invites sent but not yet accepted — a filtered slice of the same admin
     user list, the same way Alert History is a filtered slice of alerts. */
 export default function PendingInvitationsPage() {
-  const { adminUsers, updateUser, removeUser } = useAdminUsers();
+  const { adminUsers: storedAdminUsers, updateUser, removeUser } = useAdminUsers();
+  const mounted = useMounted();
+
+  // Seed until this page hydrates — see useMounted.
+  const adminUsers = mounted ? storedAdminUsers : seededAdminUsers;
 
   const pending = useMemo(
     () =>

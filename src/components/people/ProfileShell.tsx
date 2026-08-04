@@ -22,7 +22,7 @@ import { SkillsProfileEditor } from "@/components/skills-development/SkillsProfi
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Combobox } from "@/components/shared/Combobox";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/base/buttons/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatSalesforceStamp } from "@/lib/format";
 
@@ -344,7 +344,7 @@ export function ProfileShell({ person }: { person: Person }) {
               title="No goals recorded"
               message="No active or historic goals for this student."
               action={
-                <Button size="sm" render={<Link href={academicGoalsHref(person.school, person.group)} />}>
+                <Button size="sm" href={academicGoalsHref(person.school, person.group)}>
                   Add Goal
                 </Button>
               }
@@ -514,7 +514,7 @@ export function ProfileShell({ person }: { person: Person }) {
               message={isStudent ? "No alerts raised for this student." : "No alerts involving this teacher's students."}
               action={
                 isStudent ? (
-                  <Button size="sm" render={<Link href="/alerts?create=1" />}>
+                  <Button size="sm" href="/alerts?create=1">
                     Add Alert
                   </Button>
                 ) : undefined

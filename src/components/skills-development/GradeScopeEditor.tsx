@@ -25,9 +25,9 @@ export function GradeScopeEditor({ scope }: { scope: GradeScope }) {
       <div className="sf-scope-head">
         <h1 className="sf-page-title sf-page-title--with-back">
           <Link
-            href={`/skills-development/${scope.schoolId}`}
+            href="/skills-development"
             className="sf-back-btn"
-            aria-label={`Back to ${scope.schoolName} grades`}
+            aria-label="Back to Skills & Development"
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={2} />
           </Link>

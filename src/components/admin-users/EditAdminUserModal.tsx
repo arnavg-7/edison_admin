@@ -5,7 +5,7 @@ import Link from "next/link";
 import { accessSummary, type AdminRoleAssignment, type AdminScope, type AdminUser } from "@/lib/data/adminUsers";
 import { useAdminUsers } from "@/lib/admin-users-store";
 import { Modal } from "@/components/shared/Modal";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/base/buttons/button";
 import { Switch } from "@/components/ui/switch";
 import { RoleCheckboxes } from "./RoleCheckboxes";
 import { ScopeSelect } from "./ScopeSelect";
@@ -84,9 +84,9 @@ export function EditAdminUserModal({ user, onClose }: { user: AdminUser; onClose
       )}
 
       <div className="sf-edit-panel-actions">
-        <button type="button" className="sf-btn sf-btn--sm" onClick={requestPasswordReset} disabled={isPending}>
+        <Button color="secondary" size="sm" onClick={requestPasswordReset} isDisabled={isPending}>
           Force password reset
-        </button>
+        </Button>
         {resetRequested ? (
           <span className="sf-panel-note">Reset requested. They&rsquo;ll be asked to set a new password next sign-in.</span>
         ) : null}
@@ -97,12 +97,12 @@ export function EditAdminUserModal({ user, onClose }: { user: AdminUser; onClose
       </Link>
 
       <div className="list-editor-form-actions">
-        <Button onClick={save} disabled={!hasRoles}>
+        <Button size="sm" onClick={save} isDisabled={!hasRoles}>
           Save Changes
         </Button>
-        <button type="button" className="sf-btn sf-btn--quiet" onClick={onClose}>
+        <Button color="tertiary" size="sm" onClick={onClose}>
           Cancel
-        </button>
+        </Button>
       </div>
     </Modal>
   );

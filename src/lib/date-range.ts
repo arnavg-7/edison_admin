@@ -1,5 +1,4 @@
 import { SALESFORCE_LAST_REFRESH } from "@/lib/data/salesforce";
-import { currentTerm } from "@/lib/data/academicCalendar";
 import type { DateRangePreset } from "@/lib/filters";
 
 export type DateWindow = { from: Date; to: Date };
@@ -8,7 +7,7 @@ export type DateWindow = { from: Date; to: Date };
  * Anchored to the app's own last-refresh stamp, not `Date.now()`.
  *
  * Every figure in the app is display data timestamped around 17 Jul 2026 (see
- * SALESFORCE_LAST_REFRESH, the same value the context bar shows). Resolving
+ * SALESFORCE_LAST_REFRESH). Resolving
  * "This Week" against the real wall clock would put the entire dataset outside
  * every preset, so every range would read as empty — which looks like a bug
  * rather than like mock data.
@@ -40,12 +39,23 @@ function startOfWeek(date: Date): Date {
   return next;
 }
 
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
 /**
  * Turns a preset (plus the custom from/to, when set) into a concrete window.
  *
- * `custom` with either bound missing falls back to the whole current term
- * rather than to an empty window, so a half-filled custom range never blanks
- * the screen while the user is still typing the second date.
+ * The three "last" presets are the *completed* period before the current one —
+ * last week is the previous Monday-Sunday, not the trailing seven days, and
+ * likewise for the previous calendar month and year. That's what an admin means
+ * asking "how did last month look", and it's the only reading that doesn't move
+ * under them as the week goes on.
+ *
+ * `custom` with either bound missing falls back to today rather than to an empty
+ * window, so a half-filled range never blanks the screen mid-selection.
  */
 export function resolveDateWindow(
   range: DateRangePreset,
@@ -53,27 +63,34 @@ export function resolveDateWindow(
   to?: string | null
 ): DateWindow {
   const anchor = rangeAnchor();
+  const today = { from: startOfDay(anchor), to: endOfDay(anchor) };
 
   switch (range) {
     case "today":
-      return { from: startOfDay(anchor), to: endOfDay(anchor) };
-    case "week":
-      return { from: startOfWeek(anchor), to: endOfDay(anchor) };
-    case "month":
+      return today;
+    case "yesterday": {
+      const yesterday = addDays(anchor, -1);
+      return { from: startOfDay(yesterday), to: endOfDay(yesterday) };
+    }
+    case "last-week": {
+      const thisWeek = startOfWeek(anchor);
+      return { from: addDays(thisWeek, -7), to: endOfDay(addDays(thisWeek, -1)) };
+    }
+    case "last-month":
       return {
-        from: startOfDay(new Date(anchor.getFullYear(), anchor.getMonth(), 1)),
-        to: endOfDay(anchor)
+        from: startOfDay(new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1)),
+        // Day 0 of this month is the last day of the previous one.
+        to: endOfDay(new Date(anchor.getFullYear(), anchor.getMonth(), 0))
       };
-    case "term": {
-      const term = currentTerm();
-      return { from: startOfDay(new Date(term.start)), to: endOfDay(new Date(term.end)) };
+    case "last-year": {
+      const year = anchor.getFullYear() - 1;
+      return { from: startOfDay(new Date(year, 0, 1)), to: endOfDay(new Date(year, 11, 31)) };
     }
     case "custom": {
       if (from && to) {
         return { from: startOfDay(new Date(from)), to: endOfDay(new Date(to)) };
       }
-      const term = currentTerm();
-      return { from: startOfDay(new Date(term.start)), to: endOfDay(new Date(term.end)) };
+      return today;
     }
   }
 }

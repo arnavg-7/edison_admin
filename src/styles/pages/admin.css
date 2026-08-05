@@ -456,7 +456,9 @@
   margin: 0 0 12px;
   padding: 0;
   display: grid;
-  gap: 6px;
+  /* Tighter than the old 6px because each row now carries its own vertical
+     padding for the hover band; the rhythm between rows is unchanged. */
+  gap: 2px;
 }
 
 .area-skill {
@@ -466,6 +468,26 @@
   gap: 10px;
   font-size: 13px;
   color: var(--sf-text);
+  /* Padding is unconditional and the negative inline margin cancels it, so the
+     label stays exactly where it was and hovering changes only the background —
+     no reflow, and the band bleeds to the card's content edges rather than
+     stopping at the text. */
+  padding: 4px 8px;
+  margin-inline: -8px;
+  border-radius: var(--sf-radius-control);
+  transition: background 0.12s ease;
+}
+
+/* A translucent tint of the app's own ink rather than a fixed surface colour:
+   these rows sit on four different card tones, and --sf-raised would clash on
+   the green and orange cards. Mixing toward the text colour darkens whatever
+   tint is underneath by the same amount.
+
+   Paired with :focus-within so keyboard users get the same row highlight that
+   already reveals the row's actions. */
+.area-skill:hover,
+.area-skill:focus-within {
+  background: color-mix(in srgb, var(--sf-text) 7%, transparent);
 }
 
 .area-skill-label {

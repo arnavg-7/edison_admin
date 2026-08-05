@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { PlusSignIcon } from "@hugeicons/core-free-icons";
+import {
+  Delete02Icon,
+  PencilEdit02Icon,
+  PlusSignIcon,
+  ViewIcon,
+  ViewOffSlashIcon
+} from "@hugeicons/core-free-icons";
 import {
   SKILL_LEVELS,
   skillsProfileFor,
@@ -358,10 +364,14 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
                         ) : null}
                       </span>
 
+                      {/* Icon buttons rather than text links — inside a coloured
+                          level pill, two extra words competed with the sub-skill
+                          name for the same small space. */}
                       <span className="skill-pill-actions">
                         <button
                           type="button"
-                          className="sf-link-btn"
+                          className="sf-icon-btn"
+                          title={`Edit ${sub.label}`}
                           onClick={() => {
                             setSubDraft({
                               label: sub.label,
@@ -372,14 +382,17 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
                             setEditingSub({ groupId: group.id, subId: sub.id });
                           }}
                         >
-                          Edit<span className="sf-sr-only"> {sub.label}</span>
+                          <HugeiconsIcon icon={PencilEdit02Icon} size={14} strokeWidth={2} />
+                          <span className="sf-sr-only">Edit {sub.label}</span>
                         </button>
                         <button
                           type="button"
-                          className="sf-link-btn sf-link-btn--danger"
+                          className="sf-icon-btn sf-icon-btn--danger"
+                          title={`Remove ${sub.label}`}
                           onClick={() => removeSubSkill(group.id, sub.id)}
                         >
-                          Remove<span className="sf-sr-only"> {sub.label}</span>
+                          <HugeiconsIcon icon={Delete02Icon} size={14} strokeWidth={2} />
+                          <span className="sf-sr-only">Remove {sub.label}</span>
                         </button>
                       </span>
                     </li>
@@ -414,8 +427,22 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
               {/* The app's shared action button, as used by every table row: the
                   old .sf-btn--sm rendered 30px tall at 12px, a different button
                   family from the rest of the product. */}
+              {/* Same icon vocabulary as the areas tab and the User Management
+                  rows: eye pair for what students can see, pencil for edit,
+                  trash for delete. */}
               <div className="area-card-actions">
-                <Button color="secondary" size="xs" onClick={() => togglePublished(group.id)}>
+                <Button
+                  color="secondary"
+                  size="xs"
+                  onClick={() => togglePublished(group.id)}
+                  iconLeading={
+                    <HugeiconsIcon
+                      icon={group.published ? ViewOffSlashIcon : ViewIcon}
+                      size={16}
+                      strokeWidth={2}
+                    />
+                  }
+                >
                   {group.published ? "Unpublish" : "Publish"}
                   <span className="sf-sr-only"> skill {group.title}</span>
                 </Button>
@@ -427,6 +454,9 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
                     setAddingGroup(false);
                     setEditingGroupId(group.id);
                   }}
+                  iconLeading={
+                    <HugeiconsIcon icon={PencilEdit02Icon} size={16} strokeWidth={2} />
+                  }
                 >
                   Rename<span className="sf-sr-only"> skill {group.title}</span>
                 </Button>
@@ -434,6 +464,7 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
                   color="secondary-destructive"
                   size="xs"
                   onClick={() => removeGroup(group.id)}
+                  iconLeading={<HugeiconsIcon icon={Delete02Icon} size={16} strokeWidth={2} />}
                 >
                   Delete<span className="sf-sr-only"> skill {group.title}</span>
                 </Button>

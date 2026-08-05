@@ -480,6 +480,37 @@ body {
   color: var(--sf-error-text);
 }
 
+/* Per-item row actions inside a card: a glyph, not a word. Two text links beside
+   a skill name read as more label competing with the label, and at 18px tall they
+   were under any sensible touch target. 26px square clears that while staying
+   small enough to sit inside a 13px list row, and the resting colour is the
+   muted ink so a list of five skills doesn't turn into ten blue links. */
+.sf-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border: none;
+  border-radius: var(--sf-radius-control);
+  background: none;
+  padding: 0;
+  color: var(--sf-text-muted);
+  cursor: pointer;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+
+.sf-icon-btn:hover {
+  color: var(--sf-text);
+  background: var(--sf-raised);
+}
+
+.sf-icon-btn--danger:hover {
+  color: var(--sf-error-text);
+  background: var(--sf-error-bg);
+}
+
 /* Forms */
 
 .sf-field {

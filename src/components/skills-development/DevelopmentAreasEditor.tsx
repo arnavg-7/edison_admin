@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { PlusSignIcon } from "@hugeicons/core-free-icons";
+import {
+  Delete02Icon,
+  PencilEdit02Icon,
+  PlusSignIcon,
+  ViewIcon,
+  ViewOffSlashIcon
+} from "@hugeicons/core-free-icons";
 import {
   DEV_AREA_ICONS,
   DEV_AREA_TONES,
@@ -337,23 +343,34 @@ export function DevelopmentAreasEditor({
                     ) : (
                       <li key={skill.id} className="area-skill">
                         <span className="area-skill-label">{skill.label}</span>
+                        {/* Icon buttons, not the two text links these were. At
+                            13px beside a skill name they read as more label
+                            competing with the label — on a longer name like
+                            "Robotics Club" the pair crowded straight up against
+                            it. The glyphs are the same pencil and trash the card
+                            actions below use, and each keeps its accessible name
+                            plus a title for hover. */}
                         <span className="area-skill-actions">
                           <button
                             type="button"
-                            className="sf-link-btn"
+                            className="sf-icon-btn"
+                            title={`Edit ${skill.label}`}
                             onClick={() => {
                               setSkillDraft(skill.label);
                               setEditingSkill({ areaId: area.id, skillId: skill.id });
                             }}
                           >
-                            Edit<span className="sf-sr-only"> {skill.label}</span>
+                            <HugeiconsIcon icon={PencilEdit02Icon} size={14} strokeWidth={2} />
+                            <span className="sf-sr-only">Edit {skill.label}</span>
                           </button>
                           <button
                             type="button"
-                            className="sf-link-btn sf-link-btn--danger"
+                            className="sf-icon-btn sf-icon-btn--danger"
+                            title={`Remove ${skill.label}`}
                             onClick={() => removeSkill(area.id, skill.id)}
                           >
-                            Remove<span className="sf-sr-only"> {skill.label}</span>
+                            <HugeiconsIcon icon={Delete02Icon} size={14} strokeWidth={2} />
+                            <span className="sf-sr-only">Remove {skill.label}</span>
                           </button>
                         </span>
                       </li>
@@ -404,18 +421,42 @@ export function DevelopmentAreasEditor({
                 {/* The app's shared action button, as used by every table row:
                     the old .sf-btn--sm rendered 30px tall at 12px, a different
                     button family from the rest of the product. */}
+                {/* Icons match the vocabulary already established elsewhere in
+                    the app: pencil for edit and trash for delete, as on the User
+                    Management rows. Publish borrows the eye pair, because what
+                    the control actually decides is whether students see the area
+                    — "Publish" alone never said where it went. */}
                 <div className="area-card-actions">
-                  <Button color="secondary" size="xs" onClick={() => togglePublished(area.id)}>
+                  <Button
+                    color="secondary"
+                    size="xs"
+                    onClick={() => togglePublished(area.id)}
+                    iconLeading={
+                      <HugeiconsIcon
+                        icon={area.published ? ViewOffSlashIcon : ViewIcon}
+                        size={16}
+                        strokeWidth={2}
+                      />
+                    }
+                  >
                     {area.published ? "Unpublish" : "Publish"}
                     <span className="sf-sr-only"> area {area.title}</span>
                   </Button>
-                  <Button color="secondary" size="xs" onClick={() => startAreaEdit(area)}>
+                  <Button
+                    color="secondary"
+                    size="xs"
+                    onClick={() => startAreaEdit(area)}
+                    iconLeading={
+                      <HugeiconsIcon icon={PencilEdit02Icon} size={16} strokeWidth={2} />
+                    }
+                  >
                     Edit<span className="sf-sr-only"> area {area.title}</span>
                   </Button>
                   <Button
                     color="secondary-destructive"
                     size="xs"
                     onClick={() => removeArea(area.id)}
+                    iconLeading={<HugeiconsIcon icon={Delete02Icon} size={16} strokeWidth={2} />}
                   >
                     Delete<span className="sf-sr-only"> area {area.title}</span>
                   </Button>

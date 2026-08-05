@@ -165,7 +165,7 @@ export default function PeopleSearchPage() {
           onClick={() => setIsAddingUser(true)}
           iconLeading={<HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} />}
         >
-          Add User
+          Add Student/Faculty
         </Button>
       </div>
 

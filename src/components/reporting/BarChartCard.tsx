@@ -183,7 +183,7 @@ function SquareBarStartsInner({
   series: SeriesKey[];
   container: HTMLDivElement;
 }) {
-  const { margin, barScale, bandWidth, barXAccessor, data, hoveredBarIndex } = useChart();
+  const { margin, barScale, bandWidth, barXAccessor, data, hoveredBarIndex, yScale } = useChart();
   if (!barScale || !bandWidth || !barXAccessor) return null;
 
   const count = series.length;
@@ -196,7 +196,25 @@ function SquareBarStartsInner({
       {data.map((row, rowIndex) => {
         const bandTop = (barScale(barXAccessor(row)) ?? 0) + margin.top;
         return series.map((item, seriesIndex) => {
-          if (typeof row[item.label] !== "number") return null;
+          const value = row[item.label];
+          if (typeof value !== "number") return null;
+
+          /*
+            Never wider than the bar it is squaring off.
+
+            The patch used to be a flat BAR_RADIUS block drawn for every series
+            in every row, so a row whose value was 0 — or whose bar was shorter
+            than the radius — still got a solid 10px slab pinned to the axis with
+            no bar behind it. It read as a stray rectangle at the chart's left
+            edge, and hover made it obvious: it dimmed and brightened with the
+            rest of the row, so the eye went straight to it. Clamping to the
+            bar's own length means a zero draws nothing and a short bar is
+            squared off only as far as it actually extends.
+          */
+          const barLength = (yScale?.(value) ?? 0) - (yScale?.(0) ?? 0);
+          const patchWidth = Math.min(BAR_RADIUS, Math.max(0, barLength));
+          if (patchWidth <= 0) return null;
+
           return (
             <div
               key={`${rowIndex}-${item.label}`}
@@ -204,7 +222,7 @@ function SquareBarStartsInner({
               style={{
                 top: bandTop + seriesIndex * (thickness + gap),
                 left: margin.left,
-                width: BAR_RADIUS,
+                width: patchWidth,
                 height: thickness,
                 background: SERIES_VARS[item.colorIndex % SERIES_VARS.length],
                 // Tracks the library's own hover dimming, or a patch would stay

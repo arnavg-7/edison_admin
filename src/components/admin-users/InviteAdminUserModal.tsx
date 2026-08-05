@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CsvIcon, UserAdd01Icon } from "@hugeicons/core-free-icons";
+import { File01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { useAdminUsers } from "@/lib/admin-users-store";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ManualInviteForm } from "./ManualInviteForm";
@@ -54,7 +54,7 @@ export function InviteAdminUserModal({ onClose }: { onClose: () => void }) {
             <div className="sf-choice-grid">
               <button type="button" className="sf-choice-card" onClick={() => setStep("manual")}>
                 <span className="sf-choice-icon">
-                  <HugeiconsIcon icon={UserAdd01Icon} size={26} strokeWidth={1.8} />
+                  <HugeiconsIcon icon={UserIcon} size={26} strokeWidth={1.8} />
                 </span>
                 <span className="sf-choice-card-title">Invite one person</span>
                 <span className="sf-choice-card-desc">Name, email, role(s) and scope.</span>
@@ -62,7 +62,7 @@ export function InviteAdminUserModal({ onClose }: { onClose: () => void }) {
 
               <button type="button" className="sf-choice-card" onClick={() => setStep("csv")}>
                 <span className="sf-choice-icon">
-                  <HugeiconsIcon icon={CsvIcon} size={26} strokeWidth={1.8} />
+                  <HugeiconsIcon icon={File01Icon} size={26} strokeWidth={1.8} />
                 </span>
                 <span className="sf-choice-card-title">Bulk invite via CSV</span>
                 <span className="sf-choice-card-desc">

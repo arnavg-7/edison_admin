@@ -254,8 +254,16 @@ const ChartTooltipInner = memo(function ChartTooltipInner({
 
   const tooltipContent = (
     <>
-      {/* Crosshair indicator - rendered as SVG overlay */}
-      {showCrosshair && (
+      {/* Crosshair indicator - rendered as SVG overlay.
+
+          Vertical charts only, like the dots and the date pill below. The
+          indicator is a full-height vertical band at the hovered x, which only
+          means something when x is the category axis. In horizontal orientation
+          the categories run down the y axis and `xPositions` is never populated
+          (see bar-chart.tsx — only the vertical branch fills it), so
+          `tooltipData.x` falls back to 0 and this painted a full-height slab
+          against the left edge of the plot on every hover. */}
+      {showCrosshair && !isHorizontal && (
         <svg
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"

@@ -13,9 +13,14 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/base/buttons/button";
 import { Combobox } from "@/components/shared/Combobox";
-
-const isLevelOptionEqual = (a: (typeof SKILL_LEVELS)[number], b: (typeof SKILL_LEVELS)[number]) =>
-  a.value === b.value;
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle
+} from "@/components/ui/sheet";
 
 // TODO: local state only — persist through the Admin DB skills-and-development
 // contract when it exists.
@@ -187,14 +192,93 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
 
   const totalSubSkills = groups.reduce((sum, group) => sum + group.subSkills.length, 0);
 
+  /**
+   * Skill creation goes in a right-side drawer, matching both the areas tab and
+   * the goals editor on the sibling Academic Goals grade screen. Inline, the form
+   * pushed the whole card grid down the page.
+   *
+   * Renaming stays in place: it edits one field on one card, and the card is the
+   * clearest place to see what you are renaming.
+   */
+  const closeGroupForm = () => {
+    setAddingGroup(false);
+    setGroupTitle("");
+  };
+
+  const groupDrawer = (
+    <Sheet
+      open={addingGroup}
+      onOpenChange={(open) => {
+        if (!open) closeGroupForm();
+      }}
+    >
+      {/* Variant-prefixed width: SheetContent ships data-[side=right]:sm:max-w-sm,
+          which tailwind-merge keeps alongside a plain sm:max-w-*, so the
+          data-variant class would win and hold the drawer at 384px. */}
+      <SheetContent side="right" className="data-[side=right]:sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Add skill</SheetTitle>
+          <SheetDescription>
+            Name the skill, then add the sub-skills rated under it from its card.
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-6">
+          <div className="area-form area-form--drawer">
+            <label className="sf-field">
+              <span>Skill name</span>
+              <input
+                type="text"
+                autoFocus
+                value={groupTitle}
+                placeholder="e.g. Resilience"
+                onChange={(event) => setGroupTitle(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") saveNewGroup();
+                  if (event.key === "Escape") closeGroupForm();
+                }}
+              />
+            </label>
+          </div>
+        </div>
+
+        <SheetFooter className="flex-row">
+          <Button size="sm" onClick={saveNewGroup} isDisabled={!groupTitle.trim()}>
+            Create skill
+          </Button>
+          <Button color="secondary" size="sm" onClick={closeGroupForm}>
+            Cancel
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+
   return (
     <div className="sf-panel">
+      {/* Counts and the action share the panel head, as every other panel in the
+          app does. They used to sit on separate rows with the button alone in a
+          right-aligned strip, leaving dead space between the heading and the
+          cards it acts on. */}
       <div className="sf-panel-head">
         <h2>Skills profile</h2>
-        <span className="sf-panel-note">
-          {groups.length} skills · {totalSubSkills} sub-skills ·{" "}
-          {groups.filter((group) => group.published).length} published
-        </span>
+        <div className="sf-panel-head-end">
+          <span className="sf-panel-note">
+            {groups.length} skills · {totalSubSkills} sub-skills ·{" "}
+            {groups.filter((group) => group.published).length} published
+          </span>
+          {/* While empty, the only call to action lives inside the empty state,
+              so there aren't two "Add skill" buttons competing on one screen. */}
+          {isEmpty ? null : (
+            <Button
+              size="sm"
+              onClick={startAddGroup}
+              iconLeading={<HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2} />}
+            >
+              Add skill
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="skills-legend" aria-label="Skill levels">
@@ -205,45 +289,6 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
           </span>
         ))}
       </div>
-
-      {/* While empty, the only call to action lives inside the empty state, so
-          there aren't two "Add skill" buttons competing on one screen. */}
-      {isEmpty ? null : (
-        <div className="list-editor-head">
-          <Button
-            size="sm"
-            onClick={startAddGroup}
-            iconLeading={<HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} className="size-4 shrink-0" />}
-          >
-            Add skill
-          </Button>
-        </div>
-      )}
-
-      {addingGroup ? (
-        <div className="area-form">
-          <label className="sf-field">
-            <span>Skill name</span>
-            <input
-              type="text"
-              autoFocus
-              value={groupTitle}
-              placeholder="e.g. Resilience"
-              onChange={(event) => setGroupTitle(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") saveNewGroup();
-                if (event.key === "Escape") setAddingGroup(false);
-              }}
-            />
-          </label>
-          <div className="list-editor-form-actions">
-            <Button size="sm" onClick={saveNewGroup}>Create skill</Button>
-            <Button color="secondary" size="sm" onClick={() => setAddingGroup(false)}>
-              Cancel
-            </Button>
-          </div>
-        </div>
-      ) : null}
 
       {isEmpty ? (
         <EmptyState
@@ -275,16 +320,12 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
                         if (event.key === "Escape") setEditingGroupId(null);
                       }}
                     />
-                    <Button size="sm" onClick={() => saveGroupTitle(group.id)}>
+                    <Button size="xs" onClick={() => saveGroupTitle(group.id)}>
                       Save
                     </Button>
-                    <button
-                      type="button"
-                      className="sf-btn sf-btn--sm"
-                      onClick={() => setEditingGroupId(null)}
-                    >
+                    <Button color="secondary" size="xs" onClick={() => setEditingGroupId(null)}>
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 ) : (
                   <>
@@ -370,17 +411,17 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
                   </button>
                 )}
 
+              {/* The app's shared action button, as used by every table row: the
+                  old .sf-btn--sm rendered 30px tall at 12px, a different button
+                  family from the rest of the product. */}
               <div className="area-card-actions">
-                <button
-                  type="button"
-                  className="sf-btn sf-btn--sm"
-                  onClick={() => togglePublished(group.id)}
-                >
+                <Button color="secondary" size="xs" onClick={() => togglePublished(group.id)}>
                   {group.published ? "Unpublish" : "Publish"}
-                </button>
-                <button
-                  type="button"
-                  className="sf-btn sf-btn--sm"
+                  <span className="sf-sr-only"> skill {group.title}</span>
+                </Button>
+                <Button
+                  color="secondary"
+                  size="xs"
                   onClick={() => {
                     setGroupTitle(group.title);
                     setAddingGroup(false);
@@ -388,19 +429,21 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
                   }}
                 >
                   Rename<span className="sf-sr-only"> skill {group.title}</span>
-                </button>
-                <button
-                  type="button"
-                  className="sf-btn sf-btn--sm sf-btn--danger"
+                </Button>
+                <Button
+                  color="secondary-destructive"
+                  size="xs"
                   onClick={() => removeGroup(group.id)}
                 >
                   Delete<span className="sf-sr-only"> skill {group.title}</span>
-                </button>
+                </Button>
               </div>
             </article>
           ))}
         </div>
       )}
+
+      {groupDrawer}
     </div>
   );
 }

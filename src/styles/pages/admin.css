@@ -263,10 +263,15 @@
 
 /* List editor */
 
-.list-editor-head {
+/* Counts and the panel's action, grouped at the right of .sf-panel-head. The
+   two used to occupy separate rows — the action alone in a right-aligned strip
+   below the heading — which read as an orphaned button floating in a band of
+   dead space above the content it acts on. */
+.sf-panel-head-end {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 14px;
+  align-items: center;
+  gap: 14px;
+  flex: 0 0 auto;
 }
 
 .list-editor-items {
@@ -402,9 +407,14 @@
   border: 0;
 }
 
+/* Matches .skill-group-grid's 280px minimum. At 240px these tracks came out
+   263px wide, too narrow for the card's three action buttons once they moved to
+   the app's shared size — Publish/Edit/Delete wrapped 2+1 on three cards and
+   1x3 on the fourth, purely because "Publish" is shorter than "Unpublish". The
+   two tabs' cards are the same kind of object and now share one width. */
 .area-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 14px;
 }
 
@@ -645,6 +655,16 @@
   opacity: 1;
 }
 
+/* Hover-reveal is the only way to reach these, so on a device with no hover
+   they were unreachable — a touch user could add a sub-skill but never edit or
+   remove one. Keyboard users were already fine via :focus-within. */
+@media (hover: none) {
+  .area-skill-actions,
+  .skill-pill-actions {
+    opacity: 1;
+  }
+}
+
 /* Level colours. Text is darkened from the faculty palette so 13px pill labels
    clear 4.5:1 on their own tint; the dot inherits the same colour. */
 .skill-pill.level-high,
@@ -720,6 +740,39 @@
   margin-bottom: 14px;
   display: grid;
   gap: 14px;
+}
+
+/* The same field list inside a drawer, which is already a surface of its own —
+   the tint, border and radius above would read as a card floating inside it.
+   Padding comes from the drawer body so the fields line up with its header and
+   footer. Declared after .area-form deliberately: same specificity, so source
+   order is what makes it win. */
+.area-form--drawer {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+/* A <fieldset> for the radio group, so the browser's own default border box was
+   drawing a second container around Colour — inside the form container, inside
+   the drawer. The legend carries the grouping; it is styled to match the
+   sibling .sf-field labels so Colour reads as one more field, not a subsection. */
+.tone-picker {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+/* 12px / --sf-text-muted / 5px gap are exactly `.sf-field > span`'s values, so
+   the Colour label sits on the same rhythm as Area name and Icon. */
+.tone-picker > legend {
+  padding: 0;
+  margin-bottom: 5px;
+  font-size: 12px;
+  color: var(--sf-text-muted);
 }
 
 /* Settings rows (portal config, goals, system settings) */

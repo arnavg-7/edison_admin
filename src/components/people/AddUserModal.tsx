@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowRight01Icon, CsvIcon, UserAdd01Icon } from "@hugeicons/core-free-icons";
+import { ArrowRight01Icon, File01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import type { Person } from "@/lib/data/people";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ManualUserForm } from "./ManualUserForm";
@@ -11,9 +11,9 @@ import { CsvUserImport } from "./CsvUserImport";
 type Step = "choice" | "manual" | "csv";
 
 const TITLES: Record<Step, string> = {
-  choice: "Add User",
-  manual: "Add User Manually",
-  csv: "Import Users from CSV"
+  choice: "Add Student/Faculty",
+  manual: "Add Student/Faculty Manually",
+  csv: "Import Students/Faculty from CSV"
 };
 
 const DESCRIPTIONS: Record<Step, string> = {
@@ -63,7 +63,7 @@ export function AddUserModal({
             <div className="sf-choice-grid">
               <button type="button" className="sf-choice-card" onClick={() => setStep("manual")}>
                 <span className="sf-choice-icon">
-                  <HugeiconsIcon icon={UserAdd01Icon} size={24} strokeWidth={1.8} aria-hidden />
+                  <HugeiconsIcon icon={UserIcon} size={24} strokeWidth={1.8} aria-hidden />
                 </span>
                 <span className="sf-choice-card-head">
                   <span className="sf-choice-card-title">Create manually</span>
@@ -83,7 +83,7 @@ export function AddUserModal({
 
               <button type="button" className="sf-choice-card" onClick={() => setStep("csv")}>
                 <span className="sf-choice-icon">
-                  <HugeiconsIcon icon={CsvIcon} size={24} strokeWidth={1.8} aria-hidden />
+                  <HugeiconsIcon icon={File01Icon} size={24} strokeWidth={1.8} aria-hidden />
                 </span>
                 <span className="sf-choice-card-head">
                   <span className="sf-choice-card-title">Upload a CSV</span>

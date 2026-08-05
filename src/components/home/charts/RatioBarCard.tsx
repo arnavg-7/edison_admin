@@ -195,7 +195,11 @@ function ValueAxisOverlayInner({
               style={{
                 top,
                 left: margin.left,
-                width: BAR_RADIUS,
+                /* Clamped to the bar's own length, so a school with a zero or
+                   near-zero ratio can't leave a slab of colour standing at the
+                   axis with no bar behind it — see the same clamp in
+                   BarChartCard's SquareBarStarts. */
+                width: Math.min(BAR_RADIUS, Math.max(0, (yScale(row.ratio) ?? 0) - (yScale(0) ?? 0))),
                 height: bandWidth,
                 background: row.overTarget ? OVER_TARGET_COLOR : AT_TARGET_COLOR,
                 opacity: hoveredBarIndex !== null && hoveredBarIndex !== index ? 0.3 : 1,

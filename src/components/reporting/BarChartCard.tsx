@@ -150,20 +150,19 @@ function CategoryAxisInner({
 }
 
 /**
- * Squares off the left end of every horizontal bar.
+ * The visible bars, drawn here rather than by the library's <rect>.
  *
- * Every bar primitive here draws an SVG <rect> with a single `rx`, so a radius
- * always applies to all four corners — there is no per-side option. A bar
- * measured from zero should meet its axis flush, so this refills the two left
- * corner notches with a BAR_RADIUS-wide block of the same colour, leaving only
- * the value end rounded.
+ * Two things follow. `border-radius: 0 R R 0` rounds only the value end, so a bar
+ * measured from zero meets its axis flush — an SVG rect has one `rx` across all
+ * four corners and no per-side option. And the app's universal
+ * `corner-shape: squircle` applies, because that is a CSS property and cannot
+ * reach an `rx` attribute: the chart bars were the one shape in the product still
+ * drawing circular arcs.
  *
- * Unlike RatioBarCard's version this has to handle grouped series: a category's
- * band is split between them, so each bar's own thickness and offset are
- * recomputed the same way `<Bar>` does (bandWidth minus the inter-bar gaps,
- * divided by the series count). Series with no numeric value at a category draw
- * no bar, so they get no patch either — otherwise a block would float at the
- * axis with nothing attached to it.
+ * Unlike RatioBarCard's version this handles grouped series: a category's band is
+ * split between them, so each bar's thickness and offset are recomputed the same
+ * way `<Bar>` does (bandWidth minus the inter-bar gaps, divided by the series
+ * count). A series with no numeric value at a category draws nothing.
  */
 function OverlayBars({ series }: { series: SeriesKey[] }) {
   const { containerRef, barScale } = useChartStable();
@@ -474,15 +473,13 @@ export function BarChartCard({
                 <Bar
                   key={item.label}
                   dataKey={item.label}
-                  fill={SERIES_VARS[item.colorIndex % SERIES_VARS.length]}
-                  /* Explicit radius rather than the default lineCap="round",
-                     which derives one from bar thickness and lifted the bars
-                     off the axis they're measured from. Same value RatioBarCard
-                     uses, so the two cards sharing a row agree. */
-                  lineCap={BAR_RADIUS}
-                  /* The grow animation runs bar width up from 0 while the
-                     square-start patches are fixed width, so mid-animation they
-                     showed as coloured stubs at the axis ahead of their bars. */
+                  /* Mounted but not painted: these still declare the series, so
+                     the value domain and the tooltip payload stay the library's,
+                     while the visible bar is drawn by OverlayBars where CSS can
+                     give it squircle corners and a radius on the value end only.
+                     Hover comes from a full-plot rect and the SVG's own
+                     onMouseMove (bar-chart.tsx), not from these rects. */
+                  fill="transparent"
                   animate={false}
                 />
               ))}

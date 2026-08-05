@@ -73,14 +73,13 @@ const TICK_AXIS_HEIGHT = 32;
 const AXIS_TICK_COUNT = 4;
 
 /**
- * Bar corner radius. An explicit number rather than `lineCap="round"`: Bklit
- * applies one `rx` to the whole rect (there is no round-the-value-end-only
- * option), and "round" derives that radius from bar thickness — 8px on these
- * 34px bars. At 8px the curve at the zero end was pronounced enough to lift
- * every bar off the axis it is measured from, so a bar at 0 looked like a bar
- * at 1. 10px is a pronounced round on these 34px bars — under a third of their
- * thickness — and the zero end stays flush because the masking block below
- * squares it off regardless of how large this gets.
+ * Radius on the bar's value end. Applied as a CSS `border-radius` on the overlay
+ * bar rather than an SVG `rx`, which is what lets the app's universal
+ * `corner-shape: squircle` smooth it — see the note in ValueAxisOverlay.
+ *
+ * 10px on a 34px bar: well under the half-thickness point where a squircle stops
+ * reading as a smoothed rectangle and turns into a lozenge (theme.css keeps
+ * genuine pills on `corner-shape: round` for that reason).
  */
 const BAR_RADIUS = 10;
 
@@ -176,32 +175,34 @@ function ValueAxisOverlayInner({
         return (
           <div key={row.school}>
             {/*
-              Squares off the bar's left end.
+              The bar itself, drawn here rather than by the library's <rect>.
 
-              Every bar primitive in this library draws an SVG <rect> with a
-              single `rx`, so a radius always applies to all four corners — there
-              is no per-side option to ask for. A bar measured from zero should
-              meet its axis flush, so this refills the two left corner notches
-              with a BAR_RADIUS-wide block of the same colour, leaving only the
-              value end rounded.
+              Two things follow from that. `border-radius: 0 R R 0` rounds only
+              the value end, so a bar measured from zero meets its axis flush —
+              an SVG rect has one `rx` across all four corners and no per-side
+              option, which previously took a masking block to hide. And the
+              app's universal `corner-shape: squircle` applies, because that is a
+              CSS property and cannot reach an `rx` attribute: these were the one
+              shape in the product still drawing circular arcs.
 
-              It tracks Bklit's own hover dimming (`fadedOpacity` 0.3 on
-              non-hovered bars) from `hoveredBarIndex`, or the patch would stay
-              full-strength while its bar faded and read as a bright tab stuck to
-              the axis.
+              The <Bar> elements stay mounted but transparent. They still define
+              the series, so the value domain and the tooltip payload come from
+              the library as before; hover is driven by a full-plot rect and the
+              SVG's own onMouseMove (bar-chart.tsx), not by the bar rects, so
+              nothing is lost by not painting them.
+
+              Dimming mirrors the library's own `fadedOpacity` of 0.3 on
+              non-hovered bars, keyed off the same `hoveredBarIndex`.
             */}
             <div
               className="absolute"
               style={{
                 top,
                 left: margin.left,
-                /* Clamped to the bar's own length, so a school with a zero or
-                   near-zero ratio can't leave a slab of colour standing at the
-                   axis with no bar behind it — see the same clamp in
-                   BarChartCard's SquareBarStarts. */
-                width: Math.min(BAR_RADIUS, Math.max(0, (yScale(row.ratio) ?? 0) - (yScale(0) ?? 0))),
+                width: Math.max(0, (yScale(row.ratio) ?? 0) - (yScale(0) ?? 0)),
                 height: bandWidth,
                 background: row.overTarget ? OVER_TARGET_COLOR : AT_TARGET_COLOR,
+                borderRadius: `0 ${BAR_RADIUS}px ${BAR_RADIUS}px 0`,
                 opacity: hoveredBarIndex !== null && hoveredBarIndex !== index ? 0.3 : 1,
                 transition: "opacity 0.15s ease-in-out"
               }}
@@ -420,25 +421,27 @@ export function RatioBarCard({
                   {/* vertical, not horizontal: the value axis runs left to right
                       here, so the gridlines that mean anything are the upright
                       ones crossing the bars. */}
-                  <Grid horizontal={false} vertical />
+                  <Grid horizontal={false} vertical fadeVertical />
 
-                  {/* animate={false}: the grow animation runs the bar's width
-                      from 0, but the square-left-end patch in ValueAxisOverlay
-                      is fixed width, so during the animation it showed as a
-                      4px colour stub sitting at the axis ahead of its bar. The
-                      Recharts version this replaces also drew without
-                      animation, so nothing is lost. */}
+                  {/*
+                    Mounted but not painted. These still declare the two series,
+                    so the value domain and the tooltip payload are the library's
+                    as before — but the visible bar is drawn in ValueAxisOverlay,
+                    where CSS gives it the app's squircle corners and a radius on
+                    the value end only. See the note there.
+
+                    animate={false} because there is nothing to animate now, and
+                    the overlay bar is not tied to the rect's growth.
+                  */}
                   <Bar
                     dataKey={UNDER_KEY}
-                    fill={AT_TARGET_COLOR}
-                    lineCap={BAR_RADIUS}
+                    fill="transparent"
                     stackGap={STACK_GAP}
                     animate={false}
                   />
                   <Bar
                     dataKey={OVER_KEY}
-                    fill={OVER_TARGET_COLOR}
-                    lineCap={BAR_RADIUS}
+                    fill="transparent"
                     stackGap={STACK_GAP}
                     animate={false}
                   />

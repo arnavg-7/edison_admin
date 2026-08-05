@@ -71,10 +71,11 @@ function bandHeightFor(seriesCount: number): number {
     formula to size it by. */
 const VERTICAL_CHART_HEIGHT = 280;
 
-/** Bar corner radius, matching RatioBarCard — see the note at its <Bar>.
-    10px reads as a properly rounded end on the 27px single-series bars. It is
-    past half the thickness of the 14px grouped bars, so those clamp to 7px and
-    render as pills — the radius can't exceed half a bar's thickness. */
+/** Radius on the bar's value end, matching RatioBarCard. Applied as a CSS
+    `border-radius` on the overlay bar rather than an SVG `rx`, which is what lets
+    the app's universal `corner-shape: squircle` smooth it — see OverlayBars.
+    Capped there at half a bar's thickness, since the 14px grouped bars would
+    otherwise turn into lozenges. */
 const BAR_RADIUS = 10;
 
 /** Strip along the bottom holding the horizontal chart's value-axis ticks —
@@ -164,7 +165,7 @@ function CategoryAxisInner({
  * no bar, so they get no patch either — otherwise a block would float at the
  * axis with nothing attached to it.
  */
-function SquareBarStarts({ series }: { series: SeriesKey[] }) {
+function OverlayBars({ series }: { series: SeriesKey[] }) {
   const { containerRef, barScale } = useChartStable();
   const [mounted, setMounted] = useState(false);
 
@@ -173,10 +174,10 @@ function SquareBarStarts({ series }: { series: SeriesKey[] }) {
   const container = containerRef.current;
   if (!mounted || !container || !barScale) return null;
 
-  return <SquareBarStartsInner series={series} container={container} />;
+  return <OverlayBarsInner series={series} container={container} />;
 }
 
-function SquareBarStartsInner({
+function OverlayBarsInner({
   series,
   container
 }: {
@@ -199,21 +200,8 @@ function SquareBarStartsInner({
           const value = row[item.label];
           if (typeof value !== "number") return null;
 
-          /*
-            Never wider than the bar it is squaring off.
-
-            The patch used to be a flat BAR_RADIUS block drawn for every series
-            in every row, so a row whose value was 0 — or whose bar was shorter
-            than the radius — still got a solid 10px slab pinned to the axis with
-            no bar behind it. It read as a stray rectangle at the chart's left
-            edge, and hover made it obvious: it dimmed and brightened with the
-            rest of the row, so the eye went straight to it. Clamping to the
-            bar's own length means a zero draws nothing and a short bar is
-            squared off only as far as it actually extends.
-          */
-          const barLength = (yScale?.(value) ?? 0) - (yScale?.(0) ?? 0);
-          const patchWidth = Math.min(BAR_RADIUS, Math.max(0, barLength));
-          if (patchWidth <= 0) return null;
+          const barLength = Math.max(0, (yScale?.(value) ?? 0) - (yScale?.(0) ?? 0));
+          if (barLength <= 0) return null;
 
           return (
             <div
@@ -222,11 +210,20 @@ function SquareBarStartsInner({
               style={{
                 top: bandTop + seriesIndex * (thickness + gap),
                 left: margin.left,
-                width: patchWidth,
+                width: barLength,
                 height: thickness,
                 background: SERIES_VARS[item.colorIndex % SERIES_VARS.length],
-                // Tracks the library's own hover dimming, or a patch would stay
-                // full-strength while its bar faded and read as a bright tab.
+                /* Value end only, so a bar measured from zero meets its axis
+                   flush — and as CSS rather than an SVG `rx`, so the app's
+                   universal corner-shape: squircle smooths it. Capped at half
+                   the bar's thickness: past that a squircle reads as a lozenge
+                   rather than a smoothed rectangle, which matters here because
+                   the grouped series are only 14px tall. */
+                borderRadius: (() => {
+                  const r = Math.min(BAR_RADIUS, thickness / 2);
+                  return `0 ${r}px ${r}px 0`;
+                })(),
+                // Mirrors the library's own fadedOpacity of 0.3.
                 opacity: hoveredBarIndex !== null && hoveredBarIndex !== rowIndex ? 0.3 : 1,
                 transition: "opacity 0.15s ease-in-out"
               }}
@@ -494,7 +491,12 @@ export function BarChartCard({
               ) : (
                 /* Vertical reference lines against the value axis — horizontal
                    bars have no y-axis need for the horizontal-line default. */
-                <Grid horizontal={false} vertical numTicksColumns={AXIS_TICK_COUNT} />
+                <Grid
+                  horizontal={false}
+                  vertical
+                  fadeVertical
+                  numTicksColumns={AXIS_TICK_COUNT}
+                />
               )}
               {isVertical ? (
                 <>
@@ -508,7 +510,7 @@ export function BarChartCard({
                   {/* Horizontal only: for columns the equivalent flat edge is the
                       bottom baseline, which is a different patch geometry and
                       isn't in use on any card today. */}
-                  <SquareBarStarts series={series} />
+                  <OverlayBars series={series} />
                 </>
               )}
               <ChartTooltip

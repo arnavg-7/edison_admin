@@ -689,6 +689,14 @@ input[type="checkbox"]:disabled {
   color: var(--sf-error-text);
 }
 
+/* Supporting copy under a field's control, e.g. the accepted CSV levels. */
+.sf-field-hint {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--sf-text-muted);
+}
+
 /* One chip per role held, e.g. in the admin users table. */
 .sf-role-badges {
   display: inline-flex;
@@ -925,6 +933,21 @@ input[type="checkbox"]:disabled {
    stranded at the far edge behind a wide gap. */
 .sf-filter-bar .sf-field--search {
   flex: 1 1 240px;
+}
+
+/* Pushed to the far right, away from the scope controls on the left: the date
+   range is a different axis from School/Grade/Section, and the gap between the
+   two groups is what says so. */
+.sf-filter-bar .sf-field--end {
+  margin-left: auto;
+}
+
+/* Once the bar wraps there is no right edge left to sit against, and the auto
+   margin would strand the field mid-row on its own line. */
+@media (max-width: 720px) {
+  .sf-filter-bar .sf-field--end {
+    margin-left: 0;
+  }
 }
 
 .sf-filter-note {
@@ -1816,6 +1839,35 @@ nav.sf-pagination {
   overflow-wrap: anywhere;
 }
 
+/* Severity and the row's action, pinned to the right edge together. The badge
+   keeps a fixed column so the buttons line up down the list even though the
+   severity words are different lengths. */
+.sf-priority-banner-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.sf-priority-banner-actions > .admin-status,
+.sf-priority-banner-actions > [data-slot="badge"] {
+  min-width: 62px;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .sf-priority-banner-list li {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .sf-priority-banner-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
 .sf-priority-banner-foot {
   display: flex;
   align-items: center;
@@ -2320,6 +2372,7 @@ nav.sf-pagination {
 .empty-state-action {
   display: flex;
   justify-content: center;
+  gap: 10px;
   margin-top: 16px;
 }
 

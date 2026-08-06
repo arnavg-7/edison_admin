@@ -53,8 +53,14 @@ export function TrendStatCard({
 }: {
   title: string;
   value: string;
-  delta: string;
-  direction: "up" | "down";
+  /**
+   * Week-over-week change. Optional: Home dropped it (the figure there is
+   * scoped by the page filter, and a delta against an unscoped previous week
+   * would be comparing two different populations), while Reporting — where the
+   * period is the point — still shows it. Omit both to render no badge.
+   */
+  delta?: string;
+  direction?: "up" | "down";
   series: number[];
   /** ISO timestamp this card's own figure last refreshed. */
   asOf: string;
@@ -125,14 +131,16 @@ export function TrendStatCard({
         <CardDescription>{title}</CardDescription>
         <CardTitle className="text-3xl font-semibold tabular-nums">{value}</CardTitle>
         <CardAction className="flex items-center gap-2">
-          <Badge variant="outline">
-            <HugeiconsIcon
-              icon={direction === "up" ? ArrowUpRight01Icon : ArrowDownRight01Icon}
-              size={12}
-              strokeWidth={2.5}
-            />
-            {delta}
-          </Badge>
+          {delta ? (
+            <Badge variant="outline">
+              <HugeiconsIcon
+                icon={direction === "down" ? ArrowDownRight01Icon : ArrowUpRight01Icon}
+                size={12}
+                strokeWidth={2.5}
+              />
+              {delta}
+            </Badge>
+          ) : null}
           <button
             type="button"
             className="sf-card-tool"

@@ -1,22 +1,36 @@
+"use client";
+
 import { DistributionDonutCard } from "@/components/home/charts/DistributionDonutCard";
 import { RatioBarCard } from "@/components/home/charts/RatioBarCard";
 import { StatCard } from "@/components/home/charts/StatCard";
 import { TrendStatCard } from "@/components/home/charts/TrendStatCard";
 import { REPORTS } from "@/lib/data/salesforce";
-import { coreMetrics, numberOfStudents, totalFaculty } from "@/lib/data/dashboard";
+import { coreMetricsForScope, trendSeriesForMetric } from "@/lib/data/reporting";
+import {
+  distributionTitle,
+  scopedDistribution,
+  scopedFacultyCount,
+  scopedRatioRows,
+  scopedStudentCount
+} from "@/lib/data/homeScope";
 import {
   STUDENT_COUNT_BY_SCHOOL_ASOF,
   TEACHER_STUDENT_RATIO_ASOF,
-  TEACHER_STUDENT_RATIO_TARGET,
-  studentCountBySchoolDistribution,
-  teacherStudentRatioBySchool
+  TEACHER_STUDENT_RATIO_TARGET
 } from "@/lib/data/homeDashboardCharts";
+import { useReportFilters } from "@/lib/filters";
 
 /**
  * Enrollment/staffing, distribution and academic performance grouped into
  * rows instead of one flat interleaved grid, so a Super Admin's eye lands on
  * one theme at a time during the morning scan rather than jumping between
  * unrelated figures.
+ *
+ * Every card reads one scope, taken from the page's filter bar via the URL.
+ * The alternative — a filter per card — was rejected: these cards describe a
+ * single population, so independent filters would let two adjacent cards
+ * silently disagree about which population that is, and the page would stop
+ * being readable as one picture.
  *
  * A "Students' Status" donut (On Track / At Risk / Unassigned) used to sit
  * beside Student Count By School and was removed, for three reasons:
@@ -33,18 +47,24 @@ import {
  *     was a figure a Super Admin could read but not act on.
  */
 export function HomeMetrics() {
+  const { filters } = useReportFilters();
+  const scope = { school: filters.school, grade: filters.grade };
+  // Reporting's scope shape carries a section too; Home never narrows that far.
+  const rateScope = { ...scope, section: null };
+  const rates = coreMetricsForScope(rateScope);
+
   return (
     <div className="sf-card-grid">
       <StatCard
         title="Number of Students"
-        value={numberOfStudents}
+        value={scopedStudentCount(scope)}
         asOf={REPORTS.numberOfStudents.asOf}
         className="sf-col-6"
       />
 
       <StatCard
         title="Total Faculty"
-        value={totalFaculty}
+        value={scopedFacultyCount(scope)}
         asOf={REPORTS.totalFaculty.asOf}
         className="sf-col-6"
       />
@@ -56,15 +76,15 @@ export function HomeMetrics() {
           single-column breakpoint, where the ratio chart gets its room back. */}
       <RatioBarCard
         title="Teacher-Student Ratio"
-        schools={teacherStudentRatioBySchool}
+        schools={scopedRatioRows(scope)}
         asOf={TEACHER_STUDENT_RATIO_ASOF}
         target={TEACHER_STUDENT_RATIO_TARGET}
         className="sf-col-6"
       />
 
       <DistributionDonutCard
-        title="Student Count By School"
-        data={studentCountBySchoolDistribution}
+        title={distributionTitle(scope)}
+        data={scopedDistribution(scope)}
         asOf={STUDENT_COUNT_BY_SCHOOL_ASOF}
         totalLabel="Students"
         className="sf-col-6"
@@ -72,30 +92,24 @@ export function HomeMetrics() {
 
       <TrendStatCard
         title="Attendance Rate"
-        value={coreMetrics[0].value}
-        delta={coreMetrics[0].trend.replace(/^[-+]/, "")}
-        direction="down"
-        series={[93.4, 92.8, 93.1, 92.2, 92.9, 92.5, 92.4]}
+        value={rates[0].value}
+        series={trendSeriesForMetric("attendance-rate", rateScope)}
         asOf={REPORTS.attendanceRate.asOf}
         className="sf-col-4"
       />
 
       <TrendStatCard
         title="Goal Completion %"
-        value={coreMetrics[1].value}
-        delta={coreMetrics[1].trend.replace(/^[-+]/, "")}
-        direction="up"
-        series={[63.2, 64.1, 65.0, 65.4, 66.8, 67.2, 68.1]}
+        value={rates[1].value}
+        series={trendSeriesForMetric("goal-completion", rateScope)}
         asOf={REPORTS.goalCompletion.asOf}
         className="sf-col-4"
       />
 
       <TrendStatCard
         title="Assignment Completion Rate"
-        value={coreMetrics[2].value}
-        delta={coreMetrics[2].trend.replace(/^[-+]/, "")}
-        direction="up"
-        series={[82.1, 82.9, 83.4, 83.1, 84.0, 84.4, 84.7]}
+        value={rates[2].value}
+        series={trendSeriesForMetric("assignment-completion", rateScope)}
         asOf={REPORTS.assignmentCompletion.asOf}
         className="sf-col-4"
       />

@@ -142,17 +142,13 @@ export const assignmentSubmissions: BarGroup[] = [
   { label: "Grade 9", rows: [{ label: "Submissions", value: 16, colorIndex: 0 }] }
 ];
 
-/** The three original core metrics, now read from Salesforce. */
-export const coreMetrics = [
-  { id: "attendance-rate", label: "Attendance Rate", value: "92.4%", trend: "-0.6 pts vs. last week" },
-  { id: "goal-completion", label: "Goal Completion %", value: "68.1%", trend: "+2.3 pts vs. last week" },
-  {
-    id: "assignment-completion",
-    label: "Assignment Completion Rate",
-    value: "84.7%",
-    trend: "+1.1 pts vs. last week"
-  }
-];
+/*
+ * `coreMetrics` — the three fixed figures with their week-over-week trend
+ * strings — lived here and is gone. Home reads the same three from
+ * `coreMetricsForScope` in reporting.ts now, so they respond to the page's
+ * school/grade filter, and the trend strings had no reader left once the
+ * delta badge was dropped from both dashboards (2026-08-06).
+ */
 
 export const ATTENDANCE_SERIES = [
   { label: "Present", colorIndex: 0 },

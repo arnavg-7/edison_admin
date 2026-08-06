@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { NeedsAttentionBanner } from "@/components/home/NeedsAttentionBanner";
-import { HomeFilterBar } from "@/components/home/HomeFilterBar";
+import { GlobalFilterBar } from "@/components/shared/GlobalFilterBar";
 import { HomeMetrics } from "@/components/home/HomeMetrics";
 
 /**
@@ -27,18 +27,26 @@ export default function HomePage() {
               explanation was spending a second line on something the cards
               demonstrate themselves. */}
           <p className="sf-page-sub">
-            District-wide overview. Every card carries its own refresh time.
+            Overview across the district, or one school and grade. Every card carries its own
+            refresh time.
           </p>
         </div>
-
-        {/* Suspense because it reads the URL through useSearchParams, which
-            opts a route into dynamic rendering unless it sits behind a boundary. */}
-        <Suspense fallback={null}>
-          <HomeFilterBar />
-        </Suspense>
       </div>
 
-      <HomeMetrics />
+      {/* One bar for the whole page rather than a filter per card: these cards
+          describe a single population, and independent filters would let two
+          adjacent cards disagree about which population that is. Scope lives in
+          the URL, so it survives a reload and travels to Reporting intact.
+
+          Suspense because it reads the URL through useSearchParams, which opts
+          a route into dynamic rendering unless it sits behind a boundary. */}
+      <Suspense fallback={null}>
+        <GlobalFilterBar className="sf-filter-bar--top-spaced" />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <HomeMetrics />
+      </Suspense>
 
       <Suspense fallback={null}>
         <NeedsAttentionBanner />

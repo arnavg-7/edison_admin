@@ -34,8 +34,6 @@ export default function MetricsCatalogPage() {
       <TrendStatCard
         title="Attendance Rate"
         value="92.4%"
-        delta="0.6 pts vs. last week"
-        direction="down"
         series={[93.4, 92.8, 93.1, 92.2, 92.9, 92.5, 92.4]}
         asOf={REPORTS.attendanceRate.asOf}
         className="sf-col-4"
@@ -43,8 +41,6 @@ export default function MetricsCatalogPage() {
       <TrendStatCard
         title="Goal Completion %"
         value="68.1%"
-        delta="2.3 pts vs. last week"
-        direction="up"
         series={[63.2, 64.1, 65.0, 65.4, 66.8, 67.2, 68.1]}
         asOf={REPORTS.goalCompletion.asOf}
         className="sf-col-4"
@@ -52,8 +48,6 @@ export default function MetricsCatalogPage() {
       <TrendStatCard
         title="Assignment Completion Rate"
         value="84.7%"
-        delta="1.1 pts vs. last week"
-        direction="up"
         series={[82.1, 82.9, 83.4, 83.1, 84.0, 84.4, 84.7]}
         asOf={REPORTS.assignmentCompletion.asOf}
         className="sf-col-4"

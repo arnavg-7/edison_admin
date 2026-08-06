@@ -5,6 +5,7 @@
 // and never appear here unless someone deliberately adds them as an admin too.
 
 import { schools } from "./schools";
+import type { StatusTone } from "./types";
 
 export type AdminRole = "leadership" | "portal_administrator" | "it_administrator";
 
@@ -123,7 +124,27 @@ export function scopeLabel(scope: AdminScope): string {
   return schools.find((school) => school.id === scope.schoolId)?.name ?? "Unknown school";
 }
 
-export type AdminUserStatus = "Active" | "Pending Invite" | "Inactive";
+export type AdminUserStatus = "Active" | "Pending Invite" | "Inactive" | "Revoked";
+
+/**
+ * Display vocabulary for statuses. The stored value stays "Active" — accounts
+ * already in localStorage carry it — but the UI calls that state Approved,
+ * matching the Approved Users tab: access was granted and taken up, as opposed
+ * to still pending, handed back (Revoked) or dormant (Inactive).
+ */
+export const ADMIN_STATUS_LABELS: Record<AdminUserStatus, string> = {
+  Active: "Approved",
+  "Pending Invite": "Pending Invite",
+  Revoked: "Revoked",
+  Inactive: "Inactive"
+};
+
+export const ADMIN_STATUS_TONE: Record<AdminUserStatus, StatusTone> = {
+  Active: "ok",
+  "Pending Invite": "warn",
+  Revoked: "error",
+  Inactive: "neutral"
+};
 
 export type AdminUser = {
   id: string;
@@ -134,10 +155,53 @@ export type AdminUser = {
   /** Role-independent: scope applies across every role the account holds. */
   scope: AdminScope;
   status: AdminUserStatus;
+  /**
+   * Status the account held before it was revoked, so Restore can put it back
+   * where it was: a revoked invite returns to Pending Invite rather than
+   * becoming a live Active account nobody ever accepted.
+   */
+  revokedFrom?: AdminUserStatus;
   lastLogin: string | null;
   dateAdded: string;
   invitedBy: string;
 };
+
+/**
+ * Admin access is only ever granted to a district-issued institutional
+ * account. A personal mailbox can't be deprovisioned when someone leaves, so
+ * their portal access would outlive their employment — and the audit log would
+ * point at an address the district doesn't control.
+ *
+ * TODO: read the real allow-list from the district identity config; there's no
+ * settings contract for it yet, so the seed domain is hardcoded here.
+ */
+export const INSTITUTIONAL_EMAIL_DOMAINS = ["edison.example.org"];
+
+/** "@edison.example.org", or "@a or @b" if the district ever runs more than one. */
+export const INSTITUTIONAL_DOMAINS_LABEL = INSTITUTIONAL_EMAIL_DOMAINS.map((domain) => `@${domain}`).join(
+  " or "
+);
+
+/** Shape check only — shared so the manual and CSV invites can't drift apart. */
+export function isEmailShaped(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
+/**
+ * True when the address sits on an allowed institutional domain. Subdomains
+ * count (`staff.edison.example.org`), since districts routinely split staff and
+ * student mail that way.
+ */
+export function isInstitutionalEmail(email: string): boolean {
+  const normalized = email.trim().toLowerCase();
+  const at = normalized.lastIndexOf("@");
+  if (at === -1) return false;
+
+  const domain = normalized.slice(at + 1);
+  return INSTITUTIONAL_EMAIL_DOMAINS.some(
+    (allowed) => domain === allowed || domain.endsWith(`.${allowed}`)
+  );
+}
 
 export function newAdminUserId(name: string): string {
   const slug = name
@@ -216,5 +280,17 @@ export const adminUsers: AdminUser[] = [
     lastLogin: null,
     dateAdded: "2026-07-16T14:03:00-04:00",
     invitedBy: "Dana Whitfield"
+  },
+  {
+    id: "erin-castellano-admin",
+    name: "Erin Castellano",
+    email: "ecastellano@edison.example.org",
+    roles: [{ role: "portal_administrator", permission: "edit" }],
+    scope: { type: "school", schoolId: "edison-ms" },
+    status: "Revoked",
+    revokedFrom: "Active",
+    lastLogin: "2026-05-29T08:47:00-04:00",
+    dateAdded: "2025-08-22T11:15:00-04:00",
+    invitedBy: "Priya Nair"
   }
 ];

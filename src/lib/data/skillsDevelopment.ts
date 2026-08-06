@@ -55,12 +55,27 @@ export type DevSkill = {
   label: string;
 };
 
+/**
+ * What an area is for, and how long it runs. Held per area rather than per
+ * grade: a grade can run one area for the full year and another for a single
+ * semester, and the two need to say so independently.
+ */
+export type DevAreaPeriod = {
+  /** e.g. "Fall 2026", "Semester 1", "2026–27". */
+  name: string;
+  /** ISO dates (YYYY-MM-DD), no time component. */
+  from: string;
+  to: string;
+};
+
 export type DevelopmentArea = {
   id: string;
   title: string;
   tone: DevAreaTone;
   icon: DevAreaIcon;
   published: boolean;
+  /** Optional: an area can be left undated until its term is decided. */
+  period?: DevAreaPeriod;
   skills: DevSkill[];
 };
 
@@ -151,13 +166,19 @@ type AreaSeed = {
   skills: string[];
 };
 
-function buildAreas(scope: string, seeds: AreaSeed[]): DevelopmentArea[] {
+/** Every area in one build shares the term it was configured for. */
+function buildAreas(
+  scope: string,
+  seeds: AreaSeed[],
+  period?: DevAreaPeriod
+): DevelopmentArea[] {
   return seeds.map((seed) => ({
     id: `da-${scope}-${seed.key}`,
     title: seed.title,
     tone: seed.tone,
     icon: seed.icon,
     published: seed.published ?? true,
+    period,
     skills: seed.skills.map((label, index) => ({
       id: `sk-${scope}-${seed.key}-${index}`,
       label
@@ -358,9 +379,16 @@ const HS_GROUPS: GroupSeed[] = [
   }
 ];
 
+/** The term the live configuration is running for. */
+const CURRENT_TERM: DevAreaPeriod = {
+  name: "Fall 2026",
+  from: "2026-08-24",
+  to: "2026-12-18"
+};
+
 function hsAreasFor(grade: string): DevelopmentArea[] {
   const scope = scopeKey("edison-hs", grade);
-  return buildAreas(scope, [...HS_SHARED_AREAS, ...(HS_GRADE_AREAS[grade] ?? [])]);
+  return buildAreas(scope, [...HS_SHARED_AREAS, ...(HS_GRADE_AREAS[grade] ?? [])], CURRENT_TERM);
 }
 
 function hsGroupsFor(grade: string): SkillGroup[] {
@@ -399,6 +427,100 @@ export function developmentAreasFor(schoolId: string, grade: string): Developmen
 
 export function skillsProfileFor(schoolId: string, grade: string): SkillGroup[] {
   return skillsProfileByGrade[scopeKey(schoolId, grade)] ?? [];
+}
+
+// ---------------------------------------------------------------------------
+// Term history
+//
+// What a grade's areas and skills looked like in an earlier year or term.
+// Archives are read-only: they are the record of what students actually saw
+// then, so editing one would rewrite history rather than correct it. Each
+// archive carries both halves of the scope, and the two screens each read the
+// half they own.
+// ---------------------------------------------------------------------------
+
+export type ArchivedTerm = {
+  id: string;
+  /** Display label for the year or term, e.g. "Spring 2026". */
+  term: string;
+  /** The period the configuration was in force. ISO dates (YYYY-MM-DD). */
+  from: string;
+  to: string;
+  areas: DevelopmentArea[];
+  groups: SkillGroup[];
+};
+
+type TermSeed = {
+  key: string;
+  term: string;
+  from: string;
+  to: string;
+  areas: AreaSeed[];
+  groups: GroupSeed[];
+};
+
+function buildTermHistory(schoolId: string, grade: string, seeds: TermSeed[]): ArchivedTerm[] {
+  return seeds.map((seed) => {
+    // The term key joins the scope key so an archived area never collides with
+    // its live counterpart, or with the same area in another term.
+    const scope = `${scopeKey(schoolId, grade)}-${seed.key}`;
+    return {
+      id: `term-${scope}`,
+      term: seed.term,
+      from: seed.from,
+      to: seed.to,
+      // An archived area carries the term it ran for, same as a live one.
+      areas: buildAreas(scope, seed.areas, {
+        name: seed.term,
+        from: seed.from,
+        to: seed.to
+      }),
+      groups: buildGroups(scope, seed.groups)
+    };
+  });
+}
+
+/**
+ * Fall 2025 predates the two graduate-profile groups that were added when the
+ * profile was completed, so its archive is genuinely thinner than today's —
+ * which is the whole reason an admin looks back at it.
+ */
+const PRIOR_YEAR_GROUPS: GroupSeed[] = HS_GROUPS.filter(
+  (seed) => seed.key !== "critical" && seed.key !== "emotional"
+);
+
+function hsHistoryFor(grade: string): ArchivedTerm[] {
+  const gradeAreas = HS_GRADE_AREAS[grade] ?? [];
+  return buildTermHistory("edison-hs", grade, [
+    {
+      key: "spring-2026",
+      term: "Spring 2026",
+      from: "2026-01-12",
+      to: "2026-05-22",
+      areas: [...HS_SHARED_AREAS, ...gradeAreas],
+      groups: HS_GROUPS
+    },
+    {
+      key: "fall-2025",
+      term: "Fall 2025",
+      from: "2025-08-25",
+      to: "2025-12-19",
+      areas: [...HS_SHARED_AREAS, ...gradeAreas.slice(0, 1)],
+      groups: PRIOR_YEAR_GROUPS
+    }
+  ]);
+}
+
+/** Newest term first, so the history screens open on the most recent archive. */
+export const termHistoryByGrade: Record<string, ArchivedTerm[]> = {
+  [scopeKey("edison-hs", "9")]: hsHistoryFor("9"),
+  [scopeKey("edison-hs", "10")]: hsHistoryFor("10"),
+  [scopeKey("edison-hs", "11")]: hsHistoryFor("11"),
+  [scopeKey("edison-hs", "12")]: hsHistoryFor("12")
+};
+
+export function termHistoryFor(schoolId: string, grade: string): ArchivedTerm[] {
+  return termHistoryByGrade[scopeKey(schoolId, grade)] ?? [];
 }
 
 /**

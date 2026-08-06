@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { accessSummary, type AdminRoleAssignment, type AdminScope, type AdminUser } from "@/lib/data/adminUsers";
+import {
+  ADMIN_STATUS_LABELS,
+  accessSummary,
+  type AdminRoleAssignment,
+  type AdminScope,
+  type AdminUser
+} from "@/lib/data/adminUsers";
 import { useAdminUsers } from "@/lib/admin-users-store";
 import { Modal } from "@/components/shared/Modal";
 import { Button } from "@/components/base/buttons/button";
@@ -26,6 +32,12 @@ export function EditAdminUserModal({ user, onClose }: { user: AdminUser; onClose
 
   const isInactive = user.status === "Inactive";
   const isPending = user.status === "Pending Invite";
+  const isRevoked = user.status === "Revoked";
+  /* Whether this is a real sign-in-capable account. Active/Inactive is a
+     two-state switch, so offering it for a pending or revoked account would
+     silently overwrite that status with one end of a toggle it was never part
+     of — and there's no password to reset on an account nobody can use. */
+  const isLiveAccount = !isPending && !isRevoked;
 
   const hasRoles = roles.length > 0;
 
@@ -66,7 +78,12 @@ export function EditAdminUserModal({ user, onClose }: { user: AdminUser; onClose
         </p>
       ) : null}
 
-      {isPending ? (
+      {isRevoked ? (
+        <p className="sf-card-hint">
+          This account&rsquo;s access has been revoked. Restore it from Revoked Users before
+          changing whether they can sign in.
+        </p>
+      ) : isPending ? (
         <p className="sf-card-hint">
           This invite hasn&rsquo;t been accepted yet. Activate/deactivate applies once they sign
           in. Use Pending Invitations to resend or revoke it instead.
@@ -74,7 +91,7 @@ export function EditAdminUserModal({ user, onClose }: { user: AdminUser; onClose
       ) : (
         <label className="sf-switch-field">
           <span>
-            <strong>{isInactive ? "Inactive" : "Active"}</strong>
+            <strong>{isInactive ? ADMIN_STATUS_LABELS.Inactive : ADMIN_STATUS_LABELS.Active}</strong>
             <span className="sf-panel-note">
               {isInactive ? "This person can't sign in." : "This person can sign in normally."}
             </span>
@@ -84,7 +101,7 @@ export function EditAdminUserModal({ user, onClose }: { user: AdminUser; onClose
       )}
 
       <div className="sf-edit-panel-actions">
-        <Button color="secondary" size="sm" onClick={requestPasswordReset} isDisabled={isPending}>
+        <Button color="secondary" size="sm" onClick={requestPasswordReset} isDisabled={!isLiveAccount}>
           Force password reset
         </Button>
         {resetRequested ? (

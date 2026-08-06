@@ -154,6 +154,29 @@ function AlertDialogAction({
   )
 }
 
+/**
+ * A confirm action that also dismisses the dialog. Base UI's Action is a plain
+ * Button, so it only leaves the screen when the thing that rendered it does —
+ * fine for a row that disappears on Remove, but a status change (Revoke leaves
+ * the row on All Users, it just re-badges it) would strand the dialog open.
+ */
+function AlertDialogClose({
+  className,
+  variant = "default",
+  size = "default",
+  ...props
+}: AlertDialogPrimitive.Close.Props &
+  Pick<React.ComponentProps<typeof Button>, "variant" | "size">) {
+  return (
+    <AlertDialogPrimitive.Close
+      data-slot="alert-dialog-close"
+      className={cn(className)}
+      render={<Button variant={variant} size={size} />}
+      {...props}
+    />
+  )
+}
+
 function AlertDialogCancel({
   className,
   variant = "outline",
@@ -175,6 +198,7 @@ export {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
+  AlertDialogClose,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,

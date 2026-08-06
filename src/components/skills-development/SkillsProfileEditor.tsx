@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Delete02Icon,
   PencilEdit02Icon,
   PlusSignIcon,
+  Upload03Icon,
   ViewIcon,
   ViewOffSlashIcon
 } from "@hugeicons/core-free-icons";
@@ -19,6 +20,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/base/buttons/button";
 import { Combobox } from "@/components/shared/Combobox";
+import { parseSkillsCsv, type CsvParseResult, type ParsedGroup } from "@/lib/skillsCsv";
 import {
   Sheet,
   SheetContent,
@@ -33,6 +35,49 @@ import {
 
 let seq = 0;
 const nextId = (prefix: string) => `${prefix}-local-${Date.now()}-${seq++}`;
+
+/**
+ * Imported skills merge into what is already configured rather than replacing
+ * it: an admin pasting one department's sheet should not wipe another's. A
+ * skill that already exists gains the sub-skills it is missing, matched on
+ * name, and an existing sub-skill is left exactly as it was.
+ */
+function mergeImport(current: SkillGroup[], incoming: ParsedGroup[]) {
+  const merged = current.map((group) => ({ ...group, subSkills: [...group.subSkills] }));
+  let addedGroups = 0;
+  let addedSubSkills = 0;
+  let skipped = 0;
+
+  for (const parsed of incoming) {
+    let group = merged.find(
+      (entry) => entry.title.toLowerCase() === parsed.title.toLowerCase()
+    );
+
+    if (!group) {
+      // New skills arrive unpublished, so a bulk paste never puts content in
+      // front of students before anyone has looked at it.
+      group = { id: nextId("group"), title: parsed.title, published: false, subSkills: [] };
+      merged.push(group);
+      addedGroups += 1;
+    }
+
+    for (const sub of parsed.subSkills) {
+      if (group.subSkills.some((entry) => entry.label.toLowerCase() === sub.label.toLowerCase())) {
+        skipped += 1;
+        continue;
+      }
+      group.subSkills.push({
+        id: nextId("sub"),
+        label: sub.label,
+        level: sub.level,
+        description: sub.description
+      });
+      addedSubSkills += 1;
+    }
+  }
+
+  return { merged, addedGroups, addedSubSkills, skipped };
+}
 
 type SubSkillDraft = { label: string; level: SkillLevel; description: string };
 
@@ -54,8 +99,74 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
   const [editingSub, setEditingSub] = useState<{ groupId: string; subId: string } | null>(null);
   const [subDraft, setSubDraft] = useState<SubSkillDraft>(emptyDraft);
 
+  const [importOpen, setImportOpen] = useState(false);
+  const [parsedImport, setParsedImport] = useState<CsvParseResult | null>(null);
+  const [importFileName, setImportFileName] = useState<string | null>(null);
+  const [importResult, setImportResult] = useState<string | null>(null);
+  const [readError, setReadError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   /** Nothing configured and not already adding — the empty state owns the CTA. */
   const isEmpty = groups.length === 0 && !addingGroup;
+
+  const resetImport = () => {
+    setParsedImport(null);
+    setImportFileName(null);
+    setReadError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const openImport = () => {
+    resetImport();
+    setImportResult(null);
+    setImportOpen(true);
+  };
+
+  const readFile = (file: File) => {
+    setImportResult(null);
+    // Browsers report CSV inconsistently across platforms (text/csv,
+    // application/vnd.ms-excel, or nothing at all), so the extension is the
+    // reliable check.
+    if (!/\.csv$/i.test(file.name)) {
+      setParsedImport(null);
+      setImportFileName(file.name);
+      setReadError("That is not a .csv file.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImportFileName(file.name);
+      setReadError(null);
+      setParsedImport(parseSkillsCsv(String(reader.result ?? "")));
+    };
+    reader.onerror = () => {
+      setParsedImport(null);
+      setImportFileName(file.name);
+      setReadError("That file could not be read.");
+    };
+    reader.readAsText(file);
+  };
+
+  const applyImport = () => {
+    if (!parsedImport) return;
+    const { merged, addedGroups, addedSubSkills, skipped } = mergeImport(
+      groups,
+      parsedImport.groups
+    );
+    setGroups(merged);
+    setImportResult(
+      [
+        `Imported ${addedSubSkills} sub-${addedSubSkills === 1 ? "skill" : "skills"}`,
+        addedGroups > 0 ? `${addedGroups} new ${addedGroups === 1 ? "skill" : "skills"}` : null,
+        skipped > 0 ? `${skipped} already existed and ${skipped === 1 ? "was" : "were"} left alone` : null
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    );
+    resetImport();
+  };
 
   const startAddGroup = () => {
     setGroupTitle("");
@@ -260,6 +371,116 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
     </Sheet>
   );
 
+  const importDrawer = (
+    <Sheet
+      open={importOpen}
+      onOpenChange={(open) => {
+        if (!open) setImportOpen(false);
+      }}
+    >
+      <SheetContent side="right" className="data-[side=right]:sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Import skills</SheetTitle>
+          <SheetDescription>
+            Drop a .csv with one row per sub-skill. Existing skills gain what they are missing —
+            nothing is overwritten.
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-6">
+          <div className="area-form area-form--drawer">
+            <input
+              ref={fileInputRef}
+              id="skills-csv-file"
+              type="file"
+              accept=".csv,text/csv"
+              className="sf-sr-only"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) readFile(file);
+              }}
+            />
+
+            {/* The whole zone is the control: click, keyboard and drop all land
+                on the same file input. */}
+            <div
+              role="button"
+              tabIndex={0}
+              className={isDragging ? "csv-drop is-dragging" : "csv-drop"}
+              onClick={() => fileInputRef.current?.click()}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  fileInputRef.current?.click();
+                }
+              }}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(event) => {
+                event.preventDefault();
+                setIsDragging(false);
+                const file = event.dataTransfer.files?.[0];
+                if (file) readFile(file);
+              }}
+            >
+              <HugeiconsIcon
+                icon={Upload03Icon}
+                size={22}
+                strokeWidth={2}
+                className="csv-drop-icon"
+              />
+              <p className="csv-drop-title">
+                {importFileName ?? "Drop a CSV file here, or click to choose"}
+              </p>
+              <p className="csv-drop-hint">Skill, Sub-skill, Level, Description</p>
+            </div>
+
+            {readError ? <p className="sf-field-error">{readError}</p> : null}
+
+            {parsedImport ? (
+              <p className="csv-preview-summary">
+                {parsedImport.rowCount} sub-
+                {parsedImport.rowCount === 1 ? "skill" : "skills"} across{" "}
+                {parsedImport.groups.length}{" "}
+                {parsedImport.groups.length === 1 ? "skill" : "skills"} ready to import.
+              </p>
+            ) : null}
+
+            {/* Unreadable rows are skipped rather than failing the file, so the
+                import still says which ones were dropped. */}
+            {parsedImport && parsedImport.issues.length > 0 ? (
+              <ul className="csv-issues">
+                {parsedImport.issues.map((issue) => (
+                  <li key={`${issue.line}-${issue.message}`}>
+                    Line {issue.line}: {issue.message}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            {importResult ? <p className="csv-result">{importResult}</p> : null}
+          </div>
+        </div>
+
+        <SheetFooter className="flex-row">
+          <Button
+            size="sm"
+            onClick={applyImport}
+            isDisabled={!parsedImport || parsedImport.rowCount === 0}
+          >
+            Import
+          </Button>
+          <Button color="secondary" size="sm" onClick={() => setImportOpen(false)}>
+            Close
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+
   return (
     <div className="sf-panel">
       {/* Counts and the action share the panel head, as every other panel in the
@@ -276,13 +497,23 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
           {/* While empty, the only call to action lives inside the empty state,
               so there aren't two "Add skill" buttons competing on one screen. */}
           {isEmpty ? null : (
-            <Button
-              size="sm"
-              onClick={startAddGroup}
-              iconLeading={<HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2} />}
-            >
-              Add skill
-            </Button>
+            <>
+              <Button
+                color="secondary"
+                size="sm"
+                onClick={openImport}
+                iconLeading={<HugeiconsIcon icon={Upload03Icon} size={16} strokeWidth={2} />}
+              >
+                Import CSV
+              </Button>
+              <Button
+                size="sm"
+                onClick={startAddGroup}
+                iconLeading={<HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2} />}
+              >
+                Add skill
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -299,14 +530,26 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
       {isEmpty ? (
         <EmptyState
           title="No skills configured yet"
-          message="Add a skill such as Resilience, then add the sub-skills rated under it."
-          action={<Button
-            size="sm"
-            onClick={startAddGroup}
-            iconLeading={<HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} className="size-4 shrink-0" />}
-          >
-            Add skill
-          </Button>}
+          message="Add a skill such as Resilience, then add the sub-skills rated under it — or import a CSV to set up several at once."
+          action={
+            <>
+              <Button
+                size="sm"
+                onClick={startAddGroup}
+                iconLeading={<HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} className="size-4 shrink-0" />}
+              >
+                Add skill
+              </Button>
+              <Button
+                color="secondary"
+                size="sm"
+                onClick={openImport}
+                iconLeading={<HugeiconsIcon icon={Upload03Icon} strokeWidth={2} className="size-4 shrink-0" />}
+              >
+                Import CSV
+              </Button>
+            </>
+          }
         />
       ) : (
         <div className="skill-group-grid">
@@ -475,6 +718,7 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
       )}
 
       {groupDrawer}
+      {importDrawer}
     </div>
   );
 }

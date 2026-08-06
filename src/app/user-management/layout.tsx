@@ -9,9 +9,19 @@ import { Button } from "@/components/base/buttons/button";
 import { InviteAdminUserModal } from "@/components/admin-users/InviteAdminUserModal";
 
 const TABS = [
-  { label: "Admin Users", href: "/user-management" },
+  { label: "All Users", href: "/user-management" },
+  { label: "Approved Users", href: "/user-management/approved" },
+  { label: "Revoked Users", href: "/user-management/revoked" },
+  { label: "Inactive Users", href: "/user-management/inactive" },
   { label: "Pending Invitations", href: "/user-management/pending" }
 ];
+
+/**
+ * Pending Invitations is the one tab that runs its own actions (resend/revoke
+ * an invite) rather than the account table, so inviting from there would land
+ * the new row on a different tab than the one you're looking at.
+ */
+const PENDING_HREF = "/user-management/pending";
 
 /**
  * Owned by the IT Administrator: the small set of people with admin-level
@@ -34,7 +44,7 @@ export default function UserManagementLayout({ children }: { children: React.Rea
           </p>
         </div>
 
-        {pathname === "/user-management" ? (
+        {pathname !== PENDING_HREF ? (
           <Button
             size="sm"
             onClick={() => setIsInviting(true)}

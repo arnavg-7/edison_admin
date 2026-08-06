@@ -50,6 +50,14 @@ export type AttentionItem = {
   href: string;
   resolveLabel: string;
   resolved?: boolean;
+  /**
+   * School id and grade this item belongs to, for Home's scope filter. Absent
+   * on district-level items — an unconfirmed academic calendar or an alert-rule
+   * SLA breach is not any one school's problem, so those drop out of view once
+   * a school is picked rather than following every scope around.
+   */
+  school?: string;
+  grade?: string;
 };
 
 /**
@@ -75,7 +83,9 @@ export const attentionItems: AttentionItem[] = [
     reason: "18 absences against 6 present days year to date (placeholder rule: 3+ in 10 days)",
     flaggedAt: "2026-07-17T08:20:00-04:00",
     href: "/people/student/michael-andrew",
-    resolveLabel: "Open student 360"
+    resolveLabel: "Open student 360",
+    school: "edison-hs",
+    grade: "10"
   },
   {
     id: "na-2",
@@ -85,7 +95,9 @@ export const attentionItems: AttentionItem[] = [
     reason: "4 missing assignments in English Language Arts this week (placeholder rule: 3+ in a week)",
     flaggedAt: "2026-07-16T14:05:00-04:00",
     href: "/people/student/nick-johnson",
-    resolveLabel: "Open student 360"
+    resolveLabel: "Open student 360",
+    school: "edison-hs",
+    grade: "9"
   },
   {
     id: "na-3",
@@ -95,7 +107,9 @@ export const attentionItems: AttentionItem[] = [
     reason: "2 consecutive missed goal checkpoints (placeholder rule)",
     flaggedAt: "2026-07-15T09:41:00-04:00",
     href: "/people/student/rk-sharma",
-    resolveLabel: "Open student 360"
+    resolveLabel: "Open student 360",
+    school: "james-madison-intermediate",
+    grade: "8"
   },
   {
     id: "na-4",
@@ -139,24 +153,41 @@ export const attentionItems: AttentionItem[] = [
   }
 ];
 
-/** Open items, optionally narrowed to when they were flagged. */
-function openItems(window?: DateWindow): AttentionItem[] {
-  const open = attentionItems.filter((item) => !item.resolved);
-  return window ? open.filter((item) => isWithinWindow(item.flaggedAt, window)) : open;
+/** School/grade narrowing, matching Home's filter bar. */
+export type AttentionScope = { school?: string | null; grade?: string | null };
+
+function inScope(item: AttentionItem, scope?: AttentionScope): boolean {
+  if (!scope?.school) return true;
+  if (item.school !== scope.school) return false;
+  return !scope.grade || item.grade === scope.grade;
 }
 
-export function needsAttentionOpenCount(window?: DateWindow): number {
-  return openItems(window).length;
+/** Open items, optionally narrowed to when they were flagged and to a school/grade. */
+function openItems(window?: DateWindow, scope?: AttentionScope): AttentionItem[] {
+  return attentionItems.filter(
+    (item) =>
+      !item.resolved &&
+      (!window || isWithinWindow(item.flaggedAt, window)) &&
+      inScope(item, scope)
+  );
+}
+
+export function needsAttentionOpenCount(window?: DateWindow, scope?: AttentionScope): number {
+  return openItems(window, scope).length;
 }
 
 /**
  * Worst-first, most-recent-first slice for the Home page teaser banner.
  *
- * `window` is optional so the triage queue and anything else reading the full
- * set is unaffected; Home passes its date range through.
+ * `window` and `scope` are optional so the triage queue and anything else
+ * reading the full set is unaffected; Home passes its filters through.
  */
-export function topAttentionItems(limit: number, window?: DateWindow): AttentionItem[] {
-  return openItems(window)
+export function topAttentionItems(
+  limit: number,
+  window?: DateWindow,
+  scope?: AttentionScope
+): AttentionItem[] {
+  return openItems(window, scope)
     .slice()
     .sort(
       (a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || b.flaggedAt.localeCompare(a.flaggedAt)

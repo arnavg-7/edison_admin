@@ -33,7 +33,7 @@ const SCOPE_OPTIONS: ComboboxOption[] = [
 ];
 
 /* Sorted on when the invite was sent, not last login: a pending account has
-   never signed in, so the Admin Users tab's login sort has nothing to order by
+   never signed in, so the All Users tab's login sort has nothing to order by
    here. Oldest-first is how you find the invites going stale. */
 const SORT_OPTIONS: ComboboxOption[] = [
   { value: "recent", label: "Invited: newest first" },
@@ -43,13 +43,13 @@ const SORT_OPTIONS: ComboboxOption[] = [
 /** Invites sent but not yet accepted — a filtered slice of the same admin
     user list, the same way Alert History is a filtered slice of alerts. */
 export default function PendingInvitationsPage() {
-  const { adminUsers: storedAdminUsers, updateUser, removeUser } = useAdminUsers();
+  const { adminUsers: storedAdminUsers, updateUser } = useAdminUsers();
   const mounted = useMounted();
 
   // Seed until this page hydrates — see useMounted.
   const adminUsers = mounted ? storedAdminUsers : seededAdminUsers;
 
-  /* Same controls as the Admin Users tab, minus Status: every row here is a
+  /* Same controls as the All Users tab, minus Status: every row here is a
      Pending Invite by definition, so a status filter would only ever be a no-op
      or empty the table. */
   const [query, setQuery] = useState("");
@@ -90,6 +90,13 @@ export default function PendingInvitationsPage() {
     // TODO: no email backend yet — this only bumps the sent date so the
     // admin can see the resend registered.
     updateUser(id, { dateAdded: new Date().toISOString() });
+  };
+
+  /* Moves the invite to Revoked Users rather than deleting it, so a revoked
+     invite can be restored — it goes back to Pending Invite, not straight to
+     approved, since nobody has accepted it. */
+  const revoke = (id: string) => {
+    updateUser(id, { status: "Revoked", revokedFrom: "Pending Invite" });
   };
 
   return (
@@ -178,7 +185,7 @@ export default function PendingInvitationsPage() {
                         <Button
                           color="secondary-destructive"
                           size="xs"
-                          onClick={() => removeUser(user.id)}
+                          onClick={() => revoke(user.id)}
                         >
                           Revoke
                         </Button>

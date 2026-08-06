@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import {
+  INSTITUTIONAL_DOMAINS_LABEL,
   accessSummary,
+  isEmailShaped,
+  isInstitutionalEmail,
   newAdminUserId,
   type AdminRoleAssignment,
   type AdminScope,
@@ -14,8 +17,7 @@ import { MailAdd01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/base/buttons/button";
 import { RoleCheckboxes } from "./RoleCheckboxes";
 import { ScopeSelect } from "./ScopeSelect";
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { InstitutionalEmailDialog } from "./InstitutionalEmailDialog";
 
 /**
  * Sends an invite rather than creating a live account: the new record starts
@@ -34,13 +36,23 @@ export function ManualInviteForm({
   const [email, setEmail] = useState("");
   const [roles, setRoles] = useState<AdminRoleAssignment[]>([]);
   const [scope, setScope] = useState<AdminScope>({ type: "district" });
+  const [rejectedEmail, setRejectedEmail] = useState<string | null>(null);
 
   const hasRoles = roles.length > 0;
-  const canSave = name.trim() !== "" && EMAIL_PATTERN.test(email.trim()) && hasRoles;
+  /* The institutional-domain rule is deliberately not folded in here: a
+     disabled Send can't say why, and "looks like an email but isn't ours" is
+     exactly the case that needs explaining, so Send stays live and the popup
+     does the explaining. */
+  const canSave = name.trim() !== "" && isEmailShaped(email) && hasRoles;
   const summary = accessSummary(name, roles);
 
   const send = () => {
     if (!canSave) return;
+
+    if (!isInstitutionalEmail(email)) {
+      setRejectedEmail(email.trim());
+      return;
+    }
 
     onInvite({
       id: newAdminUserId(name),
@@ -76,6 +88,11 @@ export function ManualInviteForm({
           placeholder="e.g. pnair@edison.example.org"
           onChange={(event) => setEmail(event.target.value)}
         />
+        {/* Inside the label, so it's part of the field's accessible name rather
+            than copy a screen reader has to go looking for. */}
+        <span className="sf-field-hint">
+          Must be a district institutional address ({INSTITUTIONAL_DOMAINS_LABEL}).
+        </span>
       </label>
 
       <RoleCheckboxes
@@ -112,6 +129,10 @@ export function ManualInviteForm({
           Back
         </Button>
       </div>
+
+      {rejectedEmail ? (
+        <InstitutionalEmailDialog emails={[rejectedEmail]} onClose={() => setRejectedEmail(null)} />
+      ) : null}
     </div>
   );
 }

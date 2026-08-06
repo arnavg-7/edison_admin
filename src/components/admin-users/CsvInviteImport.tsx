@@ -5,7 +5,10 @@ import { schools } from "@/lib/data/schools";
 import {
   ADMIN_ROLE_LABELS,
   FIXED_ROLE_PERMISSION,
+  INSTITUTIONAL_DOMAINS_LABEL,
   defaultRolePermission,
+  isEmailShaped,
+  isInstitutionalEmail,
   newAdminUserId,
   type AdminRole,
   type AdminRoleAssignment,
@@ -16,6 +19,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { MailAdd01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/base/buttons/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { InstitutionalEmailDialog } from "./InstitutionalEmailDialog";
 
 const ROLE_KEYS: Record<string, AdminRole> = {
   leadership: "leadership",
@@ -49,7 +53,13 @@ function parseRoleEntry(raw: string): AdminRoleAssignment | null {
   return null;
 }
 
-type ParsedRow = { line: number; user?: AdminUser; error?: string };
+type ParsedRow = {
+  line: number;
+  user?: AdminUser;
+  error?: string;
+  /** Set when the row was skipped for being off-domain, so the popup can list it. */
+  rejectedEmail?: string;
+};
 
 /** Simple comma split — fine for the plain exports this template expects, not full RFC 4180. */
 function parseCsvRows(text: string): Record<string, string>[] {
@@ -81,8 +91,13 @@ function toAdminUser(row: Record<string, string>, line: number): ParsedRow {
   const scopeRaw = row.scope?.trim();
 
   if (!name) return { line, error: "missing name" };
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!email || !isEmailShaped(email)) {
     return { line, error: `invalid email "${email ?? ""}"` };
+  }
+  /* Same rule the manual invite enforces — a bulk upload is the likeliest way
+     for a personal address to slip in unnoticed. */
+  if (!isInstitutionalEmail(email)) {
+    return { line, error: `"${email}" is not on ${INSTITUTIONAL_DOMAINS_LABEL}`, rejectedEmail: email };
   }
   if (!rolesRaw) return { line, error: "missing roles" };
 
@@ -146,12 +161,17 @@ export function CsvInviteImport({
 }) {
   const [rows, setRows] = useState<ParsedRow[] | null>(null);
   const [fileName, setFileName] = useState("");
+  const [rejectedEmails, setRejectedEmails] = useState<string[]>([]);
 
   const handleFile = async (file: File) => {
     const text = await file.text();
     const parsed = parseCsvRows(text).map((row, index) => toAdminUser(row, index + 2));
     setRows(parsed);
     setFileName(file.name);
+    /* Surfaced up front rather than left to be spotted in the per-row list: an
+       off-domain address is a rule the uploader may not know about, unlike a
+       typo'd role or school name that the row's own error explains. */
+    setRejectedEmails(parsed.flatMap((row) => (row.rejectedEmail ? [row.rejectedEmail] : [])));
   };
 
   const validUsers = (rows ?? []).flatMap((row) => (row.user ? [row.user] : []));
@@ -166,6 +186,7 @@ export function CsvInviteImport({
         separated by <code>;</code>. Add <code>:view</code> or <code>:edit</code> to a role to set
         its permission level (defaults to edit; Leadership is always view only). Scope is{" "}
         <code>district</code> or an exact school name, and applies to every role on the account.
+        Every email must be a district institutional address ({INSTITUTIONAL_DOMAINS_LABEL}).
       </p>
 
       <button type="button" className="sf-inline-btn" onClick={downloadSample}>
@@ -222,6 +243,10 @@ export function CsvInviteImport({
           Back
         </Button>
       </div>
+
+      {rejectedEmails.length > 0 ? (
+        <InstitutionalEmailDialog emails={rejectedEmails} onClose={() => setRejectedEmails([])} />
+      ) : null}
     </div>
   );
 }

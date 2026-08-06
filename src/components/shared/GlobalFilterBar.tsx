@@ -11,7 +11,14 @@ type ComboOption = { value: string; label: string };
  * Shared by every Reporting screen. Grade appears once a school is picked and
  * Class/Section once a grade is picked, matching the drill-down hierarchy.
  */
-export function GlobalFilterBar({ showSection = false }: { showSection?: boolean }) {
+export function GlobalFilterBar({
+  showSection = false,
+  className
+}: {
+  showSection?: boolean;
+  /** Extra modifier, e.g. --top-spaced where only a title sits above the bar. */
+  className?: string;
+}) {
   const { filters, setFilters } = useReportFilters();
   const grades = gradesForSchool(filters.school);
   const sections = classesForGrade(filters.grade);
@@ -32,17 +39,11 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
   ];
 
   return (
-    <div className="sf-filter-bar sf-filter-bar--flush">
-      <label className="sf-field">
-        <span>Date Range</span>
-        <DateRangePicker
-          range={filters.range}
-          from={filters.from}
-          to={filters.to}
-          onChange={setFilters}
-        />
-      </label>
-
+    <div className={`sf-filter-bar sf-filter-bar--flush${className ? ` ${className}` : ""}`}>
+      {/* Scope first, date last. School → Grade → Section is one drill-down
+          the reader moves through left to right; the date range is a separate
+          axis and sits apart at the far right rather than in the middle of
+          that sequence. */}
       <label className="sf-field">
         <span>School</span>
         <Combobox
@@ -76,6 +77,16 @@ export function GlobalFilterBar({ showSection = false }: { showSection?: boolean
           />
         </label>
       ) : null}
+
+      <label className="sf-field sf-field--end">
+        <span>Date Range</span>
+        <DateRangePicker
+          range={filters.range}
+          from={filters.from}
+          to={filters.to}
+          onChange={setFilters}
+        />
+      </label>
     </div>
   );
 }

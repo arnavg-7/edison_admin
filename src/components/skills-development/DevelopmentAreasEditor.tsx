@@ -20,6 +20,7 @@ import {
 import { DevAreaIcon } from "./DevAreaIcon";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { formatDateRangeOnly } from "@/lib/format";
 import { Button } from "@/components/base/buttons/button";
 import { Combobox } from "@/components/shared/Combobox";
 import {
@@ -36,6 +37,45 @@ import {
 
 let seq = 0;
 const nextId = (prefix: string) => `${prefix}-local-${Date.now()}-${seq++}`;
+
+type AreaDraft = {
+  title: string;
+  tone: DevAreaTone;
+  icon: IconName;
+  /** What the area is for, and the dates it runs. Optional on save. */
+  periodName: string;
+  periodFrom: string;
+  periodTo: string;
+};
+
+const emptyAreaDraft: AreaDraft = {
+  title: "",
+  tone: "blue",
+  icon: "check",
+  periodName: "",
+  periodFrom: "",
+  periodTo: ""
+};
+
+/**
+ * A period is all-or-nothing: a name with no dates, or dates with no name,
+ * would show as a half-written label on the card.
+ */
+function draftPeriod(draft: AreaDraft) {
+  if (!draft.periodName.trim() || !draft.periodFrom || !draft.periodTo) {
+    return undefined;
+  }
+  return { name: draft.periodName.trim(), from: draft.periodFrom, to: draft.periodTo };
+}
+
+function periodError(draft: AreaDraft): string | null {
+  const started = draft.periodName.trim() !== "" || draft.periodFrom !== "" || draft.periodTo !== "";
+  if (!started) return null;
+  if (!draft.periodName.trim()) return "Add a name for what this area is for.";
+  if (!draft.periodFrom || !draft.periodTo) return "Add both a start and an end date.";
+  if (draft.periodFrom > draft.periodTo) return "The end date falls before the start date.";
+  return null;
+}
 
 export function DevelopmentAreasEditor({
   schoolId,
@@ -54,18 +94,14 @@ export function DevelopmentAreasEditor({
   }, [schoolId, grade]);
 
   const [addingArea, setAddingArea] = useState(false);
-  const [areaDraft, setAreaDraft] = useState<{
-    title: string;
-    tone: DevAreaTone;
-    icon: IconName;
-  }>({ title: "", tone: "blue", icon: "check" });
+  const [areaDraft, setAreaDraft] = useState<AreaDraft>(emptyAreaDraft);
 
   const [editingAreaId, setEditingAreaId] = useState<string | null>(null);
   const [skillDraftFor, setSkillDraftFor] = useState<string | null>(null);
   const [skillDraft, setSkillDraft] = useState("");
   const [editingSkill, setEditingSkill] = useState<{ areaId: string; skillId: string } | null>(null);
 
-  const resetAreaDraft = () => setAreaDraft({ title: "", tone: "blue", icon: "check" });
+  const resetAreaDraft = () => setAreaDraft(emptyAreaDraft);
 
   /** Nothing configured and not already adding — the empty state owns the CTA. */
   const isEmpty = areas.length === 0 && !addingArea;
@@ -77,7 +113,7 @@ export function DevelopmentAreasEditor({
   };
 
   const saveNewArea = () => {
-    if (!areaDraft.title.trim()) return;
+    if (!areaDraft.title.trim() || periodError(areaDraft)) return;
     setAreas((current) => [
       ...current,
       {
@@ -86,6 +122,7 @@ export function DevelopmentAreasEditor({
         tone: areaDraft.tone,
         icon: areaDraft.icon,
         published: false,
+        period: draftPeriod(areaDraft),
         skills: []
       }
     ]);
@@ -94,11 +131,17 @@ export function DevelopmentAreasEditor({
   };
 
   const saveAreaEdit = (id: string) => {
-    if (!areaDraft.title.trim()) return;
+    if (!areaDraft.title.trim() || periodError(areaDraft)) return;
     setAreas((current) =>
       current.map((area) =>
         area.id === id
-          ? { ...area, title: areaDraft.title.trim(), tone: areaDraft.tone, icon: areaDraft.icon }
+          ? {
+              ...area,
+              title: areaDraft.title.trim(),
+              tone: areaDraft.tone,
+              icon: areaDraft.icon,
+              period: draftPeriod(areaDraft)
+            }
           : area
       )
     );
@@ -107,7 +150,14 @@ export function DevelopmentAreasEditor({
   };
 
   const startAreaEdit = (area: DevelopmentArea) => {
-    setAreaDraft({ title: area.title, tone: area.tone, icon: area.icon });
+    setAreaDraft({
+      title: area.title,
+      tone: area.tone,
+      icon: area.icon,
+      periodName: area.period?.name ?? "",
+      periodFrom: area.period?.from ?? "",
+      periodTo: area.period?.to ?? ""
+    });
     setAddingArea(false);
     setEditingAreaId(area.id);
   };
@@ -209,6 +259,41 @@ export function DevelopmentAreasEditor({
         />
       </label>
 
+      {/* What the area is for and how long it runs. Optional as a set: leave
+          all three blank for an area that is not tied to a term yet. */}
+      <label className="sf-field">
+        <span>What this area is for (optional)</span>
+        <input
+          type="text"
+          value={areaDraft.periodName}
+          placeholder="e.g. Fall 2026"
+          onChange={(event) => setAreaDraft({ ...areaDraft, periodName: event.target.value })}
+        />
+      </label>
+
+      <div className="sf-field-row">
+        <label className="sf-field">
+          <span>Start date</span>
+          <input
+            type="date"
+            value={areaDraft.periodFrom}
+            onChange={(event) => setAreaDraft({ ...areaDraft, periodFrom: event.target.value })}
+          />
+        </label>
+
+        <label className="sf-field">
+          <span>End date</span>
+          <input
+            type="date"
+            value={areaDraft.periodTo}
+            onChange={(event) => setAreaDraft({ ...areaDraft, periodTo: event.target.value })}
+          />
+        </label>
+      </div>
+
+      {periodError(areaDraft) ? (
+        <p className="sf-field-error">{periodError(areaDraft)}</p>
+      ) : null}
     </div>
   );
 
@@ -251,7 +336,11 @@ export function DevelopmentAreasEditor({
         </div>
 
         <SheetFooter className="flex-row">
-          <Button size="sm" onClick={submitForm} isDisabled={!areaDraft.title.trim()}>
+          <Button
+            size="sm"
+            onClick={submitForm}
+            isDisabled={!areaDraft.title.trim() || periodError(areaDraft) !== null}
+          >
             {editingAreaId ? "Save area" : "Create area"}
           </Button>
           <Button color="secondary" size="sm" onClick={closeForm}>
@@ -317,6 +406,15 @@ export function DevelopmentAreasEditor({
                 </div>
 
                 <h3 className={`area-title tone-${area.tone}`}>{area.title}</h3>
+
+                {area.period ? (
+                  <p className="area-period">
+                    <span className="area-period-name">{area.period.name}</span>
+                    <span className="area-period-dates">
+                      {formatDateRangeOnly(area.period.from, area.period.to)}
+                    </span>
+                  </p>
+                ) : null}
 
                 <ul className="area-skills">
                   {area.skills.map((skill) =>

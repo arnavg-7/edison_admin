@@ -92,7 +92,7 @@ export default function ReportingLayout({ children }: { children: React.ReactNod
               <DropdownMenu>
                 <DropdownMenuTrigger
                   className="sf-print-hide"
-                  render={<Button variant="outline" size="sm" />}
+                  render={<Button variant="default" size="sm" />}
                 >
                   <HugeiconsIcon icon={Download01Icon} size={16} strokeWidth={2} />
                   Download report

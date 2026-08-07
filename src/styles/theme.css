@@ -939,12 +939,23 @@ input[type="checkbox"]:disabled {
   margin-top: 16px;
 }
 
-/* Pushed to the row's right edge, bottom-aligned with the fields (the bar's
-   own align-items: flex-end) — was previously a separate flex row below the
+/* A fixed gap, not another margin-left: auto — .sf-field--end (the Date
+   Range field right before this) already claims the row's free space to
+   push itself to the right edge. A second auto margin here had no space
+   left to absorb, so this sat jammed against Date Range with only the
+   bar's own 12px gap between two otherwise-unrelated groups (filters vs.
+   the download action). Bottom-aligned with the fields via the bar's own
+   align-items: flex-end — was previously a separate flex row below the
    filter bar, which put it a full row out of line with the filters instead
    of sharing their baseline. */
 .sf-filter-bar-actions {
-  margin-left: auto;
+  margin-left: 20px;
+}
+
+@media (max-width: 720px) {
+  .sf-filter-bar-actions {
+    margin-left: 0;
+  }
 }
 
 .sf-filter-bar .sf-field select,

@@ -115,6 +115,8 @@ export const STAFFING_SERIES: SeriesKey[] = [
   { label: "Faculty", colorIndex: 1 }
 ];
 
+export type SchoolAttendanceRate = { school: string; rate: number };
+
 /**
  * Illustrative — Genesis doesn't yet break the district's 92.4% attendance
  * rate down by school, so these five figures are invented, not derived from
@@ -123,15 +125,21 @@ export const STAFFING_SERIES: SeriesKey[] = [
  * spread) and on the same five-school roster as every other Home chart, so
  * this reads as a placeholder for a real number, not as one.
  *
+ * Exported as this plain table (not just the chart-shaped bars below it) so
+ * the export API route can filter and serve the same figures the chart
+ * draws, rather than a second, differently-shaped copy.
+ *
  * TODO: replace with real per-school attendance once Genesis reports it that way.
  */
-export const attendanceRateBySchoolBars: BarGroup[] = [
+export const attendanceRateBySchool: SchoolAttendanceRate[] = [
   { school: "Edison High School", rate: 90.8 },
   { school: "Edison Middle School", rate: 92.1 },
   { school: "James Madison Intermediate", rate: 91.6 },
   { school: "Lincoln Elementary", rate: 94.3 },
   { school: "Franklin Elementary", rate: 93.7 }
-].map(({ school, rate }) => ({
+];
+
+export const attendanceRateBySchoolBars: BarGroup[] = attendanceRateBySchool.map(({ school, rate }) => ({
   label: school,
   rows: [{ label: "Attendance rate", value: rate, colorIndex: 0 }]
 }));

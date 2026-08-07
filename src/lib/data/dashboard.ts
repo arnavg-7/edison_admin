@@ -150,6 +150,21 @@ export const assignmentSubmissions: BarGroup[] = [
  * delta badge was dropped from both dashboards (2026-08-06).
  */
 
+/** Counted, not entered: one district ratio derived from the two headline
+    figures, rather than a fifth invented input. */
+export const studentsPerFaculty = Math.round((numberOfStudents / totalFaculty) * 10) / 10;
+
+/** Home's "At-risk" tile reads the same figure Reporting & Analytics'
+    Students' Status funnel already shows — one number, not a second,
+    differently-derived "at risk" definition living only on Home. */
+export const atRiskStudents = studentsStatus.find((stage) => stage.label === "At Risk")?.value ?? 0;
+
+/** Daily figures behind Home's attendance trend line. Same numbers
+    `coreMetrics` already carried as a single week-over-week delta — moved
+    here so the full week can be plotted instead of collapsed into one
+    "+2.3 pts" badge. */
+export const attendanceRateDailySeries = [93.4, 92.8, 93.1, 92.2, 92.9, 92.5, 92.4];
+
 export const ATTENDANCE_SERIES = [
   { label: "Present", colorIndex: 0 },
   { label: "Absent", colorIndex: 1 },

@@ -27,15 +27,12 @@ const LINE_COLOR = "var(--sf-stat)";
 const CHART_HEIGHT = 88;
 
 /**
- * A figure with a week-over-week delta and a short trend — Attendance Rate,
- * Goal Completion %, Assignment Completion Rate. A bare percentage says
- * nothing about direction on its own, so the badge and the trend line always
- * travel together.
- *
- * The badge stays neutral (`variant="outline"`), matching shadcn's own
- * dashboard block: the app's ok/warn/error scale is reserved for status and
- * severity, and repurposing it for "this week's number moved" would blur what
- * that palette means everywhere else.
+ * A figure with a short trend line and an optional week-over-week badge —
+ * Attendance Rate, Goal Completion %, Assignment Completion Rate on Reporting
+ * & Analytics, where the period is the point. Home dropped the badge (its
+ * figures are scoped by the page's school/grade filter, and a delta against
+ * an unscoped previous week would be comparing two different populations) —
+ * pass no `delta`/`direction` there and no badge renders.
  *
  * Runs on @bklit/area-chart (visx), not the shadcn/Recharts chart the other
  * Home cards use — see the note on `cadenceDays` for the one wrinkle that

@@ -1,7 +1,6 @@
 "use client";
 
 import { StatCard } from "@/components/home/charts/StatCard";
-import { TrendStatCard } from "@/components/home/charts/TrendStatCard";
 import { RatioBarCard } from "@/components/home/charts/RatioBarCard";
 import { BarChartCard } from "@/components/reporting/BarChartCard";
 import { REPORTS } from "@/lib/data/salesforce";
@@ -11,6 +10,14 @@ import {
   TEACHER_STUDENT_RATIO_TARGET,
   teacherStudentRatioBySchool
 } from "@/lib/data/homeDashboardCharts";
+
+/** Not a report timestamp — there is no report yet. Stands in for "last
+    checked" on the two not-yet-available cards so they carry the same
+    stamp-in-the-corner rhythm as every live card, instead of looking
+    unfinished by omission. Matches the same constant in the reporting
+    layout's CSV export (kept separate rather than shared: one string
+    literal isn't worth a module of its own). */
+const UNAVAILABLE_CHECKED_AT = "2026-07-17T12:00:00-04:00";
 
 /**
  * The metrics catalog. Every card is one Salesforce report with its own refresh
@@ -30,43 +37,32 @@ import {
  */
 export default function MetricsCatalogPage() {
   return (
-    <div className="sf-card-grid">
-      <TrendStatCard
-        title="Attendance Rate"
-        value="92.4%"
-        series={[93.4, 92.8, 93.1, 92.2, 92.9, 92.5, 92.4]}
-        asOf={REPORTS.attendanceRate.asOf}
-        className="sf-col-4"
-      />
-      <TrendStatCard
-        title="Goal Completion %"
-        value="68.1%"
-        series={[63.2, 64.1, 65.0, 65.4, 66.8, 67.2, 68.1]}
-        asOf={REPORTS.goalCompletion.asOf}
-        className="sf-col-4"
-      />
-      <TrendStatCard
+    <>
+    <div className="sf-kpi-row">
+      <StatCard title="Number of Students" value={numberOfStudents} asOf={REPORTS.numberOfStudents.asOf} />
+
+      <StatCard title="Total Faculty" value={totalFaculty} asOf={REPORTS.totalFaculty.asOf} />
+
+      <StatCard title="Attendance Rate" value="92.4%" asOf={REPORTS.attendanceRate.asOf} />
+
+      {/* Starts the grid's second row (3 columns, 3 cards above) rather than
+          a separate grid — same fixed column track, so this row doesn't draw
+          a different width than the one above it. Same StatCard anatomy as
+          every other tile here too — no separate "Assignment completion"
+          placeholder alongside Homeroom coverage / Gen ed split: it would
+          just restate this live tile. */}
+      <StatCard
         title="Assignment Completion Rate"
         value="84.7%"
-        series={[82.1, 82.9, 83.4, 83.1, 84.0, 84.4, 84.7]}
         asOf={REPORTS.assignmentCompletion.asOf}
-        className="sf-col-4"
       />
 
-      <StatCard
-        title="Number of Students"
-        value={numberOfStudents}
-        asOf={REPORTS.numberOfStudents.asOf}
-        className="sf-col-6"
-      />
+      <StatCard title="Homeroom coverage" value="71%" asOf={UNAVAILABLE_CHECKED_AT} />
 
-      <StatCard
-        title="Total Faculty"
-        value={totalFaculty}
-        asOf={REPORTS.totalFaculty.asOf}
-        className="sf-col-6"
-      />
+      <StatCard title="Gen ed / special ed split" value="82% / 18%" asOf={UNAVAILABLE_CHECKED_AT} />
+    </div>
 
+    <div className="sf-card-grid">
       {/* The two charts share one row rather than stacking: both are
           per-category breakdowns, and side by side they fit on screen together
           instead of the second needing a scroll to reach. Both fall back to
@@ -94,5 +90,6 @@ export default function MetricsCatalogPage() {
       />
 
     </div>
+    </>
   );
 }

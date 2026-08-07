@@ -3,8 +3,16 @@
 import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { RefreshIcon } from "@hugeicons/core-free-icons";
-import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
 import { formatNumber, formatSalesforceStamp } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 /**
  * A single steady-state figure with no trend to report yet (Number of
@@ -15,12 +23,18 @@ export function StatCard({
   title,
   value,
   asOf,
+  note,
   className
 }: {
   title: string;
-  value: number;
+  /** A number goes through formatNumber; a string (e.g. "92.4%") renders as-is. */
+  value: number | string;
   /** ISO timestamp this card's own figure last refreshed. */
   asOf: string;
+  /** Short muted line under the figure, e.g. "Illustrative — not populated in
+      Genesis" — keeps a not-yet-real figure on the same card anatomy as every
+      other KPI tile instead of a visually different one-off. */
+  note?: string;
   className?: string;
 }) {
   const [currentAsOf, setCurrentAsOf] = useState(asOf);
@@ -38,11 +52,11 @@ export function StatCard({
   };
 
   return (
-    <Card className={className}>
+    <Card className={cn("h-full", className)}>
       <CardHeader>
         <CardDescription>{title}</CardDescription>
         <CardTitle className="text-4xl font-semibold tabular-nums text-[var(--sf-stat)]">
-          {formatNumber(value)}
+          {typeof value === "number" ? formatNumber(value) : value}
         </CardTitle>
         <CardAction>
           <button
@@ -62,6 +76,12 @@ export function StatCard({
           </button>
         </CardAction>
       </CardHeader>
+
+      {note ? (
+        <CardContent>
+          <p className="sf-card-hint">{note}</p>
+        </CardContent>
+      ) : null}
     </Card>
   );
 }

@@ -1,9 +1,8 @@
 "use client";
 
-import { DistributionDonutCard } from "@/components/home/charts/DistributionDonutCard";
-import { RatioBarCard } from "@/components/home/charts/RatioBarCard";
+import { BarChartCard } from "@/components/reporting/BarChartCard";
 import { StatCard } from "@/components/home/charts/StatCard";
-import { TrendStatCard } from "@/components/home/charts/TrendStatCard";
+import { TrendLineCard } from "@/components/home/charts/TrendLineCard";
 import { REPORTS } from "@/lib/data/salesforce";
 import { coreMetricsForScope, trendSeriesForMetric } from "@/lib/data/reporting";
 import {
@@ -13,38 +12,32 @@ import {
   scopedRatioRows,
   scopedStudentCount
 } from "@/lib/data/homeScope";
+import { atRiskStudents } from "@/lib/data/dashboard";
 import {
   STUDENT_COUNT_BY_SCHOOL_ASOF,
   TEACHER_STUDENT_RATIO_ASOF,
-  TEACHER_STUDENT_RATIO_TARGET
+  attendanceRateBySchoolBars,
+  studentsByGradeBandBars
 } from "@/lib/data/homeDashboardCharts";
 import { useReportFilters } from "@/lib/filters";
 
 /**
- * Enrollment/staffing, distribution and academic performance grouped into
- * rows instead of one flat interleaved grid, so a Super Admin's eye lands on
- * one theme at a time during the morning scan rather than jumping between
- * unrelated figures.
+ * Five plain KPI tiles, then three grouped rows — Enrollment, Trends,
+ * Staffing — each led by a section label so a Super Admin's eye lands on one
+ * theme at a time during the morning scan.
  *
- * Every card reads one scope, taken from the page's filter bar via the URL.
- * The alternative — a filter per card — was rejected: these cards describe a
- * single population, so independent filters would let two adjacent cards
- * silently disagree about which population that is, and the page would stop
- * being readable as one picture.
+ * Every scopeable card reads the page's filter bar via the URL (school/grade),
+ * same rule the previous version of this page established: a filter per card
+ * would let two adjacent cards silently disagree about which population
+ * they're describing. Two things stay district-wide regardless of scope —
+ * At-Risk Students (no per-school at-risk breakdown exists yet) and Students
+ * by Grade Band (a structural rollup, not a population the school filter
+ * narrows) — each noted at its own card below.
  *
- * A "Students' Status" donut (On Track / At Risk / Unassigned) used to sit
- * beside Student Count By School and was removed, for three reasons:
- *
- *  1. It was already on Reporting & Analytics with identical figures, and Home
- *     is the curated set — the full catalog lives there (PRODUCT.md).
- *  2. Both donuts totalled 1,702 and both carried a slice labelled
- *     "Unassigned", worth 41 here and 12 there. Same label, same population,
- *     adjacent cards, different numbers — it read as a contradiction rather
- *     than as the two different things it actually meant (no status vs no
- *     school).
- *  3. Its "At Risk · 460" had nowhere to go. Needs Attention is Home's
- *     actionable surface and it lists individual flagged students, so the 460
- *     was a figure a Super Admin could read but not act on.
+ * No card here carries a week-over-week delta or a "vs. last week" chip: the
+ * brief was explicit that this reads as more precision than the data backs.
+ * Where TrendStatCard's badge used to say "+2.3 pts", the trend line itself —
+ * still visible, still real — is now the whole story.
  */
 export function HomeMetrics() {
   const { filters } = useReportFilters();
@@ -53,66 +46,109 @@ export function HomeMetrics() {
   const rateScope = { ...scope, section: null };
   const rates = coreMetricsForScope(rateScope);
 
+  const students = scopedStudentCount(scope);
+  const faculty = scopedFacultyCount(scope);
+  const studentsPerFaculty = faculty > 0 ? Math.round((students / faculty) * 10) / 10 : 0;
+
+  const distributionBars = scopedDistribution(scope).map((slice) => ({
+    label: slice.label,
+    rows: [{ label: "Students", value: slice.value, colorIndex: 0 }]
+  }));
+
+  const staffingBars = scopedRatioRows(scope).map((row) => ({
+    label: row.school,
+    rows: [
+      { label: "Students", value: row.students, colorIndex: 0 },
+      { label: "Faculty", value: row.teachers, colorIndex: 1 }
+    ]
+  }));
+
   return (
-    <div className="sf-card-grid">
-      <StatCard
-        title="Number of Students"
-        value={scopedStudentCount(scope)}
-        asOf={REPORTS.numberOfStudents.asOf}
-        className="sf-col-6"
-      />
+    <>
+      <div className="sf-home-stat-row">
+        <StatCard title="Students" value={students} asOf={REPORTS.numberOfStudents.asOf} />
 
-      <StatCard
-        title="Total Faculty"
-        value={scopedFacultyCount(scope)}
-        asOf={REPORTS.totalFaculty.asOf}
-        className="sf-col-6"
-      />
+        <StatCard title="Faculty" value={faculty} asOf={REPORTS.totalFaculty.asOf} />
 
-      {/* The two per-school breakdowns sit side by side rather than stacked:
-          they answer the same question ("how is the district distributed across
-          schools?") from two angles, and reading them together beats scrolling
-          one past the other. Both drop to full width below the grid's
-          single-column breakpoint, where the ratio chart gets its room back. */}
-      <RatioBarCard
-        title="Teacher-Student Ratio"
-        schools={scopedRatioRows(scope)}
-        asOf={TEACHER_STUDENT_RATIO_ASOF}
-        target={TEACHER_STUDENT_RATIO_TARGET}
-        className="sf-col-6"
-      />
+        <StatCard
+          title="Students per Faculty"
+          value={studentsPerFaculty}
+          asOf={REPORTS.numberOfStudents.asOf}
+        />
 
-      <DistributionDonutCard
-        title={distributionTitle(scope)}
-        data={scopedDistribution(scope)}
-        asOf={STUDENT_COUNT_BY_SCHOOL_ASOF}
-        totalLabel="Students"
-        className="sf-col-6"
-      />
+        <StatCard title="Attendance Rate" value={rates[0].value} asOf={REPORTS.attendanceRate.asOf} />
 
-      <TrendStatCard
-        title="Attendance Rate"
-        value={rates[0].value}
-        series={trendSeriesForMetric("attendance-rate", rateScope)}
-        asOf={REPORTS.attendanceRate.asOf}
-        className="sf-col-4"
-      />
+        {/* District-wide regardless of scope — there's no per-school at-risk
+            breakdown in the mock data yet, only the district total Reporting &
+            Analytics' Students' Status funnel also shows. */}
+        <StatCard title="At-Risk Students" value={atRiskStudents} asOf={REPORTS.studentsStatus.asOf} />
+      </div>
 
-      <TrendStatCard
-        title="Goal Completion %"
-        value={rates[1].value}
-        series={trendSeriesForMetric("goal-completion", rateScope)}
-        asOf={REPORTS.goalCompletion.asOf}
-        className="sf-col-4"
-      />
+      <div className="sf-card-grid">
+        <h2 className="sf-grid-section-title">Enrollment</h2>
 
-      <TrendStatCard
-        title="Assignment Completion Rate"
-        value={rates[2].value}
-        series={trendSeriesForMetric("assignment-completion", rateScope)}
-        asOf={REPORTS.assignmentCompletion.asOf}
-        className="sf-col-4"
-      />
-    </div>
+        {/* Same drill-down rule as the old Distribution Donut this replaced:
+            schools district-wide, grades once a school is picked — see
+            distributionTitle/scopedDistribution in homeScope.ts. */}
+        <BarChartCard
+          title={distributionTitle(scope)}
+          groups={distributionBars}
+          series={[{ label: "Students", colorIndex: 0 }]}
+          labelWidth={160}
+          asOf={STUDENT_COUNT_BY_SCHOOL_ASOF}
+          className="sf-col-6"
+        />
+
+        {/* Always district-wide: grade bands (Elementary/Middle/High) are a
+            structural rollup of which schools serve which grades, not a
+            population the school filter narrows the way a headcount is. */}
+        <BarChartCard
+          title="Students by Grade Band"
+          groups={studentsByGradeBandBars}
+          series={[{ label: "Students", colorIndex: 1 }]}
+          labelWidth={160}
+          asOf={REPORTS.numberOfStudents.asOf}
+          className="sf-col-6"
+        />
+
+        <h2 className="sf-grid-section-title">Trends</h2>
+
+        <TrendLineCard
+          title="Attendance Rate"
+          series={trendSeriesForMetric("attendance-rate", rateScope)}
+          asOf={REPORTS.attendanceRate.asOf}
+          className="sf-col-6"
+        />
+
+        {/* Always every school, regardless of scope — a "by school" comparison
+            has nothing left to compare once the filter narrows to one. */}
+        <BarChartCard
+          title="Attendance Rate by School"
+          groups={attendanceRateBySchoolBars}
+          series={[{ label: "Attendance rate", colorIndex: 0 }]}
+          labelWidth={160}
+          asOf={REPORTS.attendanceRate.asOf}
+          hint="Illustrative — not yet broken down by school in Genesis"
+          className="sf-col-6"
+        />
+
+        <h2 className="sf-grid-section-title">Staffing</h2>
+
+        {/* Same drill-down as Enrollment above: schools, then grades within a
+            picked school — scopedRatioRows relabels each row accordingly. */}
+        <BarChartCard
+          title="Students & Faculty by School"
+          groups={staffingBars}
+          series={[
+            { label: "Students", colorIndex: 0 },
+            { label: "Faculty", colorIndex: 1 }
+          ]}
+          orientation="horizontal"
+          labelWidth={160}
+          asOf={TEACHER_STUDENT_RATIO_ASOF}
+          className="sf-col-12"
+        />
+      </div>
+    </>
   );
 }

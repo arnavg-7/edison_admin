@@ -13,11 +13,16 @@ type ComboOption = { value: string; label: string };
  */
 export function GlobalFilterBar({
   showSection = false,
-  className
+  className,
+  actions
 }: {
   showSection?: boolean;
   /** Extra modifier, e.g. --top-spaced where only a title sits above the bar. */
   className?: string;
+  /** A trailing control (e.g. Metrics Catalog's "Download report" menu),
+      pushed to the row's right edge and bottom-aligned with the fields —
+      not a separate row below the filter bar, which read as unrelated to it. */
+  actions?: React.ReactNode;
 }) {
   const { filters, setFilters } = useReportFilters();
   const grades = gradesForSchool(filters.school);
@@ -87,6 +92,8 @@ export function GlobalFilterBar({
           onChange={setFilters}
         />
       </label>
+
+      {actions ? <div className="sf-filter-bar-actions">{actions}</div> : null}
     </div>
   );
 }

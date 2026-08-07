@@ -334,14 +334,30 @@ body {
   left: 0;
 }
 
+/* Visually hidden, still announced.
+
+   `position: fixed`, not `absolute`: an absolutely positioned box resolves
+   against its nearest *positioned* ancestor, and most of the buttons carrying
+   one of these labels aren't positioned. The label then escaped the scrolling
+   region and took its static position from the document instead, landing far
+   below the fold — which stretched the document's scroll height past the
+   100dvh app shell. Scrolling that extra height slid the whole shell up and
+   exposed a band of bare page background under it, reading as a white overlay
+   across the bottom of the screen.
+
+   Fixed positioning takes the label out of flow the same way but resolves
+   against the viewport, so it can never extend a scroll extent. */
 .sf-sr-only {
-  position: absolute;
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 1px;
   height: 1px;
   padding: 0;
   margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }
@@ -923,6 +939,14 @@ input[type="checkbox"]:disabled {
   margin-top: 16px;
 }
 
+/* Pushed to the row's right edge, bottom-aligned with the fields (the bar's
+   own align-items: flex-end) — was previously a separate flex row below the
+   filter bar, which put it a full row out of line with the filters instead
+   of sharing their baseline. */
+.sf-filter-bar-actions {
+  margin-left: auto;
+}
+
 .sf-filter-bar .sf-field select,
 .sf-filter-bar .sf-field input {
   min-width: 168px;
@@ -1399,6 +1423,80 @@ nav.sf-pagination {
 .sf-col-7 { grid-column: span 7; }
 .sf-col-8 { grid-column: span 8; }
 .sf-col-12 { grid-column: span 12; }
+
+/** Home's five KPI tiles, one row. Its own 5-column grid rather than
+    sf-col-3 spans on the 12-column sf-card-grid: five even columns don't
+    divide 12, so five sf-col-3 cards (span 3 each = 15) overflow the row and
+    the fifth wraps onto its own line. */
+.sf-home-stat-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1280px) {
+  .sf-home-stat-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+  .sf-home-stat-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .sf-home-stat-row { grid-template-columns: minmax(0, 1fr); }
+}
+
+/**
+ * Reporting & Analytics' KPI cards: three live figures, then three
+ * not-yet-tracked placeholders — six cards, three per row. Its own 3-column
+ * grid rather than sf-col-4 spans on the 12-column sf-card-grid (same reason
+ * sf-home-stat-row exists), so a fixed column count and no empty trailing
+ * cell in either row.
+ *
+ * margin-bottom is its own, not left to the next block's margin-top: the KPI
+ * row and the detail-chart grid below it are two different kinds of content
+ * (headline figures vs. drill-down breakdowns), but both previously sat at
+ * the same ~16px gap as the 14px gutter *inside* each grid — one spacing
+ * value doing every job, so the two clusters read as one continuous grid
+ * instead of two distinct groups. This is deliberately larger, and scoped to
+ * this class alone so it doesn't touch the filter-bar-to-content spacing
+ * every other page already uses.
+ */
+.sf-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 1024px) {
+  .sf-kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .sf-kpi-row { grid-template-columns: minmax(0, 1fr); }
+}
+
+/** Labels one row of a card grid ("Enrollment", "Staffing") without a
+    surrounding sf-panel — full-width so it breaks onto its own grid row
+    ahead of the cards that follow it. */
+.sf-grid-section-title {
+  grid-column: 1 / -1;
+  margin: 8px 0 -4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sf-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sf-grid-section-title:first-child {
+  margin-top: 0;
+}
+
 
 .sf-card {
   background: var(--sf-card);
@@ -2853,3 +2951,24 @@ nav.sf-pagination {
    grade table's actions column right-aligned the *outer* table's last header
    (Status) too. Left for everything is both simpler and what the app does
    everywhere else. */
+
+/* "Download as PDF" is the browser's own print dialog ("Save as PDF"), not a
+   generated file — so the printed page needs to look like a report, not a
+   screenshot of the app chrome around one. Hides the sidebar, the section
+   tabs/filter controls (scope doesn't mean anything on a printed snapshot),
+   and the download control itself, so print output is just the title and the
+   figures. */
+@media print {
+  [data-slot="sidebar"],
+  [data-slot="sidebar-gap"],
+  .sf-skip-link,
+  .sf-section-tabs,
+  .sf-filter-bar,
+  .sf-print-hide {
+    display: none !important;
+  }
+
+  .sf-main {
+    padding: 0;
+  }
+}

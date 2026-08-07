@@ -183,6 +183,16 @@ export function AdminUserList({ status: slice, heading, noun, emptyTitle, emptyM
     setSelected([]);
   };
 
+  /**
+   * Revoke is offered from All Users only. On the Approved and Inactive tabs it
+   * is the one row action whose effect is to empty the row out of the tab you
+   * are standing on, which reads as the row vanishing rather than as access
+   * being handed back. Those tabs keep Edit, plus the bulk deactivate/reactivate
+   * that belongs to each; revoking stays one level up, next to the Revoked
+   * Users tab the account moves to.
+   */
+  const canRevoke = slice !== "Active" && slice !== "Inactive";
+
   /* Revoking keeps the record and moves it to the Revoked Users tab, so access
      can be handed back; Remove (offered on a revoked row) is the permanent one. */
   const revoke = (user: AdminUser) => {
@@ -387,37 +397,39 @@ export function AdminUserList({ status: slice, heading, noun, emptyTitle, emptyM
                               Edit
                             </Button>
 
-                            <AlertDialog>
-                              <AlertDialogTrigger
-                                className={cx(
-                                  buttonStyles.common.root,
-                                  buttonStyles.sizes.xs.root,
-                                  buttonStyles.colors["secondary-destructive"].root
-                                )}
-                              >
-                                <HugeiconsIcon icon={UserBlock01Icon} size={16} strokeWidth={2} />
-                                Revoke
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Revoke {user.name}&rsquo;s access?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    They lose admin access immediately. The account moves to Revoked
-                                    Users, where you can restore it or remove it for good.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  {/* Close, not Action: revoking re-badges the row
-                                      instead of removing it, so on All Users the
-                                      dialog's own subtree survives the click and
-                                      would sit there open. */}
-                                  <AlertDialogClose variant="destructive" onClick={() => revoke(user)}>
-                                    Revoke
-                                  </AlertDialogClose>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            {canRevoke ? (
+                              <AlertDialog>
+                                <AlertDialogTrigger
+                                  className={cx(
+                                    buttonStyles.common.root,
+                                    buttonStyles.sizes.xs.root,
+                                    buttonStyles.colors["secondary-destructive"].root
+                                  )}
+                                >
+                                  <HugeiconsIcon icon={UserBlock01Icon} size={16} strokeWidth={2} />
+                                  Revoke
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Revoke {user.name}&rsquo;s access?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      They lose admin access immediately. The account moves to Revoked
+                                      Users, where you can restore it or remove it for good.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    {/* Close, not Action: revoking re-badges the row
+                                        instead of removing it, so on All Users the
+                                        dialog's own subtree survives the click and
+                                        would sit there open. */}
+                                    <AlertDialogClose variant="destructive" onClick={() => revoke(user)}>
+                                      Revoke
+                                    </AlertDialogClose>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            ) : null}
                           </>
                         )}
                       </div>

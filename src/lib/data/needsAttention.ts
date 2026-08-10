@@ -21,6 +21,13 @@ export const ATTENTION_CATEGORIES: { value: AttentionCategory; label: string }[]
   { value: "pending-config", label: "Pending config" }
 ];
 
+/** Shared by the full triage queue and the Home teaser banner, so a category
+    reads with the same label at either depth. */
+export const CATEGORY_LABEL: Record<AttentionCategory, string> = ATTENTION_CATEGORIES.reduce(
+  (acc, item) => ({ ...acc, [item.value]: item.label }),
+  {} as Record<AttentionCategory, string>
+);
+
 export const ATTENTION_SEVERITIES: { value: AttentionSeverity; label: string }[] = [
   { value: "critical", label: "Critical" },
   { value: "high", label: "High" },
@@ -61,18 +68,20 @@ export type AttentionItem = {
 };
 
 /**
- * TODO — PLACEHOLDER THRESHOLDS. The at-risk rules below are invented. Brief
- * §7 lists the real thresholds as an open item: how many consecutive absences
- * counts as chronic, how many missed checkpoints makes a goal off-track, and how
- * many missing assignments matter. Do not treat the numbers in these reasons as
- * agreed logic.
+ * TODO — PLACEHOLDER THRESHOLDS. Every at-risk item below was flagged by an
+ * invented rule. Brief §7 lists the real thresholds as an open item. The
+ * placeholders the mock data was written against:
+ *
+ *   Attendance   3+ absences in the last 10 school days
+ *   Goals        2+ consecutive missed checkpoints
+ *   Assignments  3+ missing assignments in a single week
+ *   Grades       a drop of one full letter in any subject
+ *
+ * These used to be an exported list, rendered as a callout above the queue and
+ * echoed as "(placeholder rule: …)" in each reason. Both were removed from the
+ * UI, so the record lives here — nothing on screen now tells a reader these
+ * numbers are provisional. Confirm the real rules before anyone acts on a flag.
  */
-export const AT_RISK_PLACEHOLDER_RULES = [
-  "Attendance: 3+ absences in the last 10 school days",
-  "Goals: 2+ consecutive missed checkpoints",
-  "Assignments: 3+ missing assignments in a single week",
-  "Grades: a drop of one full letter in any subject"
-];
 
 export const attentionItems: AttentionItem[] = [
   {
@@ -80,7 +89,7 @@ export const attentionItems: AttentionItem[] = [
     category: "at-risk",
     severity: "critical",
     subject: "Michael Andrew · Grade 10 · Edison High School",
-    reason: "18 absences against 6 present days year to date (placeholder rule: 3+ in 10 days)",
+    reason: "18 absences against 6 present days year to date",
     flaggedAt: "2026-07-17T08:20:00-04:00",
     href: "/people/student/michael-andrew",
     resolveLabel: "Open student 360",
@@ -92,7 +101,7 @@ export const attentionItems: AttentionItem[] = [
     category: "at-risk",
     severity: "high",
     subject: "Nick Johnson · Grade 9 · Edison High School",
-    reason: "4 missing assignments in English Language Arts this week (placeholder rule: 3+ in a week)",
+    reason: "4 missing assignments in English Language Arts this week",
     flaggedAt: "2026-07-16T14:05:00-04:00",
     href: "/people/student/nick-johnson",
     resolveLabel: "Open student 360",
@@ -104,7 +113,7 @@ export const attentionItems: AttentionItem[] = [
     category: "at-risk",
     severity: "medium",
     subject: "R.K. Sharma · Grade 8 · James Madison Intermediate",
-    reason: "2 consecutive missed goal checkpoints (placeholder rule)",
+    reason: "2 consecutive missed goal checkpoints",
     flaggedAt: "2026-07-15T09:41:00-04:00",
     href: "/people/student/rk-sharma",
     resolveLabel: "Open student 360",

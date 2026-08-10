@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   ATTENTION_CATEGORIES,
   ATTENTION_SEVERITIES,
-  AT_RISK_PLACEHOLDER_RULES,
+  CATEGORY_LABEL,
   SEVERITY_TONE,
   attentionItems,
   type AttentionCategory,
@@ -17,11 +17,6 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Combobox } from "@/components/shared/Combobox";
 
 const SEVERITY_RANK: Record<AttentionSeverity, number> = { critical: 0, high: 1, medium: 2 };
-
-const CATEGORY_LABEL: Record<AttentionCategory, string> = ATTENTION_CATEGORIES.reduce(
-  (acc, item) => ({ ...acc, [item.value]: item.label }),
-  {} as Record<AttentionCategory, string>
-);
 
 type ComboOption<T extends string> = { value: T; label: string };
 
@@ -98,22 +93,6 @@ export default function NeedsAttentionPage() {
         <p className="sf-filter-note">
           {open.length} open of {items.length} shown · {attentionItems.length} total
         </p>
-      </div>
-
-      {/* The at-risk thresholds are not agreed yet (brief §7 open item). Saying
-          so on the screen matters more than in a code comment, because the
-          numbers in each reason look authoritative otherwise. */}
-      <div className="sf-panel sf-callout">
-        <h2>At-risk rules are placeholders</h2>
-        <p>
-          The thresholds below are invented so the queue can be built and reviewed. They are not
-          agreed logic. Confirm the real rules before anyone acts on an at-risk flag.
-        </p>
-        <ul className="sf-rule-list">
-          {AT_RISK_PLACEHOLDER_RULES.map((rule) => (
-            <li key={rule}>{rule}</li>
-          ))}
-        </ul>
       </div>
 
       <div className="sf-panel">

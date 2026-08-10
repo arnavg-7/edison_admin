@@ -1305,6 +1305,21 @@ nav.sf-pagination {
   table-layout: fixed;
 }
 
+/** Student & Faculty 360's results table: fixed layout plus a colgroup
+    (set in the JSX) instead of the shared .sf-table's default auto layout,
+    which sized every column from whichever rows happened to be on the
+    current page — Page 1's longer names and Page 2's shorter ones produced
+    two visibly different column layouts for the same table. Cells wrap
+    instead of truncating, since a fixed width can't grow for a long name
+    or school the way auto layout used to. */
+.sf-table--fixed {
+  table-layout: fixed;
+}
+
+.sf-table--fixed td {
+  overflow-wrap: break-word;
+}
+
 /**
  * Both school pickers share one row rhythm. Academic Goals' rows are taller
  * only because each carries a View button (~30px) while Skills & Development
@@ -1913,6 +1928,37 @@ nav.sf-pagination {
   color: var(--sf-text);
 }
 
+/* Sits between the banner head and the rows: quieter than the "Needs
+   Attention" title above it, matching the .sf-panel-head rhythm the triage
+   screen uses, and sharing the rows' 24px gutter so the label lines up with
+   the subjects underneath it. */
+.sf-priority-banner-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 24px 12px;
+  border-bottom: 1px solid var(--sf-card-border);
+}
+
+.sf-priority-banner-subhead h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.sf-priority-banner-subhead-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sf-priority-banner-subhead-meta .sf-inline-link {
+  margin-top: 0;
+  font-size: 12px;
+}
+
 .sf-priority-banner-empty {
   display: flex;
   align-items: center;
@@ -1931,7 +1977,10 @@ nav.sf-pagination {
 
 .sf-priority-banner-list li {
   display: flex;
-  align-items: center;
+  /* flex-start, like .sf-triage-row: the subject/reason pair is two lines and
+     the actions are one, so centring floated the badge and button against the
+     middle of the text block instead of its first line. */
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   padding: 14px 24px;
@@ -1942,9 +1991,35 @@ nav.sf-pagination {
   background: var(--sf-plot);
 }
 
+/* Two lines now, so the row aligns on its top edge rather than centring a
+   taller block against single-line buttons. */
+.sf-priority-banner-item {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/** Category + "Flagged …", the same top-row detail the full triage queue
+    prints above its own subject (.sf-triage-top) — reused here via its two
+    text classes so the two screens describe a row identically. */
+.sf-priority-banner-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
 .sf-priority-banner-subject {
   font-size: 14.5px;
   color: var(--sf-text);
+  overflow-wrap: anywhere;
+}
+
+.sf-priority-banner-reason {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--sf-text-muted);
   overflow-wrap: anywhere;
 }
 
@@ -1977,29 +2052,11 @@ nav.sf-pagination {
   }
 }
 
-.sf-priority-banner-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 24px;
-  flex-wrap: wrap;
-}
-
-.sf-priority-banner-more {
-  font-size: 12px;
-  color: var(--sf-text-muted);
-}
-
-.sf-priority-banner-foot .sf-inline-link {
-  margin-top: 0;
-}
-
-.sf-priority-banner-caveat {
-  margin: 0;
-  padding: 0 24px 16px;
-  font-size: 12px;
-  color: var(--sf-warn-text);
+/* The rows used to be followed by a footer strip, so every row drew a divider.
+   The last row now ends the card, so its divider would draw a line along the
+   card's own bottom edge for no reason. */
+.sf-priority-banner-list li:last-child {
+  border-bottom: 0;
 }
 
 .sf-inline-link {
@@ -2588,32 +2645,6 @@ nav.sf-pagination {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--sf-warn-text);
-}
-
-.sf-callout {
-  border-left: 3px solid #d99a2b;
-  background: #fdf9f0;
-}
-
-.sf-callout h2 {
-  color: var(--sf-warn-text);
-}
-
-.sf-callout p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--sf-text-muted);
-  max-width: 90ch;
-}
-
-.sf-rule-list {
-  margin: 10px 0 0;
-  padding-left: 18px;
-  display: grid;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--sf-text-muted);
 }
 
 .sf-triage-list {

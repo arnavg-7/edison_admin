@@ -253,7 +253,24 @@ export default function PeopleSearchPage() {
           />
         ) : (
           <div className="sf-table-wrap">
-            <table className="sf-table">
+            {/* table-layout: fixed + a colgroup, not the shared table's default
+                auto layout: auto sizes every column from whichever rows are on
+                the current page, so Page 1's longer names ("Naphisabet
+                Lyngkhoi") and Page 2's shorter ones ("K. Blekeski") produced a
+                visibly different column layout for the same table depending on
+                which page you were on. Fixed percentages, set once from the
+                widest page's natural proportions, hold steady across every
+                page instead. */}
+            <table className="sf-table sf-table--fixed">
+              <colgroup>
+                <col style={{ width: "15%" }} />
+                <col style={{ width: "8%" }} />
+                <col style={{ width: "19%" }} />
+                <col style={{ width: "17%" }} />
+                <col style={{ width: "9%" }} />
+                <col style={{ width: "13%" }} />
+                <col style={{ width: "19%" }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th scope="col">Name</th>

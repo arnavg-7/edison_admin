@@ -5,8 +5,14 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
-import { SEVERITY_TONE, needsAttentionOpenCount, topAttentionItems } from "@/lib/data/needsAttention";
+import {
+  CATEGORY_LABEL,
+  SEVERITY_TONE,
+  needsAttentionOpenCount,
+  topAttentionItems
+} from "@/lib/data/needsAttention";
 import { resolveDateWindow } from "@/lib/date-range";
+import { formatSalesforceStamp } from "@/lib/format";
 import { useReportFilters } from "@/lib/filters";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/base/buttons/button";
@@ -44,7 +50,6 @@ export function NeedsAttentionBanner() {
   const scope = { school: filters.school, grade: filters.grade };
   const open = needsAttentionOpenCount(window, scope);
   const top = topAttentionItems(6, window, scope);
-  const hasAtRiskItem = top.some((item) => item.category === "at-risk");
 
   return (
     <div className="sf-priority-banner">
@@ -65,10 +70,47 @@ export function NeedsAttentionBanner() {
         </p>
       ) : (
         <>
+          {/* Same "Queue · All categories" strip the triage screen prints above
+              its own list, so the two read as one queue seen at two depths.
+              The note is fixed rather than filter-driven on purpose: Home has
+              no category filter, so this excerpt is always every category —
+              which is exactly what the reader needs told before they conclude
+              six rows is the whole picture. */}
+          <div className="sf-priority-banner-subhead">
+            <h3>Queue</h3>
+            {/* Both halves of "what am I not seeing": the note says this is
+                every category, the link says there is more of it. The count
+                is dropped while a school is selected — the triage queue is
+                district-wide, so a scoped number on the way in would not
+                match what the queue actually shows. */}
+            <span className="sf-priority-banner-subhead-meta">
+              <span className="sf-panel-note">All categories</span>
+              <Link className="sf-inline-link" href="/needs-attention">
+                {scope.school ? "View all →" : `View all (${open}) →`}
+              </Link>
+            </span>
+          </div>
+
           <ul className="sf-priority-banner-list">
             {top.map((item) => (
               <li key={item.id}>
-                <span className="sf-priority-banner-subject">{item.subject}</span>
+                {/* Subject alone left every row asserting something without
+                    saying why — "12 unresolved alerts" reads as a fact rather
+                    than a flag. The reason underneath is the rule that fired,
+                    the same line the triage queue prints, so an admin can
+                    judge whether a row is worth opening from Home. Category
+                    and "Flagged …" are the same top-row detail the full triage
+                    queue prints above its own subject — Home was missing both,
+                    so a row here read as less informative than the one
+                    "View all" links out to. */}
+                <span className="sf-priority-banner-item">
+                  <span className="sf-priority-banner-meta">
+                    <span className="sf-triage-category">{CATEGORY_LABEL[item.category]}</span>
+                    <span className="sf-triage-when">Flagged {formatSalesforceStamp(item.flaggedAt)}</span>
+                  </span>
+                  <span className="sf-priority-banner-subject">{item.subject}</span>
+                  <span className="sf-priority-banner-reason">{item.reason}</span>
+                </span>
                 {/* Severity and the way out travel together: the row says how
                     urgent it is and, in the same glance, where to go and do
                     something about it. Each item already knows its own
@@ -90,29 +132,6 @@ export function NeedsAttentionBanner() {
               </li>
             ))}
           </ul>
-
-          <div className="sf-priority-banner-foot">
-            {open > top.length ? (
-              <span className="sf-priority-banner-more">
-                +{open - top.length} more open item{open - top.length === 1 ? "" : "s"}
-              </span>
-            ) : (
-              <span />
-            )}
-            {/* The count is dropped while a school is selected: the triage
-                queue is district-wide, so a scoped number on the way in would
-                not match what the queue actually shows. */}
-            <Link className="sf-inline-link" href="/needs-attention">
-              {scope.school ? "Open triage queue →" : `Open triage queue (${open}) →`}
-            </Link>
-          </div>
-
-          {hasAtRiskItem ? (
-            <p className="sf-priority-banner-caveat">
-              At-risk thresholds are provisional, not agreed rules. See the triage queue before
-              acting.
-            </p>
-          ) : null}
         </>
       )}
     </div>

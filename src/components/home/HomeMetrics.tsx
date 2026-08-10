@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { BarChartCard } from "@/components/reporting/BarChartCard";
 import { StatCard } from "@/components/home/charts/StatCard";
 import { TrendLineCard } from "@/components/home/charts/TrendLineCard";
@@ -39,7 +40,7 @@ import { useReportFilters } from "@/lib/filters";
  * Where TrendStatCard's badge used to say "+2.3 pts", the trend line itself —
  * still visible, still real — is now the whole story.
  */
-export function HomeMetrics() {
+export function HomeMetrics({ afterStats }: { afterStats?: ReactNode }) {
   const { filters } = useReportFilters();
   const scope = { school: filters.school, grade: filters.grade };
   // Reporting's scope shape carries a section too; Home never narrows that far.
@@ -83,6 +84,13 @@ export function HomeMetrics() {
             Analytics' Students' Status funnel also shows. */}
         <StatCard title="At-Risk Students" value={atRiskStudents} asOf={REPORTS.studentsStatus.asOf} />
       </div>
+
+      {/* Slot between the KPI tiles and the chart sections, so Needs Attention
+          can sit directly under the headline figures without this component
+          having to know what goes there. It can't be composed from the page
+          instead: the tiles and the charts are one component, because both
+          read the same scoped figures. */}
+      {afterStats}
 
       <div className="sf-card-grid">
         <h2 className="sf-grid-section-title">Enrollment</h2>

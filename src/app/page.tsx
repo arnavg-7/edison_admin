@@ -5,8 +5,8 @@ import { HomeMetrics } from "@/components/home/HomeMetrics";
 
 /**
  * Super Admin landing dashboard. Enrollment, staffing and academic figures
- * lead in one flat grid; Needs Attention follows at the bottom rather than
- * leading the page. Curated set; the full catalog lives in Reporting & Analytics.
+ * lead in one flat grid; Needs Attention sits below them. Curated set; the
+ * full catalog lives in Reporting & Analytics.
  *
  * The brief's suggested set included Total Events Held and Event Participants.
  * Those are screenshot-derived and outside Edison's scope docs, so the slots go
@@ -44,12 +44,13 @@ export default function HomePage() {
         <GlobalFilterBar className="sf-filter-bar--top-spaced" />
       </Suspense>
 
+      {/* Needs Attention slots directly under the KPI tiles, above the
+          Enrollment/Trends/Staffing chart sections: the headline figures say
+          where the district stands, and the queue immediately says what to do
+          about it, rather than waiting at the foot of the page. Its "View all"
+          link is the way through to the full triage queue. */}
       <Suspense fallback={null}>
-        <HomeMetrics />
-      </Suspense>
-
-      <Suspense fallback={null}>
-        <NeedsAttentionBanner />
+        <HomeMetrics afterStats={<NeedsAttentionBanner />} />
       </Suspense>
     </section>
   );

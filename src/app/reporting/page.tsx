@@ -83,6 +83,7 @@ export default function MetricsCatalogPage() {
       <BarChartCard
         title="Assignment Submissions"
         groups={assignmentSubmissions}
+        categoryHeader="Grade"
         series={[{ label: "Submissions", colorIndex: 0 }]}
         labelWidth={110}
         asOf={REPORTS.assignmentSubmissions.asOf}

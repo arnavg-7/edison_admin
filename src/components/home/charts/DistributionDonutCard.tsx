@@ -16,6 +16,7 @@ import { PieCenter } from "@/components/charts/pie-center";
 import { Legend, LegendItem, LegendLabel, LegendMarker } from "@/components/charts/legend";
 import { formatSalesforceStamp } from "@/lib/format";
 import { ChartSortButton } from "@/components/shared/ChartSortButton";
+import { ChartDownloadButton } from "@/components/shared/ChartDownloadButton";
 import { sortChartItems, type ChartSortMode } from "@/lib/chart-sort";
 
 export type DistributionSlice = { label: string; value: number };
@@ -144,6 +145,20 @@ export function DistributionDonutCard({
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardAction className="sf-card-tools">
+          {/* Share as well as value: the ring encodes the proportion, and a
+              slice's value alone doesn't carry it. */}
+          <ChartDownloadButton
+            chartTitle={title}
+            header={[title, totalLabel, "Share of total"]}
+            rows={chartData.map((slice) => {
+              const total = chartData.reduce((sum, entry) => sum + entry.value, 0);
+              return [
+                slice.label,
+                slice.value,
+                total > 0 ? `${Math.round((slice.value / total) * 1000) / 10}%` : "0%"
+              ];
+            })}
+          />
           <ChartSortButton value={sortMode} onChange={setSortMode} chartTitle={title} />
           <button
             type="button"

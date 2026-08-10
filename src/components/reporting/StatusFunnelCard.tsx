@@ -12,6 +12,7 @@ import {
   CardTitle
 } from "@/components/ui/card";
 import { formatNumber, formatSalesforceStamp } from "@/lib/format";
+import { ChartDownloadButton } from "@/components/shared/ChartDownloadButton";
 
 export type StatusSlice = { label: string; value: number };
 
@@ -73,7 +74,18 @@ export function StatusFunnelCard({
     <Card className={className}>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardAction>
+        <CardAction className="sf-card-tools">
+          {/* Share of total as well as the count — the funnel's widths encode
+              the proportion, so exporting only counts drops what it shows. */}
+          <ChartDownloadButton
+            chartTitle={title}
+            header={["Stage", "Students", "Share of total"]}
+            rows={data.map((stage) => [
+              stage.label,
+              stage.value,
+              total > 0 ? `${Math.round((stage.value / total) * 1000) / 10}%` : "0%"
+            ])}
+          />
           <button
             type="button"
             className="sf-card-tool"

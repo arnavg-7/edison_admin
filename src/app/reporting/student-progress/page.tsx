@@ -147,6 +147,7 @@ export default function StudentProgressPage() {
         <BarChartCard
           title="Students By Grade"
           groups={studentsByGrade}
+          categoryHeader="School"
           series={GRADE_SERIES}
           labelWidth={110}
           asOf={REPORTS.studentsByGrade.asOf}
@@ -156,6 +157,7 @@ export default function StudentProgressPage() {
         <BarChartCard
           title="Student Attendance By School"
           groups={studentAttendanceBySchool}
+          categoryHeader="School"
           series={ATTENDANCE_SERIES}
           labelWidth={110}
           asOf={REPORTS.studentAttendanceBySchool.asOf}
@@ -165,6 +167,7 @@ export default function StudentProgressPage() {
         <BarChartCard
           title="Student Attendance"
           groups={attendanceGroups}
+          categoryHeader="Student"
           series={ATTENDANCE_SERIES}
           labelWidth={100}
           asOf={REPORTS.studentAttendance.asOf}

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/card";
 import { SERIES_VARS, type BarGroup, type SeriesKey } from "@/components/sf/charts";
 import { ChartSortButton } from "@/components/shared/ChartSortButton";
+import { ChartDownloadButton } from "@/components/shared/ChartDownloadButton";
 import {
   CHART_SORT_MODES_WITH_SOURCE,
   sortChartItems,
@@ -294,6 +295,7 @@ export function BarChartCard({
   title,
   groups,
   series,
+  categoryHeader = "Category",
   labelWidth = 180,
   orientation = "horizontal",
   asOf,
@@ -303,6 +305,8 @@ export function BarChartCard({
   title: string;
   groups: BarGroup[];
   series: SeriesKey[];
+  /** Column heading for the category axis in the CSV export. */
+  categoryHeader?: string;
   /** Category-label column width in px. Widen for long names (school rosters).
       Only applies to `orientation="horizontal"`. */
   labelWidth?: number;
@@ -409,6 +413,18 @@ export function BarChartCard({
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardAction className="sf-card-tools">
+          {/* One column per series, one row per category, in the order on
+              screen — so a re-sorted chart exports re-sorted. */}
+          <ChartDownloadButton
+            chartTitle={title}
+            header={[categoryHeader, ...series.map((item) => item.label)]}
+            rows={sortedGroups.map((group) => [
+              group.label,
+              ...series.map(
+                (item) => group.rows.find((row) => row.label === item.label)?.value ?? 0
+              )
+            ])}
+          />
           <ChartSortButton
             value={sortMode}
             onChange={setSortMode}

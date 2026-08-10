@@ -17,6 +17,7 @@ import {
   CardTitle
 } from "@/components/ui/card";
 import { ChartSortButton } from "@/components/shared/ChartSortButton";
+import { ChartDownloadButton } from "@/components/shared/ChartDownloadButton";
 import { sortChartItems, type ChartSortMode } from "@/lib/chart-sort";
 import { formatNumber, formatSalesforceStamp } from "@/lib/format";
 import type { SchoolRatio } from "@/lib/data/homeDashboardCharts";
@@ -366,6 +367,19 @@ export function RatioBarCard({
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardAction className="sf-card-tools">
+          {/* Teachers and students as well as the ratio: the ratio alone can't
+              be checked or recomputed once it's out of the app. */}
+          <ChartDownloadButton
+            chartTitle={title}
+            header={["School", "Teachers", "Students", "Students per teacher", "Over target"]}
+            rows={rows.map((row) => [
+              row.school,
+              row.teachers,
+              row.students,
+              row.ratio,
+              row.overTarget ? "Yes" : "No"
+            ])}
+          />
           <ChartSortButton value={sortMode} onChange={setSortMode} chartTitle={title} />
           <button
             type="button"

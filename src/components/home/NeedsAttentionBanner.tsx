@@ -47,7 +47,7 @@ export function NeedsAttentionBanner() {
 
   // Same scope as the metric cards above, so the whole page reads as one
   // filtered view rather than a filtered top half and an unfiltered bottom.
-  const scope = { school: filters.school, grade: filters.grade };
+  const scope = { school: filters.school, grades: filters.grades };
   const open = needsAttentionOpenCount(window, scope);
   const top = topAttentionItems(6, window, scope);
 

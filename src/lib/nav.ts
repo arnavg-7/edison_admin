@@ -17,6 +17,7 @@ export type SectionId =
   | "academic-goals"
   | "alerts"
   | "user-management"
+  | "school-setup"
   | "system-settings";
 
 export type Section = {
@@ -33,6 +34,11 @@ export const SECTIONS: Section[] = [
   { id: "academic-goals", label: "Academic Goals", href: "/academic-goals" },
   { id: "alerts", label: "Alerts & Notifications", href: "/alerts" },
   { id: "user-management", label: "User Management", href: "/user-management" },
+  /* Above System Settings and below User Management: it is district structure
+     rather than portal preferences, and it is the hierarchy every screen above
+     it filters by — so it reads as the last of the "what the district is"
+     sections, not as one more setting. */
+  { id: "school-setup", label: "School Setup", href: "/school-setup" },
   { id: "system-settings", label: "System Settings", href: "/system-settings" }
 ];
 

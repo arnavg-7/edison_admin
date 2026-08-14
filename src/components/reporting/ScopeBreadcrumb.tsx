@@ -24,9 +24,13 @@ export function ScopeBreadcrumb() {
   if (school) {
     crumbs.push({
       label: school.name,
-      onClick: filters.grade ? () => setFilters({ grade: null }) : undefined
+      onClick: filters.grades.length > 0 ? () => setFilters({ grades: [] }) : undefined
     });
   }
+  // Reporting's Grade filter is single-select, so `grade` is the whole story
+  // here. A multi-grade selection can only arrive from Home's filter bar via a
+  // shared URL; it widens this crumb trail to the school rather than inventing a
+  // crumb for a scope this screen can't drill through.
   if (filters.grade) {
     crumbs.push({
       label: `Grade ${filters.grade}`,

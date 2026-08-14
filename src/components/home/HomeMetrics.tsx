@@ -42,9 +42,16 @@ import { useReportFilters } from "@/lib/filters";
  */
 export function HomeMetrics({ afterStats }: { afterStats?: ReactNode }) {
   const { filters } = useReportFilters();
-  const scope = { school: filters.school, grade: filters.grade };
-  // Reporting's scope shape carries a section too; Home never narrows that far.
-  const rateScope = { ...scope, section: null };
+  const scope = { school: filters.school, grades: filters.grades };
+  // Reporting's scope shape is one grade deep and carries a section; Home's
+  // Grade filter is multi-select and Home never narrows to a section, so the
+  // grade list travels alongside the single value it derives.
+  const rateScope = {
+    school: filters.school,
+    grade: filters.grade,
+    grades: filters.grades,
+    section: null
+  };
   const rates = coreMetricsForScope(rateScope);
 
   const students = scopedStudentCount(scope);

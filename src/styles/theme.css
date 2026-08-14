@@ -921,6 +921,47 @@ input[type="checkbox"]:disabled {
   color: var(--sf-text-muted);
 }
 
+/* Multi-select rows (MultiCombobox). The clear-everything row is separated by a
+   hairline rather than a heading: it belongs to the same list — it is the "none
+   of these" option — but choosing it undoes every tick below, so the break warns
+   that it isn't just another value. */
+.sf-combobox-option--reset {
+  border-bottom: 1px solid var(--sf-card-border);
+  border-radius: calc(var(--sf-radius-control) - 4px) calc(var(--sf-radius-control) - 4px) 0 0;
+  margin-bottom: 4px;
+  padding-bottom: 9px;
+}
+
+.sf-combobox-check-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+/* A checkbox, not the single-select tick: several can be on at once, and a row
+   of ticks reads as "all of these are the current one". Drawn here rather than
+   with a real <input> because the whole row is already the hit target and the
+   listbox row carries aria-selected. */
+.sf-combobox-check {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border: 1px solid var(--sf-card-border);
+  border-radius: 4px;
+  background: var(--sf-card);
+  color: transparent;
+}
+
+.sf-combobox-check.is-checked {
+  border-color: var(--sf-accent);
+  background: var(--sf-accent);
+  color: #ffffff;
+}
+
 .sf-field input::placeholder,
 .sf-field textarea::placeholder,
 .sf-input::placeholder {
@@ -3012,5 +3053,343 @@ nav.sf-pagination {
 
   .sf-main {
     padding: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   School Setup — District → School → Grade → Batch.
+
+   The reference flow for this screen used a cream/green palette and a coloured
+   chip per hierarchy level. Neither survives the translation: this theme spends
+   colour on "act here" and on chart series, so a level is named typographically
+   (.sf-node-kind) and the one thing that does earn colour is a full batch, which
+   borrows the existing warn tone. Everything else is built from the surfaces,
+   radii and table rules the rest of the app already uses.
+   --------------------------------------------------------------------------- */
+
+/* The level a detail panel is describing. An eyebrow, not a badge: it labels
+   the record rather than reporting a status. */
+.sf-node-kind {
+  margin: 0 0 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--sf-text-dim);
+}
+
+/* The panel head stops being a single row once it carries an eyebrow, a name and
+   a path above the actions. */
+.sf-node-head {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.sf-node-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sf-node-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--sf-card-border);
+}
+
+/* A square mark carrying the initials, grade number or batch letter. Neutral by
+   design — it is a scanning aid down the first column, not a status. */
+.sf-node-mark {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Grows for a three-letter school code but never shrinks below the square a
+     grade number or batch letter sits in, so the first column stays aligned. */
+  min-width: 26px;
+  height: 24px;
+  padding: 0 5px;
+  border-radius: 7px;
+  background: var(--sf-raised);
+  color: var(--sf-text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.sf-node-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sf-node-cell-text {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sf-node-sub {
+  font-size: 11px;
+  color: var(--sf-text-dim);
+}
+
+/* Seat fill. Deliberately not .sf-bar-fill: those bars are a chart series drawn
+   to a shared axis, and this is a single-value gauge sitting inside a table cell
+   or a panel foot. */
+.sf-meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sf-meter--panel {
+  flex: 1 1 240px;
+}
+
+.sf-meter-track {
+  flex: 1 1 auto;
+  min-width: 44px;
+  height: 6px;
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-gridline);
+  overflow: hidden;
+}
+
+.sf-meter--panel .sf-meter-track {
+  height: 8px;
+}
+
+.sf-meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-stat);
+}
+
+/* Over-subscribed is a real state — enrollment is measured, capacity is
+   configured — so it reads as something to fix rather than as pleasantly full. */
+.sf-meter-fill.is-full {
+  background: var(--sf-series-warn);
+}
+
+.sf-meter-value {
+  flex: 0 0 auto;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--sf-stat);
+  font-variant-numeric: tabular-nums;
+}
+
+.sf-meter-value.is-full {
+  color: var(--sf-warn-text);
+}
+
+.sf-meter-note {
+  flex: 0 0 auto;
+  font-size: 11.5px;
+  color: var(--sf-text-dim);
+}
+
+/* Breadcrumb buttons walk back up the hierarchy in place, so they are buttons
+   rather than links — styled to match .sf-crumbs a exactly, since the reader
+   should not have to care which one they are clicking. */
+.sf-crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.sf-crumbs button {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--sf-link);
+  cursor: pointer;
+}
+
+.sf-crumbs button:hover {
+  text-decoration: underline;
+}
+
+.sf-crumbs [aria-current] {
+  color: var(--sf-text);
+  font-weight: 600;
+}
+
+/* Three-pane browser. The panes are the panel's whole content, so the panel
+   gives up its padding and the columns own their own edges. */
+.sf-panel--flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+.sf-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.sf-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-right: 1px solid var(--sf-card-border);
+}
+
+.sf-column:last-child {
+  border-right: none;
+}
+
+.sf-column-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 12px 10px;
+  border-bottom: 1px solid var(--sf-card-border);
+  background: var(--sf-plot);
+}
+
+.sf-column-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--sf-text-dim);
+}
+
+.sf-column-count {
+  padding: 1px 7px;
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-raised);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--sf-text-muted);
+}
+
+.sf-column-head .sf-icon-btn {
+  margin-left: auto;
+}
+
+/* Capped so all three panes stay the same height and the detail panel below
+   stays reachable without scrolling past the longest column. */
+.sf-column-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.sf-column-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.sf-column-row:hover {
+  background: var(--sf-plot);
+}
+
+.sf-column-row.is-selected {
+  background: var(--sf-accent-soft);
+}
+
+.sf-column-row.is-selected .sf-node-mark {
+  background: var(--sf-card);
+  color: var(--sf-accent-hover);
+}
+
+.sf-column-row.is-selected .sf-column-row-name {
+  color: var(--sf-accent-hover);
+  font-weight: 600;
+}
+
+.sf-column-row-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sf-column-row-name {
+  font-size: 13px;
+  color: var(--sf-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sf-column-row-meta {
+  font-size: 11px;
+  color: var(--sf-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sf-column-row-trail {
+  flex: 0 0 auto;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--sf-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.sf-column-row-trail.is-warn {
+  color: var(--sf-warn-text);
+}
+
+.sf-column-empty {
+  margin: 0;
+  padding: 22px 12px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--sf-text-dim);
+  text-wrap: pretty;
+}
+
+/* A notice that offers a way out, not just information — the undo after a
+   cascading delete. */
+.sf-notice--action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  /* Three panes stop being scannable well before this; stacked, each pane keeps
+     its own header and count and the path reads top to bottom. */
+  .sf-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sf-column {
+    border-right: none;
+    border-bottom: 1px solid var(--sf-card-border);
+  }
+
+  .sf-column:last-child {
+    border-bottom: none;
   }
 }

@@ -13,11 +13,20 @@ export type Scope = {
   school: string | null;
   grade: string | null;
   section: string | null;
+  /**
+   * Every grade in scope, when the caller's filter is multi-select (Home's is).
+   * Reporting's own screens stay one grade deep and leave this unset. It only
+   * feeds the seed below: a rate for "grades 9 and 10" is a different figure
+   * from the whole school's, so the cards have to visibly respond to the pick
+   * rather than silently widening to a number that excludes nothing.
+   */
+  grades?: string[];
 };
 
 /** Deterministic pseudo-variance so drill-down visibly changes the numbers. */
 function scopeSeed(scope: Scope): number {
-  const key = `${scope.school ?? ""}|${scope.grade ?? ""}|${scope.section ?? ""}`;
+  const grades = scope.grades?.length ? scope.grades.join("+") : (scope.grade ?? "");
+  const key = `${scope.school ?? ""}|${grades}|${scope.section ?? ""}`;
   let hash = 0;
   for (let index = 0; index < key.length; index += 1) {
     hash = (hash * 31 + key.charCodeAt(index)) % 1000;

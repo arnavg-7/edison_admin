@@ -41,7 +41,11 @@ export default function HomePage() {
           Suspense because it reads the URL through useSearchParams, which opts
           a route into dynamic rendering unless it sits behind a boundary. */}
       <Suspense fallback={null}>
-        <GlobalFilterBar className="sf-filter-bar--top-spaced" />
+        {/* multiGrade only here: these cards are a comparison surface, so
+            "grades 9 and 10 side by side" is a question worth asking. Reporting
+            keeps a single grade — its drill-down and Class/Section filter only
+            mean anything one grade at a time. */}
+        <GlobalFilterBar multiGrade className="sf-filter-bar--top-spaced" />
       </Suspense>
 
       {/* Needs Attention slots directly under the KPI tiles, above the

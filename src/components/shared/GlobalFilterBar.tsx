@@ -1,22 +1,32 @@
 "use client";
 
 import { useReportFilters } from "@/lib/filters";
-import { classesForGrade, gradesForSchool, schools } from "@/lib/data/schools";
+import { classesForGrade, gradeLabel, gradesForSchool, schools } from "@/lib/data/schools";
 import { Combobox } from "@/components/shared/Combobox";
+import { MultiCombobox } from "@/components/shared/MultiCombobox";
 import { DateRangePicker } from "@/components/shared/DateRangePicker";
 
 type ComboOption = { value: string; label: string };
 
 /**
- * Shared by every Reporting screen. Grade appears once a school is picked and
- * Class/Section once a grade is picked, matching the drill-down hierarchy.
+ * Shared by Home and every Reporting screen. Grade appears once a school is
+ * picked and Class/Section once a grade is picked, matching the drill-down
+ * hierarchy.
  */
 export function GlobalFilterBar({
   showSection = false,
+  multiGrade = false,
   className,
   actions
 }: {
   showSection?: boolean;
+  /**
+   * Let Grade take several values at once. On for Home, where the cards are a
+   * comparison surface and "grades 9 and 10" is a question an admin actually
+   * asks; off for Reporting, whose drill-down and Class/Section filter only
+   * mean anything one grade at a time.
+   */
+  multiGrade?: boolean;
   /** Extra modifier, e.g. --top-spaced where only a title sits above the bar. */
   className?: string;
   /** A trailing control (e.g. Metrics Catalog's "Download report" menu),
@@ -33,10 +43,10 @@ export function GlobalFilterBar({
     ...schools.map((school) => ({ value: school.id, label: school.name }))
   ];
 
-  const gradeOptions: ComboOption[] = [
-    { value: "all", label: filters.school ? "All grades" : "Select a school first" },
-    ...grades.map((grade) => ({ value: grade, label: `Grade ${grade}` }))
-  ];
+  const gradeOptions: ComboOption[] = grades.map((grade) => ({
+    value: grade,
+    label: gradeLabel(grade)
+  }));
 
   const sectionOptions: ComboOption[] = [
     { value: "all", label: filters.grade ? "All sections" : "Select a grade first" },
@@ -61,13 +71,36 @@ export function GlobalFilterBar({
 
       <label className="sf-field">
         <span>Grade</span>
-        <Combobox
-          options={gradeOptions}
-          value={filters.grade ?? "all"}
-          onChange={(grade) => setFilters({ grade: grade === "all" ? null : grade })}
-          placeholder="All grades"
-          disabled={!filters.school}
-        />
+        {multiGrade ? (
+          <MultiCombobox
+            options={gradeOptions}
+            values={filters.grades}
+            onChange={(picked) => setFilters({ grades: picked })}
+            resetLabel="All grades"
+            placeholder="Select a school first"
+            /* Names two grades outright and counts from three up: "Grade 9,
+               Grade 10" still reads at a glance, "Grade 1, Grade 2, Grade 4,
+               Grade 5" does not and would just ellipsis away in the trigger. */
+            summarize={(picked) =>
+              picked.length === 2
+                ? picked.map(gradeLabel).join(", ")
+                : `${picked.length} grades`
+            }
+            ariaLabel="Grade"
+            disabled={!filters.school}
+          />
+        ) : (
+          <Combobox
+            options={[
+              { value: "all", label: filters.school ? "All grades" : "Select a school first" },
+              ...gradeOptions
+            ]}
+            value={filters.grade ?? "all"}
+            onChange={(grade) => setFilters({ grades: grade === "all" ? [] : [grade] })}
+            placeholder="All grades"
+            disabled={!filters.school}
+          />
+        )}
       </label>
 
       {showSection ? (

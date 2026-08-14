@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { UsersProvider } from "@/lib/users-store";
 import { AdminUsersProvider } from "@/lib/admin-users-store";
+import { SchoolSetupProvider } from "@/lib/school-setup-store";
 import { cn } from "@/lib/utils";
 
 /** The app's only typeface. `--font-inter` feeds Tailwind's font-sans/font-mono
@@ -31,16 +32,18 @@ export default function RootLayout({
         <TooltipProvider>
           <UsersProvider>
             <AdminUsersProvider>
-              <a className="sf-skip-link" href="#main-content">
-                Skip to main content
-              </a>
-              <SidebarProvider>
-                <Sidebar />
-                <SidebarInset className="sf-main-region">
-                  <div id="main-content">{children}</div>
-                </SidebarInset>
-                <ScrollReset />
-              </SidebarProvider>
+              <SchoolSetupProvider>
+                <a className="sf-skip-link" href="#main-content">
+                  Skip to main content
+                </a>
+                <SidebarProvider>
+                  <Sidebar />
+                  <SidebarInset className="sf-main-region">
+                    <div id="main-content">{children}</div>
+                  </SidebarInset>
+                  <ScrollReset />
+                </SidebarProvider>
+              </SchoolSetupProvider>
             </AdminUsersProvider>
           </UsersProvider>
         </TooltipProvider>

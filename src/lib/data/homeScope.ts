@@ -1,17 +1,16 @@
 /**
- * Re-scopes Home's cards to a school and grade.
+ * Re-scopes Home's cards to a school and any number of its grades.
  *
  * The per-school figures in homeDashboardCharts.ts stay the source of truth —
  * they already sum to the district totals in dashboard.ts — so narrowing to a
  * school reads a real row rather than inventing one. Only the grade split is
- * derived, because no per-grade enrollment exists in the mocked data yet.
- *
- * TODO: replace the grade split with real Genesis per-grade enrollment. Until
- * then a grade's student and teacher counts are apportioned, not measured.
+ * derived (see gradeSplit.ts), because no per-grade enrollment exists in the
+ * mocked data yet.
  */
 
 import { gradeLabel, schools } from "./schools";
 import { numberOfStudents, totalFaculty } from "./dashboard";
+import { splitAcrossGrades } from "./gradeSplit";
 import {
   studentCountBySchoolDistribution,
   teacherStudentRatioBySchool,
@@ -19,26 +18,30 @@ import {
   type SchoolRatio
 } from "./homeDashboardCharts";
 
-export type HomeScope = { school: string | null; grade: string | null };
+/** Empty `grades` means every grade the school runs, i.e. no extra narrowing. */
+export type HomeScope = { school: string | null; grades: string[] };
 
-export const DISTRICT_SCOPE: HomeScope = { school: null, grade: null };
+export const DISTRICT_SCOPE: HomeScope = { school: null, grades: [] };
 
 function schoolById(schoolId: string | null) {
   return schoolId ? schools.find((entry) => entry.id === schoolId) ?? null : null;
 }
 
 /**
- * Scope comes from the URL, so it can name a school that no longer exists or a
- * grade that school does not run — a shared link, or a bookmark from before the
+ * Scope comes from the URL, so it can name a school that no longer exists or
+ * grades that school does not run — a shared link, or a bookmark from before the
  * roster changed. Each is widened to the nearest valid level rather than
  * rendering empty cards that read as a data outage.
  */
 function normalize(scope: HomeScope): HomeScope {
   const school = schoolById(scope.school);
   if (!school) return DISTRICT_SCOPE;
+
+  // Ordered by the school's own grade list, not by how they arrived, so the
+  // ratio rows and donut slices always run youngest to oldest.
   return {
     school: school.id,
-    grade: scope.grade && school.grades.includes(scope.grade) ? scope.grade : null
+    grades: school.grades.filter((grade) => scope.grades.includes(grade))
   };
 }
 
@@ -47,33 +50,15 @@ function ratioRowFor(schoolName: string): SchoolRatio | null {
 }
 
 /**
- * Apportions a school total across its grades. Weights are fixed rather than
- * random so a grade shows the same figure on every render and every reload,
- * and the parts always add back up to the school total — a grade breakdown
- * that did not sum to its own school would be worse than no breakdown.
+ * The grades a card should actually break down: the picked ones, or the whole
+ * school when nothing is picked.
  */
-const GRADE_WEIGHTS = [1.06, 0.97, 1.02, 0.95, 1.04, 0.99, 1.01];
+function gradesInScope(scope: HomeScope, schoolGrades: string[]): string[] {
+  return scope.grades.length > 0 ? scope.grades : schoolGrades;
+}
 
-function splitAcrossGrades(total: number, grades: string[]): Record<string, number> {
-  if (grades.length === 0) return {};
-
-  const weights = grades.map((_, index) => GRADE_WEIGHTS[index % GRADE_WEIGHTS.length]);
-  const weightSum = weights.reduce((sum, weight) => sum + weight, 0);
-  const exact = weights.map((weight) => (total * weight) / weightSum);
-  const parts = exact.map(Math.floor);
-
-  // Hand the rounding remainder to the largest fractional parts, so the split
-  // is exact instead of drifting a few students away from the school total.
-  const remainder = total - parts.reduce((sum, part) => sum + part, 0);
-  const byFraction = exact
-    .map((value, index) => ({ index, fraction: value - Math.floor(value) }))
-    .sort((a, b) => b.fraction - a.fraction);
-
-  for (let step = 0; step < remainder; step += 1) {
-    parts[byFraction[step % byFraction.length].index] += 1;
-  }
-
-  return Object.fromEntries(grades.map((grade, index) => [grade, parts[index]]));
+function sumOverGrades(split: Record<string, number>, grades: string[]): number {
+  return grades.reduce((sum, grade) => sum + (split[grade] ?? 0), 0);
 }
 
 /** Students in scope. District includes the unassigned residual; a school does not. */
@@ -84,9 +69,9 @@ export function scopedStudentCount(rawScope: HomeScope): number {
 
   const row = ratioRowFor(school.name);
   if (!row) return 0;
-  if (!scope.grade) return row.students;
+  if (scope.grades.length === 0) return row.students;
 
-  return splitAcrossGrades(row.students, school.grades)[scope.grade] ?? 0;
+  return sumOverGrades(splitAcrossGrades(row.students, school.grades), scope.grades);
 }
 
 export function scopedFacultyCount(rawScope: HomeScope): number {
@@ -96,15 +81,15 @@ export function scopedFacultyCount(rawScope: HomeScope): number {
 
   const row = ratioRowFor(school.name);
   if (!row) return 0;
-  if (!scope.grade) return row.teachers;
+  if (scope.grades.length === 0) return row.teachers;
 
-  return splitAcrossGrades(row.teachers, school.grades)[scope.grade] ?? 0;
+  return sumOverGrades(splitAcrossGrades(row.teachers, school.grades), scope.grades);
 }
 
 /**
  * The ratio chart always shows the level *below* the current scope: schools
- * across the district, grades within a school, and the single grade once one
- * is picked. Anything else would show rows the filter has excluded.
+ * across the district, then one row per grade in scope. Anything else would show
+ * rows the filter has excluded.
  */
 export function scopedRatioRows(rawScope: HomeScope): SchoolRatio[] {
   const scope = normalize(rawScope);
@@ -116,15 +101,12 @@ export function scopedRatioRows(rawScope: HomeScope): SchoolRatio[] {
 
   const students = splitAcrossGrades(row.students, school.grades);
   const teachers = splitAcrossGrades(row.teachers, school.grades);
-  const grades = scope.grade ? [scope.grade] : school.grades;
 
-  return grades
-    .filter((grade) => school.grades.includes(grade))
-    .map((grade) => ({
-      school: gradeLabel(grade),
-      teachers: teachers[grade] ?? 0,
-      students: students[grade] ?? 0
-    }));
+  return gradesInScope(scope, school.grades).map((grade) => ({
+    school: gradeLabel(grade),
+    teachers: teachers[grade] ?? 0,
+    students: students[grade] ?? 0
+  }));
 }
 
 /** Same drill-down rule as the ratio chart, so the two cards never disagree. */
@@ -137,11 +119,11 @@ export function scopedDistribution(rawScope: HomeScope): DistributionSlice[] {
   if (!row) return [];
 
   const students = splitAcrossGrades(row.students, school.grades);
-  const grades = scope.grade ? [scope.grade] : school.grades;
 
-  return grades
-    .filter((grade) => school.grades.includes(grade))
-    .map((grade) => ({ label: gradeLabel(grade), value: students[grade] ?? 0 }));
+  return gradesInScope(scope, school.grades).map((grade) => ({
+    label: gradeLabel(grade),
+    value: students[grade] ?? 0
+  }));
 }
 
 /**
@@ -157,5 +139,13 @@ export function scopeLabel(rawScope: HomeScope): string | null {
   const scope = normalize(rawScope);
   const school = schoolById(scope.school);
   if (!school) return null;
-  return scope.grade ? `${school.name} · ${gradeLabel(scope.grade)}` : school.name;
+  if (scope.grades.length === 0) return school.name;
+
+  // Two grades still read at a glance; past that the count says more than a
+  // list that would wrap or be truncated.
+  const grades =
+    scope.grades.length <= 2
+      ? scope.grades.map(gradeLabel).join(" & ")
+      : `${scope.grades.length} grades`;
+  return `${school.name} · ${grades}`;
 }

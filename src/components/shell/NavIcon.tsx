@@ -6,6 +6,7 @@ import {
   Mortarboard02Icon,
   Notification01Icon,
   PreferenceHorizontalIcon,
+  SchoolIcon,
   Settings02Icon,
   Target01Icon,
   UserSettings01Icon
@@ -20,6 +21,7 @@ const ICONS: Record<SectionId, IconSvgElement> = {
   "academic-goals": Target01Icon,
   alerts: Notification01Icon,
   "user-management": UserSettings01Icon,
+  "school-setup": SchoolIcon,
   "system-settings": Settings02Icon
 };
 

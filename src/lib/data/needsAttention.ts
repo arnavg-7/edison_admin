@@ -162,13 +162,17 @@ export const attentionItems: AttentionItem[] = [
   }
 ];
 
-/** School/grade narrowing, matching Home's filter bar. */
-export type AttentionScope = { school?: string | null; grade?: string | null };
+/**
+ * School/grade narrowing, matching Home's filter bar. `grades` is a set because
+ * Home's Grade filter is multi-select; empty means every grade in the school.
+ */
+export type AttentionScope = { school?: string | null; grades?: string[] };
 
 function inScope(item: AttentionItem, scope?: AttentionScope): boolean {
   if (!scope?.school) return true;
   if (item.school !== scope.school) return false;
-  return !scope.grade || item.grade === scope.grade;
+  if (!scope.grades?.length) return true;
+  return item.grade !== undefined && scope.grades.includes(item.grade);
 }
 
 /** Open items, optionally narrowed to when they were flagged and to a school/grade. */

@@ -13,6 +13,8 @@ import {
   type PoagPillar
 } from "@/lib/data/poag";
 import { usePoag } from "@/lib/poag-store";
+import { subjects } from "@/lib/data/systemSettings";
+import { MultiCombobox } from "@/components/shared/MultiCombobox";
 import { Button } from "@/components/base/buttons/button";
 import {
   Sheet,
@@ -69,6 +71,9 @@ export function PoagContentDrawer({
   /* Only editable while adding. After that it is what every rating already filed
      against this pillar points at, so changing it would orphan them. */
   const [rubricKey, setRubricKey] = useState(pillar?.rubricKey ?? "");
+  /* Empty means every subject. Kept as the empty list rather than "all the ids"
+     so a subject added to the district later is picked up automatically. */
+  const [subjectIds, setSubjectIds] = useState<string[]>(pillar?.subjectIds ?? []);
   const [keyTouched, setKeyTouched] = useState(false);
 
   /* Sized to the live scale, not to what was stored: a pillar written before the
@@ -136,10 +141,15 @@ export function PoagContentDrawer({
       addPillar({
         displayTitle: title.trim(),
         rubricKey: effectiveKey,
-        hoverText: hover.trim()
+        hoverText: hover.trim(),
+        subjectIds
       });
     } else {
-      updatePillar(effectiveKey, { displayTitle: title.trim(), hoverText: hover.trim() });
+      updatePillar(effectiveKey, {
+        displayTitle: title.trim(),
+        hoverText: hover.trim(),
+        subjectIds
+      });
     }
 
     updateContent(band, effectiveKey, {
@@ -159,6 +169,15 @@ export function PoagContentDrawer({
   /* A new pillar is live in all three bands the moment it exists, but this
      drawer only writes one of them — so the other two are named up front. */
   const otherBands = POAG_BANDS.filter((entry) => entry !== band);
+
+  const subjectOptions = subjects.map((subject) => ({
+    value: subject.id,
+    label: subject.name
+  }));
+  const subjectNames = subjects
+    .filter((subject) => subjectIds.includes(subject.id))
+    .map((subject) => subject.name)
+    .join(" and ");
 
   return (
     <Sheet
@@ -227,6 +246,27 @@ export function PoagContentDrawer({
                 onChange={(event) => setHover(event.target.value)}
               />
               <span className="sf-field-hint">Shared by all three bands, like the title.</span>
+            </label>
+
+            {/* Which subjects rate this pillar. Sits with the title and hover
+                because it is a fact about the pillar across the district, not
+                about this band's wording — and it decides who is ever asked for
+                it: a pillar scoped to Science never appears to a Maths teacher. */}
+            <label className="sf-field">
+              <span>Rated in</span>
+              <MultiCombobox
+                options={subjectOptions}
+                values={subjectIds}
+                onChange={setSubjectIds}
+                resetLabel="All subjects"
+                ariaLabel="Subjects this pillar is rated in"
+                summarize={(picked) => `${picked.length} subjects`}
+              />
+              <span className="sf-field-hint">
+                {subjectIds.length === 0
+                  ? "Every subject, including any added later. Edison's six are district-wide competencies, so they stay unscoped."
+                  : `Only ${subjectNames} teachers are asked for this pillar. The others never see it, and it is left out of their coverage.`}
+              </span>
             </label>
 
             {isNew ? (

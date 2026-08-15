@@ -70,6 +70,12 @@ export function MultiCombobox<T extends string = string>({
     [onChange, options, selectedSet]
   );
 
+  /* Keeps focus on the trigger when a row is clicked. Without it the browser
+     moves focus to the body, so the trigger's own keydown handler stops running
+     and Escape falls through to whatever Sheet or Modal is behind the popup —
+     dismissing the form instead of the dropdown. */
+  const holdFocus = (event: React.MouseEvent) => event.preventDefault();
+
   const commit = useCallback(
     (index: number) => {
       if (index <= 0) {
@@ -78,8 +84,11 @@ export function MultiCombobox<T extends string = string>({
       }
       const option = options[index - 1];
       if (option) toggle(option.value);
+      // Belt and braces for touch and keyboard, where there is no mousedown to
+      // suppress: the popup stays open, so the trigger must keep the keys.
+      popup.focusTrigger();
     },
-    [onChange, options, toggle]
+    [onChange, options, popup, toggle]
   );
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -151,6 +160,7 @@ export function MultiCombobox<T extends string = string>({
                     data-index={0}
                     className={`${rowClass(0)} sf-combobox-option--reset`}
                     onPointerEnter={() => popup.setActiveIndex(0)}
+                    onMouseDown={holdFocus}
                     onClick={() => commit(0)}
                   >
                     <span>{resetLabel}</span>
@@ -167,6 +177,7 @@ export function MultiCombobox<T extends string = string>({
                         data-index={index + 1}
                         className={rowClass(index + 1)}
                         onPointerEnter={() => popup.setActiveIndex(index + 1)}
+                        onMouseDown={holdFocus}
                         onClick={() => commit(index + 1)}
                       >
                         <span className="sf-combobox-check-row">

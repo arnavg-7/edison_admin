@@ -70,7 +70,31 @@ export type PoagPillar = {
   rubricKey: string;
   /** Skills Chart definition, shown on hover in the faculty and student views. */
   hoverText: string;
+  /**
+   * Subjects this pillar is rated in, as `subjects.id` from System Settings.
+   *
+   * Empty means every subject, which is not the same as "none" — Edison's six
+   * are district-wide competencies and a Maths teacher rates Resilience just as
+   * a Science teacher does. A district adding "Practical Technique" would scope
+   * it to Arts, and no other subject's teacher would ever see it.
+   *
+   * Scoping lives on the pillar rather than on the rating because it decides
+   * what a teacher is *asked*; the rating itself is already per class, which is
+   * what makes a student's Critical Thinking in Calculus a separate record from
+   * the same pillar in Geology.
+   */
+  subjectIds: string[];
 };
+
+/** Empty subject list means every subject, so an unscoped pillar matches all. */
+export function pillarAppliesToSubject(pillar: PoagPillar, subjectId: string): boolean {
+  return pillar.subjectIds.length === 0 || pillar.subjectIds.includes(subjectId);
+}
+
+export function pillarsForSubject(pillars: PoagPillar[], subjectId: string | null): PoagPillar[] {
+  if (!subjectId) return pillars;
+  return pillars.filter((pillar) => pillarAppliesToSubject(pillar, subjectId));
+}
 
 /**
  * Edison's own six. Seeded, not fixed: a district can add a seventh, and the
@@ -83,36 +107,42 @@ export const seedPoagPillars: PoagPillar[] = [
     displayTitle: "Resilience",
     rubricKey: "Adaptive & Resilient",
     hoverText:
-      "Takes calculated risks, reflects on challenges, and persists in the face of difficulties."
+      "Takes calculated risks, reflects on challenges, and persists in the face of difficulties.",
+    subjectIds: []
   },
   {
     displayTitle: "Effective Communication",
     rubricKey: "Effective Communicator",
     hoverText:
-      "Listens actively, expresses ideas clearly, and adapts the message to the audience."
+      "Listens actively, expresses ideas clearly, and adapts the message to the audience.",
+    subjectIds: []
   },
   {
     displayTitle: "Engaged Community Member",
     rubricKey: "Engaged Community Member",
-    hoverText: "Contributes to the community, collaborates with others, and acts with integrity."
+    hoverText: "Contributes to the community, collaborates with others, and acts with integrity.",
+    subjectIds: []
   },
   {
     displayTitle: "Lifelong Learner",
     rubricKey: "Resourceful Lifelong Learner",
     hoverText:
-      "Seeks out new knowledge, uses resources independently, and owns their own learning."
+      "Seeks out new knowledge, uses resources independently, and owns their own learning.",
+    subjectIds: []
   },
   {
     displayTitle: "Emotionally Intelligent",
     rubricKey: "Emotionally Intelligent",
     hoverText:
-      "Recognises their own emotions and those of others, and responds with empathy and self-control."
+      "Recognises their own emotions and those of others, and responds with empathy and self-control.",
+    subjectIds: []
   },
   {
     displayTitle: "Critical Thinking",
     rubricKey: "Critical Thinker & Problem Solver",
     hoverText:
-      "Analyses information, weighs evidence, and works through problems to a reasoned solution."
+      "Analyses information, weighs evidence, and works through problems to a reasoned solution.",
+    subjectIds: []
   }
 ];
 

@@ -12,6 +12,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import {
   isSeedPillar,
+  pillarsForSubject,
   poagBandForGrade,
   type PoagPillar
 } from "@/lib/data/poag";
@@ -24,6 +25,7 @@ import {
   unmappedSubjects
 } from "@/lib/data/poagCoverage";
 import { schools } from "@/lib/data/schools";
+import { subjects } from "@/lib/data/systemSettings";
 import { POAG_FOCUS_ALL, usePoag } from "@/lib/poag-store";
 import { formatDateTime } from "@/lib/format";
 import { Button } from "@/components/base/buttons/button";
@@ -108,8 +110,12 @@ export function PoagProfileEditor({ schoolId, grade }: { schoolId: string; grade
   const subject = gradeSubjects.find((entry) => entry.id === subjectId) ?? gradeSubjects[0] ?? null;
   const subjectRows = coverage.filter((row) => row.subjectId === subject?.id);
   const subjectTotals = poagCoverageTotals(subjectRows);
+  /* Only the pillars that subject is rated on. A pillar scoped to Science has
+     no Maths rating to distribute, and drawing it at zero would read as "nobody
+     has rated it yet" rather than "it is not asked for here". */
+  const subjectPillars = subject ? pillarsForSubject(pillars, subject.id) : pillars;
   const distribution = subject
-    ? poagDistributionFor(schoolId, grade, subject.id, pillars, levels.length)
+    ? poagDistributionFor(schoolId, grade, subject.id, subjectPillars, levels.length)
     : [];
   const subjectOptions: ComboboxOption[] = gradeSubjects.map((entry) => ({
     value: entry.id,
@@ -186,6 +192,7 @@ export function PoagProfileEditor({ schoolId, grade }: { schoolId: string; grade
             <thead>
               <tr>
                 <th scope="col">Pillar</th>
+                <th scope="col">Rated in</th>
                 <th scope="col">Levels written</th>
                 <th scope="col">Wording</th>
                 <th scope="col">Actions</th>
@@ -240,6 +247,22 @@ export function PoagProfileEditor({ schoolId, grade }: { schoolId: string; grade
                             )}
                           </span>
                         </div>
+                      </td>
+                      <td>
+                        {/* Which subjects ask for this pillar. "All subjects"
+                            is the district-wide case and stays plain; a scoped
+                            pillar names them, because who is not asked is the
+                            surprising half. */}
+                        {pillar.subjectIds.length === 0 ? (
+                          <span className="poag-subject-all">All subjects</span>
+                        ) : (
+                          <span className="poag-subject-list">
+                            {subjects
+                              .filter((entry) => pillar.subjectIds.includes(entry.id))
+                              .map((entry) => entry.name)
+                              .join(", ")}
+                          </span>
+                        )}
                       </td>
                       <td>
                         {/* Whether this band is fully authored — the admin's
@@ -325,7 +348,7 @@ export function PoagProfileEditor({ schoolId, grade }: { schoolId: string; grade
 
                     {isOpen ? (
                       <tr className="sf-subrow" id={detailId}>
-                        <td colSpan={4}>
+                        <td colSpan={5}>
                           <p className="poag-hover-text">
                             <strong>Hover definition</strong> · {pillar.hoverText}
                           </p>
@@ -374,7 +397,7 @@ export function PoagProfileEditor({ schoolId, grade }: { schoolId: string; grade
           <h2>Where this grade sits</h2>
           <span className="sf-panel-note">
             {subject
-              ? `${subjectTotals.ratedStudents} of ${subjectTotals.students} rated in ${subject.name}`
+              ? `${subjectTotals.ratedStudents} of ${subjectTotals.students} rated in ${subject.name} · ${subjectPillars.length} of ${pillars.length} pillars`
               : `${roll} students, no subject mapped`}
           </span>
         </div>
@@ -488,6 +511,7 @@ export function PoagProfileEditor({ schoolId, grade }: { schoolId: string; grade
               <thead>
                 <tr>
                   <th scope="col">Class</th>
+                  <th scope="col">Pillars</th>
                   <th scope="col">Principal teacher</th>
                   <th scope="col">Students</th>
                   <th scope="col">Rated</th>
@@ -501,6 +525,13 @@ export function PoagProfileEditor({ schoolId, grade }: { schoolId: string; grade
                   return (
                     <tr key={row.id}>
                       <td>{row.name}</td>
+                      <td>
+                        {/* How many of the district's pillars this subject is
+                            asked for. Less than all of them is the point of
+                            scoping, so it is stated per class rather than left
+                            to be worked out from the pillar table. */}
+                        {pillarsForSubject(pillars, row.subjectId).length} of {pillars.length}
+                      </td>
                       <td>
                         {row.principalTeacher ?? (
                           /* Does not occur in the current export — every one of

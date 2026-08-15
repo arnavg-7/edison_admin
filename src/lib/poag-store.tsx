@@ -52,8 +52,11 @@ const LEVELS_KEY = "edison-admin.poag-levels.v1";
 /** Pillars the district added on top of Edison's six. */
 type PillarState = {
   custom: PoagPillar[];
-  /** Title/hover rewrites, keyed by rubric key — which itself never changes. */
-  overrides: Record<string, { displayTitle?: string; hoverText?: string }>;
+  /** Title/hover/subject rewrites, keyed by rubric key — which never changes. */
+  overrides: Record<
+    string,
+    { displayTitle?: string; hoverText?: string; subjectIds?: string[] }
+  >;
 };
 
 const EMPTY_PILLAR_STATE: PillarState = { custom: [], overrides: {} };
@@ -90,8 +93,16 @@ type PoagContextValue = {
   /** Edison's six plus anything the district added, in display order. */
   pillars: PoagPillar[];
   addPillar: (pillar: PoagPillar) => void;
-  /** Title and hover only — the rubric key is what ratings point at. */
-  updatePillar: (rubricKey: string, patch: { displayTitle: string; hoverText: string }) => void;
+  /**
+   * Everything about a pillar except its rubric key, which is what ratings
+   * point at. Subject scope is editable like the rest: narrowing it stops
+   * teachers of the dropped subjects being asked for the pillar, and leaves
+   * ratings they already filed where they are.
+   */
+  updatePillar: (
+    rubricKey: string,
+    patch: { displayTitle: string; hoverText: string; subjectIds: string[] }
+  ) => void;
   /** Added pillars only; the seeded six refuse. Takes its wording with it. */
   removePillar: (rubricKey: string) => void;
   /** Edison's four plus anything the district added, low to high. */
@@ -111,7 +122,13 @@ type PoagContextValue = {
   setFocus: (schoolId: string, grade: string, rubricKey: string) => void;
   /** Applies a parsed bulk upload: new pillars, then wording, in one commit. */
   importContent: (
-    entries: { pillar: PoagPillar; band: PoagBand; content: PoagBandContent }[]
+    entries: {
+      pillar: PoagPillar;
+      band: PoagBand;
+      content: PoagBandContent;
+      /** Row left the subjects column blank — keep whatever scope it has. */
+      keepSubjects?: boolean;
+    }[]
   ) => void;
   isLoaded: boolean;
 };
@@ -266,13 +283,25 @@ export function PoagProvider({ children }: { children: React.ReactNode }) {
       importContent: (entries) => {
         setPillarState((current) => {
           const custom = [...current.custom];
+          const overrides = { ...current.overrides };
+
           for (const entry of entries) {
             const known =
               isSeedPillar(entry.pillar.rubricKey) ||
               custom.some((item) => item.rubricKey === entry.pillar.rubricKey);
-            if (!known) custom.push(entry.pillar);
+
+            if (!known) {
+              custom.push(entry.pillar);
+            } else if (!entry.keepSubjects) {
+              // Re-scoping an existing pillar is an override, the same as a
+              // rewording — the rubric key it is filed under never moves.
+              overrides[entry.pillar.rubricKey] = {
+                ...overrides[entry.pillar.rubricKey],
+                subjectIds: entry.pillar.subjectIds
+              };
+            }
           }
-          return { ...current, custom };
+          return { custom, overrides };
         });
         setContent((current) => {
           const next = { ...current };

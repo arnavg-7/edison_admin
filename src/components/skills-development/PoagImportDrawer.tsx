@@ -74,8 +74,13 @@ export function PoagImportDrawer({ band, onClose }: { band: PoagBand; onClose: (
         pillar: {
           displayTitle: row.displayTitle,
           rubricKey: row.rubricKey,
-          hoverText: row.hoverText
+          hoverText: row.hoverText,
+          subjectIds: row.subjectIds
         },
+        /* A blank subjects column means "not stated", not "all subjects" — a
+           sheet carrying only wording must not silently unscope a pillar it
+           never mentions. */
+        keepSubjects: row.subjectsUnset,
         band: row.band,
         content: { descriptor: row.descriptor, levels: row.levels }
       }))

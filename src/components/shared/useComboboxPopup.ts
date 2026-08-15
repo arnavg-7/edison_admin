@@ -131,6 +131,11 @@ export function useComboboxPopup({
     switch (event.key) {
       case "Escape":
         event.preventDefault();
+        /* Stops here rather than bubbling: these popups often sit inside a
+           Sheet or Modal, which also closes on Escape — so one keypress
+           dismissed the dropdown *and* threw away the form behind it. With the
+           popup shut, a second Escape reaches the dialog as it should. */
+        event.stopPropagation();
         closePopup();
         return true;
       case "Tab":

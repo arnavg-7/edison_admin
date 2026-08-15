@@ -3736,3 +3736,15 @@ nav.sf-pagination {
   flex: 1 1 220px;
   margin-top: 2px;
 }
+
+/* A pillar's subject scope in the table. "All subjects" is the district-wide
+   default and stays quiet; a scoped pillar names its subjects, because who is
+   *not* asked for it is the surprising half. */
+.poag-subject-all {
+  color: var(--sf-text-dim);
+}
+
+.poag-subject-list {
+  font-size: 12.5px;
+  color: var(--sf-text);
+}

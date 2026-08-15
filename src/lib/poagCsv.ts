@@ -1,5 +1,6 @@
 import { POAG_BANDS, poagRubricKeyFrom, type PoagBand } from "@/lib/data/poag";
 import { splitCsvLine } from "@/lib/skillsCsv";
+import { subjects } from "@/lib/data/systemSettings";
 
 /**
  * Bulk load for Portrait of a Graduate content — the admin-side equivalent of
@@ -11,7 +12,12 @@ import { splitCsvLine } from "@/lib/skillsCsv";
  * Columns are matched by header name rather than position, because nine columns
  * in a fixed order is a trap for anyone editing the sheet by hand.
  *
- *   display_title,rubric_key,hover_text,band,descriptor,learning,building,applying,innovating
+ *   display_title,rubric_key,hover_text,subjects,band,descriptor,learning,building,applying,innovating
+ *
+ * `subjects` is a semicolon-separated list of subject names, or blank for every
+ * subject. It is a fact about the pillar rather than about the band, so the last
+ * row to name it wins and a blank never narrows an existing scope — a sheet that
+ * only carries wording should not silently unscope a pillar.
  *
  * The level columns are the live scale, not those four names: a district that
  * added a level uploads a file with a column for it, and the template it
@@ -29,6 +35,10 @@ export type PoagCsvRow = {
   displayTitle: string;
   rubricKey: string;
   hoverText: string;
+  /** Parsed subject ids; empty means every subject. */
+  subjectIds: string[];
+  /** True when the row left the column blank, so it must not narrow anything. */
+  subjectsUnset: boolean;
   band: PoagBand;
   descriptor: string;
   /** One per level of the live scale, in order. */
@@ -72,6 +82,7 @@ function buildIndex(header: string[], levelLabels: string[]): Record<string, num
     displayTitle: find("display_title", "display title", "pillar", "title"),
     rubricKey: find("rubric_key", "rubric key", "pillar_key", "rubric"),
     hoverText: find("hover_text", "hover text", "hover", "definition"),
+    subjectIds: find("subjects", "subject", "rated in", "rated_in"),
     band: find("band", "grade_band", "grade band"),
     descriptor: find("descriptor", "summary")
   };
@@ -112,6 +123,25 @@ function parseBand(raw: string): PoagBand | null {
   return BAND_ALIASES.get(normalizeHeader(raw)) ?? null;
 }
 
+/** Subject names, semicolon-separated. Returns null when one does not resolve. */
+function parseSubjects(raw: string): string[] | null {
+  const names = raw
+    .split(/[;|]/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  if (names.length === 0) return [];
+
+  const ids: string[] = [];
+  for (const name of names) {
+    const match = subjects.find(
+      (subject) => subject.name.toLowerCase() === name.toLowerCase() || subject.id === name
+    );
+    if (!match) return null;
+    if (!ids.includes(match.id)) ids.push(match.id);
+  }
+  return ids;
+}
+
 /** The worked example, one line per level of Edison's seeded four. */
 const TEMPLATE_LEVEL_EXAMPLES = [
   "Accepts a topic as given and rarely asks beyond it.",
@@ -136,6 +166,7 @@ export function poagCsvTemplate(levelLabels: string[]): string {
     "Curiosity",
     "Curious Enquirer",
     quote("Asks questions, follows them up, and enjoys not knowing the answer yet."),
+    quote("Science;Mathematics"),
     "High School",
     quote("Pursuing questions past the point the assignment stops."),
     // A level the district added has no worked example, so the placeholder names
@@ -242,6 +273,16 @@ export function parsePoagCsv(
       return;
     }
 
+    const rawSubjects = at("subjectIds");
+    const subjectIds = parseSubjects(rawSubjects);
+    if (subjectIds === null) {
+      issues.push({
+        line,
+        message: `"${rawSubjects}" is not a subject. Use ${subjects.map((subject) => subject.name).join(", ")}, separated by ";".`
+      });
+      return;
+    }
+
     const rubricKey = at("rubricKey") || poagRubricKeyFrom(displayTitle);
     const pairKey = `${band}|${rubricKey}`;
     if (seenPairs.has(pairKey)) {
@@ -262,6 +303,8 @@ export function parsePoagCsv(
       displayTitle,
       rubricKey,
       hoverText: at("hoverText"),
+      subjectIds,
+      subjectsUnset: rawSubjects.trim() === "",
       band,
       descriptor,
       levels

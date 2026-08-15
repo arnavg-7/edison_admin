@@ -120,6 +120,10 @@ export function Combobox<T extends string = string>({
                         : "sf-combobox-option"
                     }
                     onPointerEnter={() => popup.setActiveIndex(index)}
+                    /* A listbox option is not a focus target — see the note in
+                       MultiCombobox. Here the commit closes and refocuses
+                       anyway, but the flicker through body is avoidable. */
+                    onMouseDown={(event) => event.preventDefault()}
                     onClick={() => commit(index)}
                   >
                     <span>{option.label}</span>

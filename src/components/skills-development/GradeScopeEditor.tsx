@@ -32,6 +32,19 @@ const TABS = ["Development areas", "Skill groups", "Skills profile"] as const;
  */
 const VIEWS = ["Current", "History"] as const;
 
+/**
+ * Hidden for now, at Edison's request — Portrait of a Graduate is the only thing
+ * under review on this screen while the pilot runs.
+ *
+ * A hide, not a removal: both editors, their term history, their CSV import and
+ * the counts they feed on the school picker are all untouched and still reached
+ * from the Student & Faculty 360 profile. Take a name out of this list to bring
+ * its tab straight back.
+ */
+const HIDDEN_TABS: readonly (typeof TABS)[number][] = ["Development areas", "Skill groups"];
+
+const VISIBLE_TABS = TABS.filter((label) => !HIDDEN_TABS.includes(label));
+
 const HAS_HISTORY: Record<(typeof TABS)[number], boolean> = {
   "Development areas": true,
   "Skill groups": true,
@@ -39,7 +52,7 @@ const HAS_HISTORY: Record<(typeof TABS)[number], boolean> = {
 };
 
 export function GradeScopeEditor({ scope }: { scope: GradeScope }) {
-  const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[0]);
+  const [tab, setTab] = useState<(typeof TABS)[number]>(VISIBLE_TABS[0]);
   const [view, setView] = useState<(typeof VIEWS)[number]>(VIEWS[0]);
   const gradeLabel = `Grade ${scope.grade}`;
 
@@ -65,19 +78,24 @@ export function GradeScopeEditor({ scope }: { scope: GradeScope }) {
         </p>
       ) : null}
 
-      <Tabs
-        value={tab}
-        onValueChange={(value) => setTab(value as (typeof TABS)[number])}
-        className="sf-section-tabs"
-      >
-        <TabsList variant="line" aria-label="Configuration view">
-          {TABS.map((label) => (
-            <TabsTrigger key={label} value={label}>
-              {label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      {/* With one tab left there is nothing to switch between, and a lone tab is
+          a dead control. The strip returns on its own once a name comes back off
+          HIDDEN_TABS. */}
+      {VISIBLE_TABS.length > 1 ? (
+        <Tabs
+          value={tab}
+          onValueChange={(value) => setTab(value as (typeof TABS)[number])}
+          className="sf-section-tabs"
+        >
+          <TabsList variant="line" aria-label="Configuration view">
+            {VISIBLE_TABS.map((label) => (
+              <TabsTrigger key={label} value={label}>
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      ) : null}
 
       {/* Segmented, against the section tabs' underline, so two tab rows in a
           row read as a hierarchy rather than as one wrapped set. Hidden entirely

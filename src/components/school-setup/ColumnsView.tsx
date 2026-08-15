@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { PlusSignIcon } from "@hugeicons/core-free-icons";
+import { PlusSignIcon, Upload03Icon } from "@hugeicons/core-free-icons";
 import {
   batchCount,
   gradeSeats,
@@ -16,6 +16,7 @@ import {
 import { useSchoolSetup } from "@/lib/school-setup-store";
 import { useSetupSelection } from "@/lib/school-setup-selection";
 import { SetupDetailPanel } from "./SetupDetailPanel";
+import { SetupImportDrawer } from "./SetupImportDrawer";
 import { SetupNodeModal, type SetupModalRequest } from "./SetupNodeModal";
 import { UndoNotice } from "./UndoNotice";
 
@@ -37,7 +38,8 @@ function Column({
   rows,
   emptyMessage,
   onAdd,
-  addLabel
+  addLabel,
+  onImport
 }: {
   label: string;
   rows: ColumnRow[];
@@ -45,12 +47,25 @@ function Column({
   /** Absent when the parent level isn't picked yet, so there is nothing to add to. */
   onAdd?: () => void;
   addLabel: string;
+  /** Schools only — a CSV covers the whole hierarchy, so it needs one home. */
+  onImport?: () => void;
 }) {
   return (
     <div className="sf-column">
       <div className="sf-column-head">
         <span className="sf-column-label">{label}</span>
         <span className="sf-column-count">{rows.length}</span>
+        {onImport ? (
+          <button
+            type="button"
+            className="sf-icon-btn"
+            onClick={onImport}
+            aria-label="Add CSV"
+            title="Add CSV"
+          >
+            <HugeiconsIcon icon={Upload03Icon} size={15} strokeWidth={2} />
+          </button>
+        ) : null}
         {onAdd ? (
           <button type="button" className="sf-icon-btn" onClick={onAdd} aria-label={addLabel}>
             <HugeiconsIcon icon={PlusSignIcon} size={15} strokeWidth={2.4} />
@@ -104,6 +119,7 @@ export function ColumnsView() {
   const { district } = useSchoolSetup();
   const { school, grade, batch, query, select } = useSetupSelection();
   const [modal, setModal] = useState<SetupModalRequest | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const term = query.trim().toLowerCase();
   const hit = (value: string) => value.toLowerCase().includes(term);
@@ -198,6 +214,7 @@ export function ColumnsView() {
             emptyMessage={term ? "No school matches this search." : "No schools yet."}
             onAdd={() => setModal({ mode: "add", kind: "school" })}
             addLabel="Add school"
+            onImport={() => setImporting(true)}
           />
           <Column
             label="Grades"
@@ -235,6 +252,8 @@ export function ColumnsView() {
       <SetupDetailPanel onEdit={setModal} />
 
       {modal ? <SetupNodeModal request={modal} onClose={() => setModal(null)} /> : null}
+
+      {importing ? <SetupImportDrawer onClose={() => setImporting(false)} /> : null}
     </>
   );
 }

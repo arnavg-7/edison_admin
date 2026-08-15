@@ -212,13 +212,13 @@ export function SkillsProfileHistory({ schoolId, grade }: { schoolId: string; gr
   const terms = useMemo(() => termHistoryFor(schoolId, grade), [schoolId, grade]);
 
   if (terms.length === 0) {
-    return <NoHistory heading="Skills profile history" />;
+    return <NoHistory heading="Skill groups history" />;
   }
 
   return (
     <div className="sf-panel">
       <div className="sf-panel-head">
-        <h2>Skills profile history</h2>
+        <h2>Skill groups history</h2>
       </div>
 
       <TermRows

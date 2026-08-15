@@ -2,12 +2,14 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
+  newSetupId,
   seedDistrict,
   type SetupBatch,
   type SetupDistrict,
   type SetupGrade,
   type SetupSchool
 } from "@/lib/data/schoolSetup";
+import { useMounted } from "@/lib/use-mounted";
 
 /**
  * The district hierarchy School Setup edits. Same shape as admin-users-store:
@@ -44,6 +46,98 @@ function readStorage(): SetupDistrict {
 /** What a delete removed, so the screen can name it in the undo offer. */
 export type SetupUndo = { label: string; district: SetupDistrict };
 
+/**
+ * One parsed CSV row, flattened school → grade → batch. Blank strings mean "the
+ * file did not say", and are left alone rather than written as empty — a sheet
+ * listing batches should not blank out the principal it never mentioned.
+ */
+export type SetupImportRow = {
+  school: string;
+  schoolCode: string;
+  level: SetupSchool["level"] | null;
+  principal: string;
+  city: string;
+  grade: string;
+  stream: string;
+  gradeLead: string;
+  batch: string;
+  year: string;
+  capacity: number | null;
+};
+
+const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+/**
+ * Folds every row into the tree in one pass. Merge, not replace: a row lands on
+ * the school/grade/batch it names if it is already there and creates it if not,
+ * and anything the file never mentions is untouched.
+ */
+function applyImport(district: SetupDistrict, rows: SetupImportRow[]): SetupDistrict {
+  const schools = district.schools.map((school) => ({
+    ...school,
+    grades: school.grades.map((grade) => ({ ...grade, batches: [...grade.batches] }))
+  }));
+
+  for (const row of rows) {
+    let school = schools.find((entry) => same(entry.name, row.school));
+    if (!school) {
+      school = {
+        id: newSetupId("school", row.school),
+        name: row.school,
+        code: (row.schoolCode || row.school.slice(0, 3)).toUpperCase(),
+        level: row.level ?? "HS",
+        principal: row.principal || "Unassigned",
+        city: row.city || "—",
+        grades: []
+      };
+      schools.push(school);
+    } else {
+      if (row.schoolCode) school.code = row.schoolCode.toUpperCase();
+      if (row.level) school.level = row.level;
+      if (row.principal) school.principal = row.principal;
+      if (row.city) school.city = row.city;
+    }
+
+    if (!row.grade) continue;
+
+    let grade = school.grades.find((entry) => same(entry.name, row.grade));
+    if (!grade) {
+      grade = {
+        id: newSetupId("grade", `${row.school} ${row.grade}`),
+        name: row.grade,
+        stream: row.stream || "General",
+        lead: row.gradeLead || "Unassigned",
+        batches: []
+      };
+      school.grades.push(grade);
+    } else {
+      if (row.stream) grade.stream = row.stream;
+      if (row.gradeLead) grade.lead = row.gradeLead;
+    }
+
+    if (!row.batch) continue;
+
+    const batch = grade.batches.find((entry) => same(entry.name, row.batch));
+    if (!batch) {
+      grade.batches.push({
+        id: newSetupId("batch", `${row.grade} ${row.batch}`),
+        name: row.batch,
+        year: row.year,
+        capacity: row.capacity ?? 30,
+        // Enrollment syncs from Genesis; an import never sets a head count.
+        enrolled: 0
+      });
+    } else {
+      if (row.year) batch.year = row.year;
+      // Never below what is already enrolled — the seat meter would read past
+      // 100% for a batch nobody over-filled.
+      if (row.capacity !== null) batch.capacity = Math.max(batch.enrolled, row.capacity);
+    }
+  }
+
+  return { ...district, schools };
+}
+
 type SchoolSetupContextValue = {
   district: SetupDistrict;
   addSchool: (school: SetupSchool) => void;
@@ -55,6 +149,8 @@ type SchoolSetupContextValue = {
   addBatch: (schoolId: string, gradeId: string, batch: SetupBatch) => void;
   updateBatch: (schoolId: string, gradeId: string, batchId: string, patch: Partial<SetupBatch>) => void;
   removeBatch: (schoolId: string, gradeId: string, batchId: string) => void;
+  /** Applies a parsed bulk upload — schools, grades and batches in one commit. */
+  importHierarchy: (rows: SetupImportRow[]) => void;
   /** Set by the last delete, cleared by undoing or dismissing it. */
   undo: SetupUndo | null;
   applyUndo: () => void;
@@ -175,6 +271,7 @@ export function SchoolSetupProvider({ children }: { children: React.ReactNode })
           )
         );
       },
+      importHierarchy: (rows) => setDistrict((current) => applyImport(current, rows)),
       undo,
       applyUndo: () => {
         if (undo) setDistrict(undo.district);
@@ -191,8 +288,27 @@ export function SchoolSetupProvider({ children }: { children: React.ReactNode })
 
 export function useSchoolSetup(): SchoolSetupContextValue {
   const context = useContext(SchoolSetupContext);
+  const mounted = useMounted();
+
   if (!context) {
     throw new Error("useSchoolSetup must be used inside <SchoolSetupProvider>");
   }
-  return context;
+
+  /**
+   * Hands back the seed until the *consuming* component has hydrated.
+   *
+   * The provider seeds itself deterministically and only touches storage in an
+   * effect, but it lives in the root layout — so React can commit it, swapping
+   * in the stored tree, before a page inside the section's Suspense boundary
+   * hydrates. That page would then render stored data against server HTML built
+   * from the seed, which React reports as a hydration mismatch. It only bites
+   * once storage diverges from the seed, so it stayed invisible until the first
+   * edit or import.
+   *
+   * Gated here rather than in each view so useSetupSelection is covered too:
+   * it resolves the selected node from this same tree, and a selection resolved
+   * against one version of the tree while the panel renders another is the same
+   * bug wearing a different hat.
+   */
+  return mounted ? context : { ...context, district: seedDistrict };
 }

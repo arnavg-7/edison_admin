@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { PlusSignIcon } from "@hugeicons/core-free-icons";
+import { PlusSignIcon, Upload03Icon } from "@hugeicons/core-free-icons";
 import {
   SCHOOL_LEVEL_LABELS,
   batchCount,
@@ -21,6 +21,7 @@ import { Combobox, type ComboboxOption } from "@/components/shared/Combobox";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SeatMeter } from "./SeatMeter";
 import { SetupDetailPanel } from "./SetupDetailPanel";
+import { SetupImportDrawer } from "./SetupImportDrawer";
 import { SetupNodeModal, type SetupModalRequest } from "./SetupNodeModal";
 import { UndoNotice } from "./UndoNotice";
 
@@ -69,6 +70,7 @@ export function DrillDownView() {
   const { district } = useSchoolSetup();
   const { school, grade, batch, kind, query, year, select } = useSetupSelection();
   const [modal, setModal] = useState<SetupModalRequest | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const term = query.trim().toLowerCase();
 
@@ -217,40 +219,45 @@ export function DrillDownView() {
         </nav>
       ) : null}
 
-      <div className="sf-filter-bar sf-filter-bar--flush">
-        <label className="sf-field sf-field--search">
-          <span>Search</span>
-          <input
-            type="search"
-            value={query}
-            placeholder="School, grade or batch"
-            onChange={(event) => select({ query: event.target.value })}
-          />
-        </label>
+      <SetupDetailPanel onEdit={setModal} />
 
-        {/* Only at grade level: a batch year filter is a filter over one grade's
-            batch list, and above that it would be filtering rows that don't
-            carry a year. */}
-        {kind === "grade" && years.length > 1 ? (
-          <label className="sf-field">
-            <span>Batch year</span>
-            <Combobox
-              options={yearOptions}
-              value={year === "" ? "all" : year}
-              onChange={(next) => select({ year: next === "all" ? null : next })}
-              placeholder="All years"
+      {/* Below the detail card and immediately above the list, because that is
+          the only thing it filters. Above the card it read as a search over the
+          whole screen, and sat between the breadcrumb and the record the
+          breadcrumb had just led you to. Hidden on a batch, which has no list
+          under it to narrow. */}
+      {kind === "batch" ? null : (
+        <div className="sf-filter-bar sf-filter-bar--flush sf-filter-bar--top-spaced">
+          <label className="sf-field sf-field--search">
+            <span>Search</span>
+            <input
+              type="search"
+              value={query}
+              placeholder="School, grade or batch"
+              onChange={(event) => select({ query: event.target.value })}
             />
           </label>
-        ) : null}
 
-        {kind === "batch" ? null : (
+          {/* Only at grade level: a batch year filter is a filter over one grade's
+              batch list, and above that it would be filtering rows that don't
+              carry a year. */}
+          {kind === "grade" && years.length > 1 ? (
+            <label className="sf-field">
+              <span>Batch year</span>
+              <Combobox
+                options={yearOptions}
+                value={year === "" ? "all" : year}
+                onChange={(next) => select({ year: next === "all" ? null : next })}
+                placeholder="All years"
+              />
+            </label>
+          ) : null}
+
           <p className="sf-filter-note">
             {child.rows.length} of {child.total} {child.noun}
           </p>
-        )}
-      </div>
-
-      <SetupDetailPanel onEdit={setModal} />
+        </div>
+      )}
 
       {kind === "batch" ? (
         <div className="sf-panel">
@@ -268,16 +275,30 @@ export function DrillDownView() {
         <div className="sf-panel">
           <div className="sf-panel-head">
             <h2>{child.heading}</h2>
-            {addRequest ? (
+            {/* Beside the single-record action, because they answer the same
+                question — "how do I get records in here?" — one at a time or a
+                spreadsheet at a time. The CSV reaches the whole hierarchy, not
+                just this level; the drawer says so. */}
+            <div className="sf-row-actions">
               <Button
                 color="secondary"
                 size="xs"
-                onClick={() => setModal(addRequest)}
-                iconLeading={<HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2.4} />}
+                onClick={() => setImporting(true)}
+                iconLeading={<HugeiconsIcon icon={Upload03Icon} size={16} strokeWidth={2} />}
               >
-                Add {child.singular}
+                Add CSV
               </Button>
-            ) : null}
+              {addRequest ? (
+                <Button
+                  color="secondary"
+                  size="xs"
+                  onClick={() => setModal(addRequest)}
+                  iconLeading={<HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2.4} />}
+                >
+                  Add {child.singular}
+                </Button>
+              ) : null}
+            </div>
           </div>
 
           {child.rows.length === 0 ? (
@@ -348,6 +369,8 @@ export function DrillDownView() {
       )}
 
       {modal ? <SetupNodeModal request={modal} onClose={() => setModal(null)} /> : null}
+
+      {importing ? <SetupImportDrawer onClose={() => setImporting(false)} /> : null}
     </>
   );
 }

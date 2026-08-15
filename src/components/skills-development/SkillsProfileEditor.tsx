@@ -488,7 +488,7 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
           right-aligned strip, leaving dead space between the heading and the
           cards it acts on. */}
       <div className="sf-panel-head">
-        <h2>Skills profile</h2>
+        <h2>Skill groups</h2>
         <div className="sf-panel-head-end">
           <span className="sf-panel-note">
             {groups.length} skills · {totalSubSkills} sub-skills ·{" "}

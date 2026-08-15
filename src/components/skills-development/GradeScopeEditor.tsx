@@ -7,18 +7,36 @@ import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import type { GradeScope } from "@/lib/data/skillsDevelopment";
 import { DevelopmentAreasEditor } from "./DevelopmentAreasEditor";
 import { SkillsProfileEditor } from "./SkillsProfileEditor";
+import { PoagProfileEditor } from "./PoagProfileEditor";
 import { DevelopmentAreasHistory, SkillsProfileHistory } from "./TermHistory";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 /**
- * Both editors for one grade. The tabs are local rather than routed: the two
- * panels are the same scope viewed two ways, and keeping them on one URL means
- * the school/grade a user drilled into stays in the address bar.
+ * Every editor for one grade. The tabs are local rather than routed: the panels
+ * are the same scope viewed several ways, and keeping them on one URL means the
+ * school/grade a user drilled into stays in the address bar.
+ *
+ * "Skill groups" is the district's own skills taxonomy — groups and sub-skills,
+ * bulk-imported from a department sheet. It used to be called "Skills profile";
+ * that name now belongs to Edison's Portrait of a Graduate, and "Skill groups"
+ * is what the panel has always actually managed.
  */
-const TABS = ["Development areas", "Skills profile"] as const;
+const TABS = ["Development areas", "Skill groups", "Skills profile"] as const;
 
-/** Each screen carries its own history, so this sits under the section tabs. */
+/**
+ * Development areas and Skill groups each archive per term, so they carry a
+ * Current/History switch. Portrait of a Graduate does not: its ratings are
+ * append-only per marking period on the faculty side, and the admin's own
+ * history — who changed which wording — belongs in the district audit log
+ * rather than in a second copy of this screen.
+ */
 const VIEWS = ["Current", "History"] as const;
+
+const HAS_HISTORY: Record<(typeof TABS)[number], boolean> = {
+  "Development areas": true,
+  "Skill groups": true,
+  "Skills profile": false
+};
 
 export function GradeScopeEditor({ scope }: { scope: GradeScope }) {
   const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[0]);
@@ -62,22 +80,28 @@ export function GradeScopeEditor({ scope }: { scope: GradeScope }) {
       </Tabs>
 
       {/* Segmented, against the section tabs' underline, so two tab rows in a
-          row read as a hierarchy rather than as one wrapped set. */}
-      <Tabs
-        value={view}
-        onValueChange={(value) => setView(value as (typeof VIEWS)[number])}
-        className="sf-scope-views"
-      >
-        <TabsList aria-label={`${tab} view`}>
-          {VIEWS.map((label) => (
-            <TabsTrigger key={label} value={label}>
-              {label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+          row read as a hierarchy rather than as one wrapped set. Hidden entirely
+          on a tab with no history — a switch whose second option does nothing is
+          worse than no switch. */}
+      {HAS_HISTORY[tab] ? (
+        <Tabs
+          value={view}
+          onValueChange={(value) => setView(value as (typeof VIEWS)[number])}
+          className="sf-scope-views"
+        >
+          <TabsList aria-label={`${tab} view`}>
+            {VIEWS.map((label) => (
+              <TabsTrigger key={label} value={label}>
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      ) : null}
 
-      {tab === "Development areas" ? (
+      {tab === "Skills profile" ? (
+        <PoagProfileEditor schoolId={scope.schoolId} grade={scope.grade} />
+      ) : tab === "Development areas" ? (
         view === "Current" ? (
           <DevelopmentAreasEditor schoolId={scope.schoolId} grade={scope.grade} />
         ) : (

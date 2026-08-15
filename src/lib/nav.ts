@@ -38,7 +38,7 @@ export const SECTIONS: Section[] = [
      rather than portal preferences, and it is the hierarchy every screen above
      it filters by — so it reads as the last of the "what the district is"
      sections, not as one more setting. */
-  { id: "school-setup", label: "School Setup", href: "/school-setup" },
+  { id: "school-setup", label: "School Master Setup", href: "/school-setup" },
   { id: "system-settings", label: "System Settings", href: "/system-settings" }
 ];
 

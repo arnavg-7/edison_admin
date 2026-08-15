@@ -71,7 +71,7 @@ const STUDENT_TABS: { id: TabId; label: string }[] = [
   { id: "grades", label: "Grades & history" },
   { id: "attendance", label: "Attendance & history" },
   { id: "goals", label: "Goals" },
-  { id: "skills", label: "Skills profile" },
+  { id: "skills", label: "Skill groups" },
   { id: "development", label: "Development areas" },
   { id: "classes", label: "Classes & schedule" },
   { id: "alerts", label: "Alert history" }
@@ -414,7 +414,7 @@ export function ProfileShell({ person }: { person: Person }) {
             </Link>
           </>
         ) : (
-          <Panel title="Skills profile" note="Configured in Skills & Development">
+          <Panel title="Skill groups" note="Configured in Skills & Development">
             <EmptyState
               title="No grade configured"
               message={`${person.school} has no matching grade in Skills & Development yet.`}

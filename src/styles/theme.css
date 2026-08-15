@@ -3393,3 +3393,346 @@ nav.sf-pagination {
     border-bottom: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Edison Portrait of a Graduate — admin view.
+
+   The faculty build uses Edison's brand #AD46FF on a cream canvas. That colour
+   does not come across: here it would be the one purple on screen that means
+   nothing else, against a palette that already spends purple-blue on "act here".
+   So the levels are a single-hue ramp of --sf-stat — the app's data colour, not
+   its CTA — and the rule the brand guide actually cares about is the one kept: a
+   level is conveyed by position and a text label, never by colour alone
+   (WCAG 1.4.1). Every bar segment prints its count; every track sits beside the
+   level's name in words.
+
+   The ramp itself is no longer four fixed tints here. The district can add a
+   level, so each step is mixed from its position at render time — see
+   poagLevelTint, which is also what decides the ink flip below.
+   --------------------------------------------------------------------------- */
+
+/* The level positions, echoing the faculty matrix's track. Decorative — the
+   level name always sits next to it — so it carries an aria-label and nothing
+   inside it is focusable. */
+.poag-track {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.poag-track-step {
+  display: inline-flex;
+  align-items: center;
+}
+
+.poag-track-line {
+  width: 14px;
+  height: 2px;
+  background: var(--sf-gridline);
+}
+
+.poag-track-step:first-child .poag-track-line {
+  display: none;
+}
+
+.poag-track-step.is-reached .poag-track-line {
+  background: var(--sf-stat);
+}
+
+.poag-track-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--sf-radius-pill);
+  border: 1.5px solid var(--sf-gridline);
+  background: var(--sf-card);
+}
+
+.poag-track-step.is-reached .poag-track-dot {
+  border-color: var(--sf-stat);
+  background: var(--sf-stat);
+}
+
+/* The current level is the answer to "where is this student"; the ones behind it
+   are just the path taken, so only it is enlarged. */
+.poag-track-step.is-current .poag-track-dot {
+  width: 11px;
+  height: 11px;
+}
+
+/* Pillar table */
+
+.poag-controls {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 14px 0 4px;
+}
+
+.poag-controls .sf-field {
+  flex: 0 0 auto;
+  min-width: 220px;
+}
+
+.poag-controls .sf-field-hint {
+  flex: 1 1 320px;
+  margin-top: 22px;
+  max-width: 70ch;
+}
+
+.poag-pillar-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+/* The pillar teachers are rating this period — tinted rather than badged alone,
+   so it is findable in a six-row table at a glance. */
+.poag-row.is-focus > td {
+  background: var(--sf-accent-soft);
+}
+
+.poag-rubric-key {
+  font-size: 11.5px;
+  color: var(--sf-text-muted);
+}
+
+/* Both names of one pillar, stacked in the first cell. */
+.poag-pillar-cell {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.poag-levels-written {
+  font-variant-numeric: tabular-nums;
+  color: var(--sf-text-muted);
+}
+
+/* Expanded row */
+
+.poag-hover-text {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  color: var(--sf-text-muted);
+  max-width: 90ch;
+}
+
+.poag-descriptor {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--sf-text);
+  max-width: 90ch;
+}
+
+.poag-levels {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: poag-level;
+}
+
+.poag-levels li {
+  display: grid;
+  grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--sf-gridline);
+}
+
+.poag-levels li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.poag-level-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.poag-level-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.poag-level-text {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--sf-text-muted);
+  max-width: 90ch;
+}
+
+.poag-band-note,
+.poag-coverage-note {
+  display: block;
+  margin-top: 12px;
+  line-height: 1.6;
+  max-width: 100ch;
+}
+
+/* Distribution */
+
+.poag-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--sf-text-muted);
+}
+
+.poag-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.poag-legend-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+
+.poag-dist {
+  display: grid;
+  gap: 9px;
+}
+
+.poag-dist-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 200px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.poag-dist-label {
+  font-size: 12.5px;
+  color: var(--sf-text-muted);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.poag-dist-track {
+  display: flex;
+  height: 22px;
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.poag-dist-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Ink flips on the dark end of the ramp so the count clears 4.5:1 either way.
+   Which segments those are depends on how long the scale is, so the flip is
+   marked per segment by poagLevelTint rather than named by level here. */
+.poag-dist-count {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.poag-dist-seg[data-ink="light"] .poag-dist-count {
+  color: #ffffff;
+}
+
+/* Drawer */
+
+.poag-drawer-fields {
+  display: grid;
+  gap: 16px;
+  padding-bottom: 8px;
+}
+
+.poag-drawer-fields .sf-field-grid {
+  gap: 10px 20px;
+}
+
+/* The rating scale, edited inline in the pillar drawer rather than in a section
+   of its own: the levels are the columns of the table being written, so the
+   admin defining a pillar edits the scale in the same place they write against
+   it. Every control here is district-wide, which the drawer says in words. */
+
+.poag-scale-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.sf-field-label {
+  font-size: 12px;
+  color: var(--sf-text-muted);
+}
+
+.poag-level-field {
+  gap: 6px;
+}
+
+/* The ordinal is fixed and the name is not, so they sit side by side rather
+   than the whole label becoming an input. */
+.poag-level-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.poag-level-ordinal {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--sf-text-muted);
+  white-space: nowrap;
+}
+
+/* Reads as a label until focused, so a row of them doesn't look like a form to
+   fill in — the names are already set, and most visits will not touch them. */
+.poag-level-name-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--sf-radius-control);
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.poag-level-name-input:hover {
+  border-color: var(--sf-card-border);
+}
+
+.poag-level-name-input:focus {
+  border-color: var(--sf-accent);
+  background: var(--sf-card);
+}
+
+.poag-scale-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.poag-scale-actions .sf-field-hint {
+  flex: 1 1 220px;
+  margin-top: 2px;
+}

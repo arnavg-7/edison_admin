@@ -21,7 +21,7 @@ export default function SchoolSetupLayout({ children }: { children: React.ReactN
     <section className="sf-main">
       <div className="sf-page-head">
         <div>
-          <h1 className="sf-page-title">School Setup</h1>
+          <h1 className="sf-page-title">School Master Setup</h1>
           <p className="sf-page-sub">
             The district structure Edison360 reports against — schools, the grades they run,
             and the batches students are enrolled into.

@@ -77,7 +77,7 @@ export type AlertRecord = {
   overdue?: boolean;
 };
 
-/** Skills profile — group with level-rated sub-skills, as configured in Portal Config. */
+/** Skill groups — group with level-rated sub-skills, as configured in Portal Config. */
 export type SkillAssessment = {
   group: string;
   subSkills: { label: string; level: "High" | "Middle" | "Elementary" }[];

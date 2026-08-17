@@ -19,6 +19,7 @@ import { gradeConfigHref, resolveGradeScope } from "@/lib/data/skillsDevelopment
 import { academicGoalsHref } from "@/lib/data/academicGoals";
 import { DevelopmentAreasEditor } from "@/components/skills-development/DevelopmentAreasEditor";
 import { SkillsProfileEditor } from "@/components/skills-development/SkillsProfileEditor";
+import { StudentPoagPanel } from "./StudentPoagPanel";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Combobox } from "@/components/shared/Combobox";
@@ -56,6 +57,7 @@ type TabId =
   | "attendance"
   | "goals"
   | "skills"
+  | "poag"
   | "development"
   | "classes"
   | "alerts";
@@ -71,6 +73,7 @@ const STUDENT_TABS: { id: TabId; label: string }[] = [
   { id: "grades", label: "Grades & history" },
   { id: "attendance", label: "Attendance & history" },
   { id: "goals", label: "Goals" },
+  { id: "poag", label: "Skills profile" },
   { id: "skills", label: "Skill groups" },
   { id: "development", label: "Development areas" },
   { id: "classes", label: "Classes & schedule" },
@@ -398,6 +401,27 @@ export function ProfileShell({ person }: { person: Person }) {
             Open Academic Goals →
           </Link>
         </Panel>
+      ) : null}
+
+      {/* ------------------------------------------- portrait of a graduate */}
+      {tab === "poag" ? (
+        gradeScope ? (
+          /* Unlike the two tabs below, this is *this student's* record rather
+             than the grade's shared configuration — a rating is made about a
+             named student by their class's teacher. */
+          <StudentPoagPanel
+            studentId={person.id}
+            studentName={person.name}
+            grade={gradeScope.grade}
+          />
+        ) : (
+          <Panel title="Skills profile" note="Edison Portrait of a Graduate">
+            <EmptyState
+              title="No grade configured"
+              message={`${person.school} has no matching grade in Skills & Development yet, so there is no Portrait of a Graduate content to rate against.`}
+            />
+          </Panel>
+        )
       ) : null}
 
       {/* ---------------------------------------------------------- skills */}

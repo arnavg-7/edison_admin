@@ -77,22 +77,17 @@ export type DevelopmentArea = {
   /** Optional: an area can be left undated until its term is decided. */
   period?: DevAreaPeriod;
   /**
-   * Subjects this area belongs to, as `subjects.id` from System Settings.
+   * The subject this area belongs to, as `subjects.id` from System Settings.
    *
-   * Empty means every subject — how the areas that describe a student rather
-   * than a course ("Strengths", "Interests") stay, since a strength is not a
-   * Maths strength. Scoping an area to Mathematics puts it in front of that
-   * subject's teachers and nobody else's, which is what makes "Word Problems"
-   * a sensible thing to list under Room To Grow.
+   * Exactly one, never a list and never "all": a grade's development areas are
+   * one set per subject, the way a student picks Calculus and reads Calculus's
+   * Strengths, Room To Grow, Interests and Future Goals. The same four headings
+   * recur under every subject and mean different things under each — "Room To
+   * Grow" in Maths is word problems, in Art it is composition.
    */
-  subjectIds: string[];
+  subjectId: string;
   skills: DevSkill[];
 };
-
-/** Empty subject list means every subject, so an unscoped area matches all. */
-export function areaAppliesToSubject(area: DevelopmentArea, subjectId: string): boolean {
-  return area.subjectIds.length === 0 || area.subjectIds.includes(subjectId);
-}
 
 /**
  * Skills profile is also two levels, but unlike development areas the colour
@@ -173,8 +168,6 @@ export function allGradeScopes(): GradeScope[] {
 // ---------------------------------------------------------------------------
 
 type AreaSeed = {
-  /** Subject ids; omitted means the area applies to every subject. */
-  subjectIds?: string[];
   key: string;
   title: string;
   tone: DevAreaTone;
@@ -186,19 +179,20 @@ type AreaSeed = {
 /** Every area in one build shares the term it was configured for. */
 function buildAreas(
   scope: string,
+  subjectId: string,
   seeds: AreaSeed[],
   period?: DevAreaPeriod
 ): DevelopmentArea[] {
   return seeds.map((seed) => ({
-    id: `da-${scope}-${seed.key}`,
+    id: `da-${scope}-${subjectId}-${seed.key}`,
     title: seed.title,
     tone: seed.tone,
     icon: seed.icon,
     published: seed.published ?? true,
     period,
-    subjectIds: seed.subjectIds ?? [],
+    subjectId,
     skills: seed.skills.map((label, index) => ({
-      id: `sk-${scope}-${seed.key}-${index}`,
+      id: `sk-${scope}-${subjectId}-${seed.key}-${index}`,
       label
     }))
   }));
@@ -230,110 +224,54 @@ function buildGroups(scope: string, seeds: GroupSeed[]): SkillGroup[] {
  * describe how a student works, not what year they are in. Interests and Future
  * Goals are where the grades actually diverge, so those are per-grade.
  */
-const HS_SHARED_AREAS: AreaSeed[] = [
-  {
-    key: "strengths",
-    title: "Strengths",
-    tone: "blue",
-    icon: "check",
-    skills: ["Analytical Thinker", "Problem Solver", "Detail-Oriented"]
-  },
-  {
-    key: "grow",
-    title: "Room To Grow",
-    tone: "green",
-    icon: "bolt",
-    /* The one seeded area that is plainly about a course rather than a person:
-       "Word Problems" and "Speed in Tests" are Maths, and a Music teacher has
-       no view on either. Strengths and Interests stay unscoped. */
-    subjectIds: ["sub-math"],
-    skills: ["Speed in Tests", "Word Problems", "Time Management"]
-  }
+/**
+ * The four headings every subject's set uses. The same shape recurs under each
+ * subject and means something different in each — Room To Grow in Maths is word
+ * problems, in English it is essay structure — which is exactly why the set is
+ * per subject rather than one pile per grade.
+ */
+const AREA_SHAPE: Omit<AreaSeed, "skills">[] = [
+  { key: "strengths", title: "Strengths", tone: "blue", icon: "check" },
+  { key: "grow", title: "Room To Grow", tone: "green", icon: "bolt" },
+  { key: "interests", title: "Interests", tone: "cyan", icon: "smile" },
+  { key: "goals", title: "Future Goals", tone: "orange", icon: "target" }
 ];
 
-const HS_GRADE_AREAS: Record<string, AreaSeed[]> = {
-  "9": [
-    {
-      key: "interests",
-      title: "Interests",
-      tone: "cyan",
-      icon: "smile",
-      skills: ["Mathematics", "Robotics Club", "Chess"]
-    },
-    {
-      // Ninth-graders have not committed to a pathway yet, so this area exists
-      // but is still a draft. It also exercises the Draft badge on this screen.
-      key: "goals",
-      title: "Future Goals",
-      tone: "orange",
-      icon: "target",
-      published: false,
-      skills: ["Explore STEM Electives"]
-    }
-  ],
-  "10": [
-    {
-      key: "interests",
-      title: "Interests",
-      tone: "cyan",
-      icon: "smile",
-      skills: ["Mathematics", "Physics", "Chess"]
-    },
-    {
-      key: "goals",
-      title: "Future Goals",
-      tone: "orange",
-      icon: "target",
-      skills: ["Engineering School", "STEM Career", "Research Internship"]
-    }
-  ],
-  "11": [
-    {
-      key: "interests",
-      title: "Interests",
-      tone: "cyan",
-      icon: "smile",
-      skills: ["Physics", "Computer Science", "Debate"]
-    },
-    {
-      key: "goals",
-      title: "Future Goals",
-      tone: "orange",
-      icon: "target",
-      skills: ["College Applications", "Summer Research", "AP Coursework"]
-    },
-    {
-      key: "readiness",
-      title: "College Readiness",
-      tone: "violet",
-      icon: "book",
-      skills: ["Standardised Testing", "Essay Writing", "Recommendations"]
-    }
-  ],
-  "12": [
-    {
-      key: "interests",
-      title: "Interests",
-      tone: "cyan",
-      icon: "smile",
-      skills: ["Computer Science", "Entrepreneurship", "Debate"]
-    },
-    {
-      key: "goals",
-      title: "Future Goals",
-      tone: "orange",
-      icon: "target",
-      skills: ["University Placement", "Apprenticeship", "Gap-Year Plan"]
-    },
-    {
-      key: "transition",
-      title: "Transition Skills",
-      tone: "rose",
-      icon: "star",
-      skills: ["Financial Literacy", "Independent Study", "Interviewing"]
-    }
-  ]
+/** What each heading holds, per subject. Keyed by `subjects.id`. */
+const SUBJECT_AREA_SKILLS: Record<string, Record<string, string[]>> = {
+  "sub-math": {
+    strengths: ["Analytical Thinker", "Problem Solver", "Detail-Oriented"],
+    grow: ["Speed in Tests", "Word Problems", "Showing Working"],
+    interests: ["Robotics Club", "Puzzles", "Chess"],
+    goals: ["Explore STEM Electives"]
+  },
+  "sub-english": {
+    strengths: ["Close Reader", "Clear Writer", "Great Listener"],
+    grow: ["Essay Structure", "Public Speaking", "Citing Evidence"],
+    interests: ["Creative Writing", "Debate", "Poetry"],
+    goals: ["Join the School Newspaper"]
+  },
+  "sub-science": {
+    strengths: ["Careful Observer", "Methodical", "Curious"],
+    grow: ["Lab Write-Ups", "Graphing Data", "Fair Testing"],
+    interests: ["Astronomy", "Marine Biology", "Science Fair"],
+    goals: ["AP Science Pathway"]
+  }
 };
+
+function subjectAreaSeeds(subjectId: string, grade: string): AreaSeed[] {
+  const bySubject = SUBJECT_AREA_SKILLS[subjectId];
+  if (!bySubject) return [];
+
+  return AREA_SHAPE.map((shape) => ({
+    ...shape,
+    // Ninth-graders have not committed to a pathway yet, so Future Goals exists
+    // but is still a draft. It also exercises the Draft badge on this screen.
+    published: !(grade === "9" && shape.key === "goals"),
+    skills: bySubject[shape.key] ?? []
+  }));
+}
+
 
 /**
  * The six graduate-profile groups. Critical Thinking and Emotionally
@@ -408,9 +346,13 @@ const CURRENT_TERM: DevAreaPeriod = {
   to: "2026-12-18"
 };
 
+/** Every subject's set for this grade, concatenated — each area knows its own
+    subject, and the editors narrow to one at a time. */
 function hsAreasFor(grade: string): DevelopmentArea[] {
   const scope = scopeKey("edison-hs", grade);
-  return buildAreas(scope, [...HS_SHARED_AREAS, ...(HS_GRADE_AREAS[grade] ?? [])], CURRENT_TERM);
+  return Object.keys(SUBJECT_AREA_SKILLS).flatMap((subjectId) =>
+    buildAreas(scope, subjectId, subjectAreaSeeds(subjectId, grade), CURRENT_TERM)
+  );
 }
 
 function hsGroupsFor(grade: string): SkillGroup[] {
@@ -477,7 +419,8 @@ type TermSeed = {
   term: string;
   from: string;
   to: string;
-  areas: AreaSeed[];
+  /** The set for one subject, so an archived term keeps the same split. */
+  areasFor: (subjectId: string) => AreaSeed[];
   groups: GroupSeed[];
 };
 
@@ -491,12 +434,16 @@ function buildTermHistory(schoolId: string, grade: string, seeds: TermSeed[]): A
       term: seed.term,
       from: seed.from,
       to: seed.to,
-      // An archived area carries the term it ran for, same as a live one.
-      areas: buildAreas(scope, seed.areas, {
-        name: seed.term,
-        from: seed.from,
-        to: seed.to
-      }),
+      /* An archived area carries the term it ran for, same as a live one, and
+         the subject it belonged to — an archive that lost the subject split
+         would not be a picture of what the screen looked like. */
+      areas: Object.keys(SUBJECT_AREA_SKILLS).flatMap((subjectId) =>
+        buildAreas(scope, subjectId, seed.areasFor(subjectId), {
+          name: seed.term,
+          from: seed.from,
+          to: seed.to
+        })
+      ),
       groups: buildGroups(scope, seed.groups)
     };
   });
@@ -512,14 +459,13 @@ const PRIOR_YEAR_GROUPS: GroupSeed[] = HS_GROUPS.filter(
 );
 
 function hsHistoryFor(grade: string): ArchivedTerm[] {
-  const gradeAreas = HS_GRADE_AREAS[grade] ?? [];
   return buildTermHistory("edison-hs", grade, [
     {
       key: "spring-2026",
       term: "Spring 2026",
       from: "2026-01-12",
       to: "2026-05-22",
-      areas: [...HS_SHARED_AREAS, ...gradeAreas],
+      areasFor: (subjectId) => subjectAreaSeeds(subjectId, grade),
       groups: HS_GROUPS
     },
     {
@@ -527,7 +473,10 @@ function hsHistoryFor(grade: string): ArchivedTerm[] {
       term: "Fall 2025",
       from: "2025-08-25",
       to: "2025-12-19",
-      areas: [...HS_SHARED_AREAS, ...gradeAreas.slice(0, 1)],
+      /* Fall 2025 predates Interests and Future Goals being added per subject,
+         so its archive is genuinely thinner than today's — which is the whole
+         reason an admin looks back at it. */
+      areasFor: (subjectId) => subjectAreaSeeds(subjectId, grade).slice(0, 2),
       groups: PRIOR_YEAR_GROUPS
     }
   ]);

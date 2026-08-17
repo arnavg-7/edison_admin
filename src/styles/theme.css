@@ -3749,10 +3749,17 @@ nav.sf-pagination {
   color: var(--sf-text);
 }
 
-/* A development area's subject link, on the card beside its Draft badge. Shown
-   only when the area is scoped — "all subjects" is the default and the quiet
-   case, and naming a subject is what says this area is not on every teacher's
-   screen. */
+/* Subject chips. A grade's development areas are one set per subject, so this
+   is a place you stand rather than a filter — same control the student's own
+   screen uses, and the segmented style already carries "pick one of these" in
+   this app. */
+.sf-subject-chips {
+  margin-bottom: 4px;
+}
+
+/* Names the subject on an archived area card. The live editor does not need it
+   — you are standing in one subject — but the history shows every subject's set
+   at once, where four cards called Strengths would look like duplicates. */
 .area-subjects {
   margin-left: auto;
   padding: 2px 8px;
@@ -3778,4 +3785,16 @@ nav.sf-pagination {
 
 .sf-field--inline > span {
   white-space: nowrap;
+}
+
+/* Who filed a rating and when, stacked in one cell on a student's record. */
+.poag-rater {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.poag-rater-when {
+  font-size: 11px;
+  color: var(--sf-text-dim);
 }

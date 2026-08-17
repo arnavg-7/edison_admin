@@ -10,6 +10,11 @@ import {
 } from "@/lib/data/skillsDevelopment";
 import { DevAreaIcon } from "./DevAreaIcon";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { subjects } from "@/lib/data/systemSettings";
+
+function subjectName(id: string): string {
+  return subjects.find((subject) => subject.id === id)?.name ?? "Unmapped subject";
+}
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatDateOnly, formatDateRangeOnly } from "@/lib/format";
 
@@ -174,6 +179,10 @@ export function DevelopmentAreasHistory({
                     <span className={`area-icon tone-${area.tone}`} aria-hidden>
                       <DevAreaIcon name={area.icon} />
                     </span>
+                    {/* Named here, unlike the live editor: the archive shows
+                        every subject's set at once, so without it four cards
+                        called Strengths would look like duplicates. */}
+                    <span className="area-subjects">{subjectName(area.subjectId)}</span>
                     {!area.published ? <StatusBadge tone="neutral">Draft</StatusBadge> : null}
                   </div>
 

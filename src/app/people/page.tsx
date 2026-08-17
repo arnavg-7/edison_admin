@@ -207,14 +207,10 @@ export default function PeopleSearchPage() {
         </label>
 
         {/* Grade Level and School only exist to get you down to one school. A
-            school admin is already there, so both come off and the scope is
-            named in their place. */}
-        {scopedSchool ? (
-          <div className="sf-field sf-field--static">
-            <span>School</span>
-            <p className="sf-field-static-value">{scopedSchool.name}</p>
-          </div>
-        ) : (
+            school admin is already there, so both come off entirely — the
+            sidebar says which school this is, and a fixed-value field would be
+            one more thing to read past on the way to the filters that do work. */}
+        {scopedSchool ? null : (
           <>
             <label className="sf-field">
               <span>Grade Level</span>

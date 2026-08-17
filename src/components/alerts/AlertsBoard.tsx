@@ -104,12 +104,7 @@ export function AlertsBoard() {
           />
         </label>
 
-        {scopedSchool ? (
-          <div className="sf-field sf-field--static">
-            <span>School</span>
-            <p className="sf-field-static-value">{scopedSchool.name}</p>
-          </div>
-        ) : (
+        {scopedSchool ? null : (
           <label className="sf-field">
             <span>School</span>
             <Combobox

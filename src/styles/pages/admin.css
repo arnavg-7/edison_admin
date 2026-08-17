@@ -1657,22 +1657,3 @@
   font-weight: 500;
   color: var(--sf-text-muted);
 }
-
-/* A filter slot holding a fixed value rather than a control — the School field
-   for an admin who has only one. Matched to the height and rhythm of the
-   comboboxes beside it so the row does not step. */
-.sf-field--static > span {
-  font-size: 12px;
-  color: var(--sf-text-muted);
-}
-
-.sf-field-static-value {
-  display: flex;
-  align-items: center;
-  min-height: 38px;
-  margin: 0;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--sf-text);
-  white-space: nowrap;
-}

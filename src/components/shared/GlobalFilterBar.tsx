@@ -61,14 +61,10 @@ export function GlobalFilterBar({
           the reader moves through left to right; the date range is a separate
           axis and sits apart at the far right rather than in the middle of
           that sequence. */}
-      {/* A school admin has one school, so there is no choice to offer — the
-          scope is named instead, so the figures below are never unattributed. */}
-      {scopedSchool ? (
-        <div className="sf-field sf-field--static">
-          <span>School</span>
-          <p className="sf-field-static-value">{scopedSchool.name}</p>
-        </div>
-      ) : (
+      {/* Nothing at all for a school admin, not a field showing one fixed value:
+          a control you cannot use is still a control to read past, and the
+          sidebar already names the school every screen is scoped to. */}
+      {scopedSchool ? null : (
         <label className="sf-field">
           <span>School</span>
           <Combobox

@@ -76,8 +76,23 @@ export type DevelopmentArea = {
   published: boolean;
   /** Optional: an area can be left undated until its term is decided. */
   period?: DevAreaPeriod;
+  /**
+   * Subjects this area belongs to, as `subjects.id` from System Settings.
+   *
+   * Empty means every subject — how the areas that describe a student rather
+   * than a course ("Strengths", "Interests") stay, since a strength is not a
+   * Maths strength. Scoping an area to Mathematics puts it in front of that
+   * subject's teachers and nobody else's, which is what makes "Word Problems"
+   * a sensible thing to list under Room To Grow.
+   */
+  subjectIds: string[];
   skills: DevSkill[];
 };
+
+/** Empty subject list means every subject, so an unscoped area matches all. */
+export function areaAppliesToSubject(area: DevelopmentArea, subjectId: string): boolean {
+  return area.subjectIds.length === 0 || area.subjectIds.includes(subjectId);
+}
 
 /**
  * Skills profile is also two levels, but unlike development areas the colour
@@ -158,6 +173,8 @@ export function allGradeScopes(): GradeScope[] {
 // ---------------------------------------------------------------------------
 
 type AreaSeed = {
+  /** Subject ids; omitted means the area applies to every subject. */
+  subjectIds?: string[];
   key: string;
   title: string;
   tone: DevAreaTone;
@@ -179,6 +196,7 @@ function buildAreas(
     icon: seed.icon,
     published: seed.published ?? true,
     period,
+    subjectIds: seed.subjectIds ?? [],
     skills: seed.skills.map((label, index) => ({
       id: `sk-${scope}-${seed.key}-${index}`,
       label
@@ -225,6 +243,10 @@ const HS_SHARED_AREAS: AreaSeed[] = [
     title: "Room To Grow",
     tone: "green",
     icon: "bolt",
+    /* The one seeded area that is plainly about a course rather than a person:
+       "Word Problems" and "Speed in Tests" are Maths, and a Music teacher has
+       no view on either. Strengths and Interests stay unscoped. */
+    subjectIds: ["sub-math"],
     skills: ["Speed in Tests", "Word Problems", "Time Management"]
   }
 ];

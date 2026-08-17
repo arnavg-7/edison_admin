@@ -10,6 +10,7 @@ import {
   ViewOffSlashIcon
 } from "@hugeicons/core-free-icons";
 import {
+  areaAppliesToSubject,
   DEV_AREA_ICONS,
   DEV_AREA_TONES,
   developmentAreasFor,
@@ -19,6 +20,8 @@ import {
 } from "@/lib/data/skillsDevelopment";
 import { DevAreaIcon } from "./DevAreaIcon";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { MultiCombobox } from "@/components/shared/MultiCombobox";
+import { subjects } from "@/lib/data/systemSettings";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatDateRangeOnly } from "@/lib/format";
 import { Button } from "@/components/base/buttons/button";
@@ -42,16 +45,26 @@ type AreaDraft = {
   title: string;
   tone: DevAreaTone;
   icon: IconName;
+  /** Subjects the area belongs to; empty means every subject. */
+  subjectIds: string[];
   /** What the area is for, and the dates it runs. Optional on save. */
   periodName: string;
   periodFrom: string;
   periodTo: string;
 };
 
+function subjectNames(ids: string[]): string {
+  return subjects
+    .filter((subject) => ids.includes(subject.id))
+    .map((subject) => subject.name)
+    .join(", ");
+}
+
 const emptyAreaDraft: AreaDraft = {
   title: "",
   tone: "blue",
   icon: "check",
+  subjectIds: [],
   periodName: "",
   periodFrom: "",
   periodTo: ""
@@ -95,6 +108,9 @@ export function DevelopmentAreasEditor({
 
   const [addingArea, setAddingArea] = useState(false);
   const [areaDraft, setAreaDraft] = useState<AreaDraft>(emptyAreaDraft);
+  /* "" is every subject. Filters what is listed, not what exists — an area
+     scoped elsewhere is hidden here, not deleted. */
+  const [subjectFilter, setSubjectFilter] = useState("");
 
   const [editingAreaId, setEditingAreaId] = useState<string | null>(null);
   const [skillDraftFor, setSkillDraftFor] = useState<string | null>(null);
@@ -121,6 +137,7 @@ export function DevelopmentAreasEditor({
         title: areaDraft.title.trim(),
         tone: areaDraft.tone,
         icon: areaDraft.icon,
+        subjectIds: areaDraft.subjectIds,
         published: false,
         period: draftPeriod(areaDraft),
         skills: []
@@ -140,6 +157,7 @@ export function DevelopmentAreasEditor({
               title: areaDraft.title.trim(),
               tone: areaDraft.tone,
               icon: areaDraft.icon,
+              subjectIds: areaDraft.subjectIds,
               period: draftPeriod(areaDraft)
             }
           : area
@@ -154,6 +172,7 @@ export function DevelopmentAreasEditor({
       title: area.title,
       tone: area.tone,
       icon: area.icon,
+      subjectIds: area.subjectIds,
       periodName: area.period?.name ?? "",
       periodFrom: area.period?.from ?? "",
       periodTo: area.period?.to ?? ""
@@ -228,6 +247,25 @@ export function DevelopmentAreasEditor({
             if (event.key === "Escape") onCancel();
           }}
         />
+      </label>
+
+      {/* Directly under the name, because it is the other half of what the area
+          *is* — colour and icon below are only how it looks. */}
+      <label className="sf-field">
+        <span>Subject</span>
+        <MultiCombobox
+          options={subjects.map((subject) => ({ value: subject.id, label: subject.name }))}
+          values={areaDraft.subjectIds}
+          onChange={(picked) => setAreaDraft({ ...areaDraft, subjectIds: picked })}
+          resetLabel="All subjects"
+          ariaLabel="Subjects this area belongs to"
+          summarize={(picked) => `${picked.length} subjects`}
+        />
+        <span className="sf-field-hint">
+          {areaDraft.subjectIds.length === 0
+            ? "Every subject. Right for an area describing the student rather than the course — a strength is not a Maths strength."
+            : "Only this subject's teachers see the area, and only they add skills to it."}
+        </span>
       </label>
 
       <fieldset className="tone-picker">
@@ -352,6 +390,11 @@ export function DevelopmentAreasEditor({
   );
 
   const totalSkills = areas.reduce((sum, area) => sum + area.skills.length, 0);
+  /* An unscoped area shows under every subject, because that is exactly what
+     "all subjects" means — it is not a gap in the filter. */
+  const visibleAreas = subjectFilter
+    ? areas.filter((area) => areaAppliesToSubject(area, subjectFilter))
+    : areas;
 
   return (
     <div className="sf-panel">
@@ -362,9 +405,21 @@ export function DevelopmentAreasEditor({
       <div className="sf-panel-head">
         <h2>Development areas</h2>
         <div className="sf-panel-head-end">
+          <label className="sf-field sf-field--inline">
+            <span>Subject</span>
+            <Combobox
+              options={[
+                { value: "all", label: "All subjects" },
+                ...subjects.map((subject) => ({ value: subject.id, label: subject.name }))
+              ]}
+              value={subjectFilter === "" ? "all" : subjectFilter}
+              onChange={(next) => setSubjectFilter(next === "all" ? "" : next)}
+              ariaLabel="Filter areas by subject"
+            />
+          </label>
           <span className="sf-panel-note">
-            {areas.length} areas · {totalSkills} skills ·{" "}
-            {areas.filter((area) => area.published).length} published
+            {subjectFilter ? `${visibleAreas.length} of ${areas.length}` : `${areas.length}`} areas
+            · {totalSkills} skills · {areas.filter((area) => area.published).length} published
           </span>
           {/* While empty, the only call to action lives inside the empty state,
               so there aren't two "Add area" buttons competing on one screen. */}
@@ -396,12 +451,18 @@ export function DevelopmentAreasEditor({
         <div className="area-grid">
           {/* The card stays in place while its drawer is open, so the area being
               edited is still visible beside the fields changing it. */}
-          {areas.map((area) => (
+          {visibleAreas.map((area) => (
               <article className={`area-card tone-${area.tone}`} key={area.id}>
                 <div className="area-card-top">
                   <span className={`area-icon tone-${area.tone}`} aria-hidden>
                     <DevAreaIcon name={area.icon} />
                   </span>
+                  {/* Only when it is scoped. "All subjects" is the default and
+                      the quiet case; naming the subject is what tells a reader
+                      this area is not on every teacher's screen. */}
+                  {area.subjectIds.length > 0 ? (
+                    <span className="area-subjects">{subjectNames(area.subjectIds)}</span>
+                  ) : null}
                   {!area.published ? <StatusBadge tone="neutral">Draft</StatusBadge> : null}
                 </div>
 

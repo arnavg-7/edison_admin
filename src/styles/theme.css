@@ -3748,3 +3748,34 @@ nav.sf-pagination {
   font-size: 12.5px;
   color: var(--sf-text);
 }
+
+/* A development area's subject link, on the card beside its Draft badge. Shown
+   only when the area is scoped — "all subjects" is the default and the quiet
+   case, and naming a subject is what says this area is not on every teacher's
+   screen. */
+.area-subjects {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-card);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sf-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
+}
+
+/* A filter that sits in a panel head rather than a filter bar: label and
+   control on one line so the head stays a single row. */
+.sf-field--inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sf-field--inline > span {
+  white-space: nowrap;
+}

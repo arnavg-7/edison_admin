@@ -33,15 +33,15 @@ const TABS = ["Development areas", "Skill groups", "Skills profile"] as const;
 const VIEWS = ["Current", "History"] as const;
 
 /**
- * Hidden for now, at Edison's request — Portrait of a Graduate is the only thing
- * under review on this screen while the pilot runs.
+ * Skill groups stays hidden for now, at Edison's request — Portrait of a
+ * Graduate and Development areas are what is under review while the pilot runs.
  *
- * A hide, not a removal: both editors, their term history, their CSV import and
- * the counts they feed on the school picker are all untouched and still reached
- * from the Student & Faculty 360 profile. Take a name out of this list to bring
- * its tab straight back.
+ * A hide, not a removal: the editor, its term history, its CSV import and the
+ * counts it feeds on the school picker are all untouched, and a student's skill
+ * groups are still on their 360 profile. Take the name out of this list to bring
+ * the tab straight back.
  */
-const HIDDEN_TABS: readonly (typeof TABS)[number][] = ["Development areas", "Skill groups"];
+const HIDDEN_TABS: readonly (typeof TABS)[number][] = ["Skill groups"];
 
 const VISIBLE_TABS = TABS.filter((label) => !HIDDEN_TABS.includes(label));
 

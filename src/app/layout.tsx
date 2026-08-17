@@ -11,6 +11,7 @@ import { UsersProvider } from "@/lib/users-store";
 import { AdminUsersProvider } from "@/lib/admin-users-store";
 import { SchoolSetupProvider } from "@/lib/school-setup-store";
 import { PoagProvider } from "@/lib/poag-store";
+import { AdminScopeProvider } from "@/lib/admin-scope";
 import { cn } from "@/lib/utils";
 
 /** The app's only typeface. `--font-inter` feeds Tailwind's font-sans/font-mono
@@ -31,6 +32,7 @@ export default function RootLayout({
     <html lang="en" className={cn("font-sans", inter.variable)}>
       <body className={inter.className}>
         <TooltipProvider>
+          <AdminScopeProvider>
           <UsersProvider>
             <AdminUsersProvider>
               <SchoolSetupProvider>
@@ -49,6 +51,7 @@ export default function RootLayout({
               </SchoolSetupProvider>
             </AdminUsersProvider>
           </UsersProvider>
+          </AdminScopeProvider>
         </TooltipProvider>
       </body>
     </html>

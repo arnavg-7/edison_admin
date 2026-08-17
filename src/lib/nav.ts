@@ -43,3 +43,29 @@ export const SECTIONS: Section[] = [
 ];
 
 export const ADMIN_ROLE_LABEL = "Super Admin";
+
+/**
+ * Sections whose first screen is "pick a school".
+ *
+ * A school admin has already answered that question by being who they are, so
+ * their nav links skip it and point straight at their school — see
+ * `sectionHref`. Listing them here rather than testing the id at each call site
+ * keeps the set in one place, next to the routes it names.
+ */
+export const SCOPED_SECTIONS: Section[] = SECTIONS.filter((section) =>
+  ["skills-development", "academic-goals"].includes(section.id)
+);
+
+/**
+ * Where a section's nav link goes for the current scope.
+ *
+ * The redirect on the school-picker pages is the safety net for a bookmark or a
+ * typed URL; this is the path most people take, and it means a school admin is
+ * never shown a list of schools on the way to their own.
+ */
+export function sectionHref(section: Section, schoolId: string | null): string {
+  if (!schoolId) return section.href;
+  return SCOPED_SECTIONS.some((entry) => entry.id === section.id)
+    ? `${section.href}/${schoolId}`
+    : section.href;
+}

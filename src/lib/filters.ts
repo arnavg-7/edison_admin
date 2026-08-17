@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useAdminScope } from "@/lib/admin-scope";
 
 export type DateRangePreset =
   | "today"
@@ -83,6 +84,11 @@ export function useReportFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  /* Clamped here rather than on each screen: Home and all four Reporting pages
+     read their scope through this hook, so a school admin is narrowed once and
+     no screen can forget to. A `?school=` naming another school is overridden,
+     not honoured — the URL is not the authority on who you are. */
+  const { schoolId } = useAdminScope();
 
   const filters = useMemo<ReportFilters>(() => {
     const grades = parseGrades(searchParams.get(GRADE_PARAM));
@@ -91,16 +97,19 @@ export function useReportFilters() {
       range: (searchParams.get("range") as DateRangePreset | null) ?? DEFAULT_FILTERS.range,
       from: searchParams.get("from"),
       to: searchParams.get("to"),
-      school: searchParams.get("school"),
+      school: schoolId ?? searchParams.get("school"),
       grades,
       grade: grades.length === 1 ? grades[0] : null,
       section: searchParams.get("section")
     };
-  }, [searchParams]);
+  }, [searchParams, schoolId]);
 
   const setFilters = useCallback(
     (patch: ReportFiltersPatch) => {
       const next = new URLSearchParams(searchParams.toString());
+
+      // The one field a school admin does not get to change.
+      if (schoolId && "school" in patch) delete patch.school;
 
       for (const [key, value] of Object.entries(patch)) {
         if (Array.isArray(value)) {
@@ -131,7 +140,7 @@ export function useReportFilters() {
       const query = next.toString();
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams]
+    [pathname, router, searchParams, schoolId]
   );
 
   return { filters, setFilters };

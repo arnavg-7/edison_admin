@@ -1,6 +1,7 @@
 "use client";
 
 import { useReportFilters } from "@/lib/filters";
+import { useAdminScope } from "@/lib/admin-scope";
 import { classesForGrade, gradeLabel, gradesForSchool, schools } from "@/lib/data/schools";
 import { Combobox } from "@/components/shared/Combobox";
 import { MultiCombobox } from "@/components/shared/MultiCombobox";
@@ -35,6 +36,7 @@ export function GlobalFilterBar({
   actions?: React.ReactNode;
 }) {
   const { filters, setFilters } = useReportFilters();
+  const { school: scopedSchool } = useAdminScope();
   const grades = gradesForSchool(filters.school);
   const sections = classesForGrade(filters.grade);
 
@@ -59,15 +61,24 @@ export function GlobalFilterBar({
           the reader moves through left to right; the date range is a separate
           axis and sits apart at the far right rather than in the middle of
           that sequence. */}
-      <label className="sf-field">
-        <span>School</span>
-        <Combobox
-          options={schoolOptions}
-          value={filters.school ?? "all"}
-          onChange={(school) => setFilters({ school: school === "all" ? null : school })}
-          placeholder="All schools"
-        />
-      </label>
+      {/* A school admin has one school, so there is no choice to offer — the
+          scope is named instead, so the figures below are never unattributed. */}
+      {scopedSchool ? (
+        <div className="sf-field sf-field--static">
+          <span>School</span>
+          <p className="sf-field-static-value">{scopedSchool.name}</p>
+        </div>
+      ) : (
+        <label className="sf-field">
+          <span>School</span>
+          <Combobox
+            options={schoolOptions}
+            value={filters.school ?? "all"}
+            onChange={(school) => setFilters({ school: school === "all" ? null : school })}
+            placeholder="All schools"
+          />
+        </label>
+      )}
 
       <label className="sf-field">
         <span>Grade</span>

@@ -5,6 +5,7 @@ import { Button } from "@/components/base/buttons/button";
 import { schools } from "@/lib/data/schools";
 import { gradeConfigSummary, isSchoolInScope, schoolConfigSummary } from "@/lib/data/skillsDevelopment";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { SchoolPickerGate } from "@/components/shell/SchoolPickerGate";
 import {
   ExpandableSchoolTable,
   GradeDetailTable,
@@ -97,7 +98,7 @@ export default function SchoolPickerPage() {
   });
 
   return (
-    <>
+    <SchoolPickerGate section="/skills-development">
       <h1 className="sf-page-title">Skills &amp; Development</h1>
       <p className="sf-page-sub">
         Development areas and skills profiles, configured per grade. Pick a school, then a grade.
@@ -114,6 +115,6 @@ export default function SchoolPickerPage() {
           rows={rows}
         />
       </div>
-    </>
+    </SchoolPickerGate>
   );
 }

@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ADMIN_ROLE_LABEL, SECTIONS } from "@/lib/nav";
+import { SECTIONS, sectionHref } from "@/lib/nav";
+import { useAdminScope } from "@/lib/admin-scope";
+import { ScopeSwitcher } from "./ScopeSwitcher";
 import { NavIcon } from "./NavIcon";
 import { Button } from "@/components/base/buttons/button";
 import {
@@ -20,6 +22,7 @@ import {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { school, schoolId, roleLabel } = useAdminScope();
 
   return (
     <SidebarPrimitive collapsible="icon">
@@ -28,7 +31,12 @@ export function Sidebar() {
           <div className="sf-brand-head group-data-[collapsible=icon]:justify-center">
             <div className="group-data-[collapsible=icon]:hidden">
               <div className="sf-brand-name">Edison360 Admin</div>
-              <div className="sf-brand-role">{ADMIN_ROLE_LABEL}</div>
+              {/* The school, not just the role: "School Admin" alone leaves the
+                  one thing that decides what is on screen unsaid. */}
+              <div className="sf-brand-role">
+                {roleLabel}
+                {school ? <span className="sf-brand-scope">{school.name}</span> : null}
+              </div>
             </div>
             <SidebarTrigger />
           </div>
@@ -42,6 +50,9 @@ export function Sidebar() {
               {SECTIONS.map((section) => {
                 const isActive =
                   section.href === "/" ? pathname === "/" : pathname.startsWith(section.href);
+                /* Scoped sections point one level in, so a school admin lands on
+                   their grade list rather than a picker holding one school. */
+                const href = sectionHref(section, schoolId);
 
                 return (
                   <SidebarMenuItem key={section.id}>
@@ -55,7 +66,7 @@ export function Sidebar() {
                       isActive={isActive}
                       tooltip={section.label}
                       className="rounded-(--sf-radius-control)"
-                      render={<Link href={section.href} aria-current={isActive ? "page" : undefined} />}
+                      render={<Link href={href} aria-current={isActive ? "page" : undefined} />}
                     >
                       <NavIcon name={section.id} />
                       <span>{section.label}</span>
@@ -69,6 +80,7 @@ export function Sidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        <ScopeSwitcher />
         <Button color="tertiary" size="sm" className="w-full justify-start">
           <span className="group-data-[collapsible=icon]:hidden">Log out</span>
         </Button>

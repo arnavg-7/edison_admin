@@ -8,6 +8,7 @@ import { Add01Icon, Download01Icon, PencilEdit02Icon, ViewIcon } from "@hugeicon
 import { people as seededPeople, type Person, type PersonKind } from "@/lib/data/people";
 import { SCHOOL_LEVELS, gradeLabel, schools, type SchoolLevel } from "@/lib/data/schools";
 import { useUsers } from "@/lib/users-store";
+import { useAdminScope } from "@/lib/admin-scope";
 import { useMounted } from "@/lib/use-mounted";
 import { formatDateTime } from "@/lib/format";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -70,10 +71,18 @@ const PAGE_SIZE = 10;
 export default function PeopleSearchPage() {
   const router = useRouter();
   const { users: storedPeople, createUser, createUsers } = useUsers();
+  const { school: scopedSchool } = useAdminScope();
   const mounted = useMounted();
 
   // Seed until this page hydrates — see useMounted.
-  const allPeople = mounted ? storedPeople : seededPeople;
+  const everyone = mounted ? storedPeople : seededPeople;
+  /* A school admin's directory is their school's. Filtered before anything else
+     reads it, so the count, the pager and the CSV export all agree — an export
+     that quietly held five schools' people would be the worst of the three. */
+  const allPeople = useMemo(
+    () => (scopedSchool ? everyone.filter((person) => person.school === scopedSchool.name) : everyone),
+    [everyone, scopedSchool]
+  );
 
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState<PersonKind | "all">("all");
@@ -93,7 +102,14 @@ export default function PeopleSearchPage() {
   // step before it, and picking a new value upstream clears everything downstream
   // so the UI can never be left pointing at an impossible combination.
   const schoolsForLevel = level === "all" ? schools : schools.filter((s) => s.level === level);
-  const gradesForSchool = school === "all" ? [] : (schoolByName.get(school)?.grades ?? []);
+  /* Scoped: the school step is already answered, so Grade reads straight off it
+     rather than waiting for a picker that is not on the page. */
+  const effectiveSchool = scopedSchool ? scopedSchool.name : school;
+  const gradesForSchool = scopedSchool
+    ? scopedSchool.grades
+    : school === "all"
+      ? []
+      : (schoolByName.get(school)?.grades ?? []);
 
   const schoolOptions = useMemo<ComboOption[]>(
     () => [
@@ -127,7 +143,7 @@ export default function PeopleSearchPage() {
       allPeople
         .filter((person) => (kind === "all" ? true : person.kind === kind))
         .filter((person) => (level === "all" ? true : schoolByName.get(person.school)?.level === level))
-        .filter((person) => (school === "all" ? true : person.school === school))
+        .filter((person) => (effectiveSchool === "all" ? true : person.school === effectiveSchool))
         .filter((person) => (grade === "all" ? true : person.group === gradeLabel(grade)))
         .filter((person) =>
           query.trim() === ""
@@ -136,14 +152,14 @@ export default function PeopleSearchPage() {
                 .toLowerCase()
                 .includes(query.trim().toLowerCase())
         ),
-    [allPeople, query, kind, level, school, grade]
+    [allPeople, query, kind, level, effectiveSchool, grade]
   );
 
   // A new filter/search can shrink the result set past the page the admin was
   // on, so every change starts back at page 1 rather than showing an empty page.
   useEffect(() => {
     setPage(1);
-  }, [query, kind, level, school, grade]);
+  }, [query, kind, level, effectiveSchool, grade]);
 
   const pageCount = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
@@ -190,25 +206,37 @@ export default function PeopleSearchPage() {
           />
         </label>
 
-        <label className="sf-field">
-          <span>Grade Level</span>
-          <Combobox
-            options={LEVEL_OPTIONS}
-            value={level}
-            onChange={(next) => setLevelAndReset(next as SchoolLevel | "all")}
-            placeholder="All grade levels"
-          />
-        </label>
+        {/* Grade Level and School only exist to get you down to one school. A
+            school admin is already there, so both come off and the scope is
+            named in their place. */}
+        {scopedSchool ? (
+          <div className="sf-field sf-field--static">
+            <span>School</span>
+            <p className="sf-field-static-value">{scopedSchool.name}</p>
+          </div>
+        ) : (
+          <>
+            <label className="sf-field">
+              <span>Grade Level</span>
+              <Combobox
+                options={LEVEL_OPTIONS}
+                value={level}
+                onChange={(next) => setLevelAndReset(next as SchoolLevel | "all")}
+                placeholder="All grade levels"
+              />
+            </label>
 
-        <label className="sf-field">
-          <span>School</span>
-          <Combobox
-            options={schoolOptions}
-            value={school}
-            onChange={setSchoolAndReset}
-            placeholder="All schools"
-          />
-        </label>
+            <label className="sf-field">
+              <span>School</span>
+              <Combobox
+                options={schoolOptions}
+                value={school}
+                onChange={setSchoolAndReset}
+                placeholder="All schools"
+              />
+            </label>
+          </>
+        )}
 
         <label className="sf-field">
           <span>Grade</span>
@@ -217,7 +245,7 @@ export default function PeopleSearchPage() {
             value={grade}
             onChange={setGrade}
             placeholder="All grades"
-            disabled={school === "all"}
+            disabled={!scopedSchool && school === "all"}
           />
         </label>
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { schools } from "@/lib/data/schools";
+import { useAdminScope } from "@/lib/admin-scope";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,6 +25,9 @@ import {
  */
 export default function AcademicGoalsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  /* A school admin has no school picker to go back to, so the section crumb is
+     a label rather than a link that would only bounce them here again. */
+  const { isDistrict } = useAdminScope();
   const [, schoolId, grade] = pathname.split("/").filter(Boolean);
   const school = schoolId ? schools.find((entry) => entry.id === schoolId) : undefined;
 
@@ -33,7 +37,11 @@ export default function AcademicGoalsLayout({ children }: { children: React.Reac
         <Breadcrumb className="mb-5">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink render={<Link href="/academic-goals" />}>Academic Goals</BreadcrumbLink>
+              {isDistrict ? (
+                <BreadcrumbLink render={<Link href="/academic-goals" />}>Academic Goals</BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage>Academic Goals</BreadcrumbPage>
+              )}
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>

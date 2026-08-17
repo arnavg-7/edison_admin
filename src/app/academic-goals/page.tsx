@@ -5,6 +5,7 @@ import { Button } from "@/components/base/buttons/button";
 import { schools } from "@/lib/data/schools";
 import { gradeGoalsSummary, schoolGoalsSummary } from "@/lib/data/academicGoals";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { SchoolPickerGate } from "@/components/shell/SchoolPickerGate";
 import {
   ExpandableSchoolTable,
   GradeDetailTable,
@@ -84,7 +85,7 @@ export default function GoalsSchoolPickerPage() {
   });
 
   return (
-    <>
+    <SchoolPickerGate section="/academic-goals">
       <h1 className="sf-page-title">Academic Goals</h1>
       <p className="sf-page-sub">
         Goals set for students, configured per grade. Pick a school, then a grade.
@@ -101,6 +102,6 @@ export default function GoalsSchoolPickerPage() {
           rows={rows}
         />
       </div>
-    </>
+    </SchoolPickerGate>
   );
 }

@@ -12,6 +12,7 @@ import {
   type SetupSchool
 } from "@/lib/data/schoolSetup";
 import { useSchoolSetup } from "@/lib/school-setup-store";
+import { useAdminScope } from "@/lib/admin-scope";
 
 export type SetupSelectionPatch = {
   school?: string | null;
@@ -37,9 +38,15 @@ export function useSetupSelection() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { district } = useSchoolSetup();
+  /* Setup's tree carries the same school ids as `schools`, so the scope maps
+     straight onto it. A school admin's root is their school, not the district:
+     there is no level above it they may act on. */
+  const { schoolId: scopedSchoolId } = useAdminScope();
 
   const selection = useMemo(() => {
-    const school = findSchool(district, searchParams.get("school"));
+    const school = scopedSchoolId
+      ? findSchool(district, scopedSchoolId)
+      : findSchool(district, searchParams.get("school"));
     const grade = findGrade(school, searchParams.get("grade"));
     const batch = findBatch(grade, searchParams.get("batch"));
 
@@ -54,7 +61,7 @@ export function useSetupSelection() {
       /** Batch-year filter on the grade's batch list. "" is every year. */
       year: searchParams.get("year") ?? ""
     };
-  }, [district, searchParams]);
+  }, [district, searchParams, scopedSchoolId]);
 
   const select = useCallback(
     (patch: SetupSelectionPatch) => {

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { studentAlerts, type StudentAlert } from "@/lib/data/alerts";
+import { useAdminScope } from "@/lib/admin-scope";
 import { schools, gradeLabel } from "@/lib/data/schools";
 import { AlertCard } from "./AlertCard";
 import { AlertDetailsModal } from "./AlertDetailsModal";
@@ -31,8 +32,14 @@ export function AlertsBoard() {
   const isCreating = searchParams.get("create") === "1";
   const closeCreate = () => router.replace("/alerts");
 
+  /* A school admin's board is their school's, and the picker comes off: an
+     option that resolves to "no alerts you may see" is worse than no option. */
+  const { school: scopedSchool } = useAdminScope();
+
   const [alerts, setAlerts] = useState<StudentAlert[]>(studentAlerts);
-  const [schoolId, setSchoolId] = useState(ALL);
+  const [pickedSchool, setPickedSchool] = useState(ALL);
+  const schoolId = scopedSchool ? scopedSchool.id : pickedSchool;
+  const setSchoolId = setPickedSchool;
   const [grade, setGrade] = useState(ALL);
   const [search, setSearch] = useState("");
   const [selectedAlertId, setSelectedAlertId] = useState<string | null>(null);
@@ -97,18 +104,25 @@ export function AlertsBoard() {
           />
         </label>
 
-        <label className="sf-field">
-          <span>School</span>
-          <Combobox
-            options={schoolComboOptions}
-            value={schoolId}
-            onChange={(next) => {
-              setSchoolId(next);
-              setGrade(ALL);
-            }}
-            placeholder="All schools"
-          />
-        </label>
+        {scopedSchool ? (
+          <div className="sf-field sf-field--static">
+            <span>School</span>
+            <p className="sf-field-static-value">{scopedSchool.name}</p>
+          </div>
+        ) : (
+          <label className="sf-field">
+            <span>School</span>
+            <Combobox
+              options={schoolComboOptions}
+              value={schoolId}
+              onChange={(next) => {
+                setSchoolId(next);
+                setGrade(ALL);
+              }}
+              placeholder="All schools"
+            />
+          </label>
+        )}
 
         <label className="sf-field">
           <span>Grade</span>

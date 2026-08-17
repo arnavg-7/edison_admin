@@ -1621,3 +1621,58 @@
   gap: 12px;
   margin-top: 12px;
 }
+
+/* Admin scope ------------------------------------------------------------ */
+
+/* The scope switcher, above Log out in the sidebar footer. Separated by a rule
+   because it is not a nav item and not an action — it changes what the whole
+   portal is, and reading as one more sidebar button would understate that. */
+.sf-scope-switcher {
+  padding: 12px 4px 10px;
+  border-top: 1px solid var(--sf-card-border);
+  display: grid;
+  gap: 8px;
+}
+
+.sf-scope-switcher .sf-field > span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sf-text-dim);
+}
+
+.sf-scope-switcher-note {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--sf-text-dim);
+}
+
+/* The school being administered, under the role in the sidebar header. Its own
+   line: "School Admin · Edison High School" on one line wrapped mid-name at the
+   sidebar's width. */
+.sf-brand-scope {
+  display: block;
+  margin-top: 2px;
+  font-weight: 500;
+  color: var(--sf-text-muted);
+}
+
+/* A filter slot holding a fixed value rather than a control — the School field
+   for an admin who has only one. Matched to the height and rhythm of the
+   comboboxes beside it so the row does not step. */
+.sf-field--static > span {
+  font-size: 12px;
+  color: var(--sf-text-muted);
+}
+
+.sf-field-static-value {
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sf-text);
+  white-space: nowrap;
+}

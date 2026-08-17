@@ -18,8 +18,7 @@
  * and school so a roster shows the same goals on every render.
  */
 
-import { people } from "./people";
-import { schools } from "./schools";
+import { gradeRoster, rosterSeed as seed } from "./studentRoster";
 import { studentsInGrade } from "./poagCoverage";
 import type { PoagPillar } from "./poag";
 
@@ -66,30 +65,6 @@ export type StudentGoalRow = {
   personId: string | null;
   goals: StudentGoal[];
 };
-
-/** Stable pseudo-variance, so a roster reads the same on every render. */
-function seed(...parts: string[]): number {
-  const key = parts.join("|");
-  let hash = 0;
-  for (let index = 0; index < key.length; index += 1) {
-    hash = (hash * 31 + key.charCodeAt(index)) % 100000;
-  }
-  return hash;
-}
-
-// TODO: real rosters come from Genesis. The pools mirror the district's actual
-// mix rather than defaulting to one naming tradition.
-const FIRST_NAMES = [
-  "Aditi", "Marcus", "Priya", "Elena", "Rohan", "Jasmine", "Daniel", "Ananya",
-  "Tobias", "Sofia", "Ibrahim", "Grace", "Kiran", "Noah", "Mei", "Ethan",
-  "Fatima", "Lucas", "Anjali", "Samuel", "Zara", "Owen", "Nadia", "Isaac"
-];
-
-const LAST_NAMES = [
-  "Sharma", "Whitfield", "Nair", "Okonkwo", "Mehta", "Alvarez", "Brennan",
-  "Iyer", "Lindqvist", "Costa", "Rahman", "Ellery", "Deshpande", "Barlow",
-  "Chen", "Novak", "Siddiqui", "Moreau", "Kulkarni", "Hartley"
-];
 
 // TODO: real names come from users.csv, joined through the student's classes.
 const FACULTY = [
@@ -271,38 +246,19 @@ export function studentGoalsFor(
   grade: string,
   pillars: PoagPillar[]
 ): StudentGoalRow[] {
-  const school = schools.find((entry) => entry.id === schoolId);
-  if (!school || pillars.length === 0) return [];
+  if (pillars.length === 0) return [];
 
-  const enrolled = studentsInGrade(schoolId, grade);
+  const roster = gradeRoster(schoolId, grade);
+  const enrolled = roster.length;
   // Roughly one in five, held inside a range the table can show without paging.
   const count = Math.max(4, Math.min(24, Math.round(enrolled / 5)));
 
-  /* Students with a real 360 profile lead the list, so the names an admin can
-     click through to are the ones they meet first. */
-  const named = people
-    .filter(
-      (person) =>
-        person.kind === "student" &&
-        person.school === school.name &&
-        person.group === `Grade ${grade}`
-    )
-    .map((person) => ({ name: person.name, personId: person.id }));
+  /* Taken off the front of the shared roster rather than sampled: that roster
+     already leads with the students who have a 360 record, so the names an
+     admin can click through to are the ones they meet first. */
+  const withGoals = roster.slice(0, count);
 
-  const roster: { name: string; personId: string | null }[] = [...named];
-  const taken = new Set(named.map((entry) => entry.name));
-
-  for (let index = 0; roster.length < count && index < count * 8; index += 1) {
-    const key = seed(schoolId, grade, String(index));
-    const name = `${FIRST_NAMES[key % FIRST_NAMES.length]} ${
-      LAST_NAMES[(key >> 3) % LAST_NAMES.length]
-    }`;
-    if (taken.has(name)) continue;
-    taken.add(name);
-    roster.push({ name, personId: null });
-  }
-
-  return roster.map((entry) => {
+  return withGoals.map((entry) => {
     const base = seed(schoolId, grade, entry.name);
     // Two to four goals each: one is not a plan, and beyond four a student is
     // listing wishes rather than working to them.
@@ -347,12 +303,7 @@ export function studentGoalsFor(
     // Soonest first: the goal with the nearest deadline is the live one.
     goals.sort((a, b) => a.due.localeCompare(b.due));
 
-    return {
-      id: entry.personId ?? `student-${entry.name.replace(/\s+/g, "-").toLowerCase()}`,
-      studentName: entry.name,
-      personId: entry.personId,
-      goals
-    };
+    return { id: entry.id, studentName: entry.name, personId: entry.personId, goals };
   });
 }
 

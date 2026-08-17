@@ -19,6 +19,7 @@ import { gradeConfigHref, resolveGradeScope } from "@/lib/data/skillsDevelopment
 import { academicGoalsHref } from "@/lib/data/academicGoals";
 import { DevelopmentAreasEditor } from "@/components/skills-development/DevelopmentAreasEditor";
 import { SkillsProfileEditor } from "@/components/skills-development/SkillsProfileEditor";
+import { StudentGradeGoalsPanel } from "./StudentGradeGoalsPanel";
 import { StudentPoagPanel } from "./StudentPoagPanel";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -336,8 +337,23 @@ export function ProfileShell({ person }: { person: Person }) {
       ) : null}
 
       {/* ----------------------------------------------------------- goals */}
+      {/* Two kinds of goal, and the distinction matters: the grade's goals were
+          set by an admin and the student reports progress on them, while the
+          individual ones below belong to this student. Grade goals lead, since
+          they are the ones every student in the grade is measured against. */}
+      {tab === "goals" && gradeScope ? (
+        <StudentGradeGoalsPanel
+          schoolId={gradeScope.schoolId}
+          grade={gradeScope.grade}
+          studentName={person.name}
+        />
+      ) : null}
+
       {tab === "goals" ? (
-        <Panel title="Goals" note="Editable in Admin · templates configured in Academic Goals">
+        <Panel
+          title="Individual goals"
+          note="Editable in Admin · templates configured in Academic Goals"
+        >
           <p className="sf-card-hint">
             Checkpoint and status changes apply to this student only, not to the shared goal
             template. TODO: local state only until the Admin DB contract exists.

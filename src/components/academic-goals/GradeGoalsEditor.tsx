@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { PlusSignIcon } from "@hugeicons/core-free-icons";
@@ -21,7 +21,11 @@ import { gradeLabel, gradesForSchool, schools } from "@/lib/data/schools";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/base/buttons/button";
 import { Combobox } from "@/components/shared/Combobox";
+import { GradeGoalStudents } from "./GradeGoalStudents";
+import { GoalProgressCell } from "./GoalProgressCell";
 import { StudentGoalsPanel } from "./StudentGoalsPanel";
+import { HugeiconsIcon as ExpandIcon } from "@hugeicons/react";
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Sheet,
@@ -137,6 +141,14 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  /* Which goals are opened out onto their student list. Several at once, so two
+     goals' spreads can be compared without closing one to open the other. */
+  const [openGoals, setOpenGoals] = useState<string[]>([]);
+
+  const toggleGoal = (id: string) =>
+    setOpenGoals((current) =>
+      current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id]
+    );
   const [draft, setDraft] = useState<Draft>(() => emptyDraft(scope));
 
   const startAdd = () => {
@@ -455,13 +467,16 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
             />
           ) : (
             <div className="sf-table-wrap">
-              <table className="sf-table">
+              <table className="sf-table sf-table--expandable">
                 <thead>
                   <tr>
                     <th scope="col">Goal</th>
                     <th scope="col">Category</th>
                     <th scope="col">Semester</th>
                     <th scope="col">Dates</th>
+                    {/* An admin sets the goal; the students report where they
+                        are with it. This column is that report, summed. */}
+                    <th scope="col">Student progress</th>
                     <th scope="col" aria-label="Actions" />
                   </tr>
                 </thead>
@@ -469,15 +484,41 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
                   {/* Editing no longer swaps the row out for the form — the row
                       stays put and the drawer opens over it, so you can still
                       see the goal you're editing and the ones around it. */}
-                  {current.map((goal) => (
-                      <tr key={goal.id} data-editing={editingId === goal.id || undefined}>
+                  {current.map((goal) => {
+                    const isOpen = openGoals.includes(goal.id);
+                    const detailId = `${goal.id}-students`;
+
+                    return (
+                      <Fragment key={goal.id}>
+                      <tr data-editing={editingId === goal.id || undefined}>
                         <td>
-                          <div className="list-editor-item-title">{goal.title}</div>
-                          <div className="list-editor-item-detail">{goal.description}</div>
+                          <div className="sf-row-expander">
+                            <button
+                              type="button"
+                              className={isOpen ? "sf-row-toggle is-open" : "sf-row-toggle"}
+                              aria-expanded={isOpen}
+                              aria-controls={detailId}
+                              onClick={() => toggleGoal(goal.id)}
+                            >
+                              <ExpandIcon icon={ArrowRight01Icon} size={15} strokeWidth={2} />
+                              <span className="sf-sr-only">
+                                {isOpen
+                                  ? `Hide student progress for ${goal.title}`
+                                  : `Show student progress for ${goal.title}`}
+                              </span>
+                            </button>
+                            <div>
+                              <div className="list-editor-item-title">{goal.title}</div>
+                              <div className="list-editor-item-detail">{goal.description}</div>
+                            </div>
+                          </div>
                         </td>
                         <td>{goal.category}</td>
                         <td>{goal.semester.name}</td>
                         <td>{formatDateRange(goal.semester.from, goal.semester.to)}</td>
+                        <td>
+                          <GoalProgressCell schoolId={schoolId} grade={grade} goalId={goal.id} />
+                        </td>
                         <td>
                           <div className="sf-row-actions">
                             <Button color="secondary" size="xs" onClick={() => startEdit(goal)}>
@@ -493,7 +534,22 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
                           </div>
                         </td>
                       </tr>
-                  ))}
+
+                      {isOpen ? (
+                        <tr className="sf-subrow" id={detailId}>
+                          <td colSpan={6}>
+                            <GradeGoalStudents
+                              schoolId={schoolId}
+                              grade={grade}
+                              goalId={goal.id}
+                              goalTitle={goal.title}
+                            />
+                          </td>
+                        </tr>
+                      ) : null}
+                      </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

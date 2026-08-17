@@ -1572,3 +1572,52 @@
   font-size: 12px;
   color: var(--sf-text-dim);
 }
+
+/* Grade goal progress ---------------------------------------------------- */
+
+/* Count, bar, breakdown — stacked in one table cell. */
+.goal-progress {
+  min-width: 170px;
+}
+
+/* Three segments in one track, sized by share of the grade. Decoration only:
+   every figure it encodes is written above and below it, so the cell never asks
+   anyone to tell three colours apart (WCAG 1.4.1). */
+.goal-progress-bar {
+  display: flex;
+  height: 6px;
+  margin: 6px 0 5px;
+  border-radius: var(--sf-radius-pill);
+  overflow: hidden;
+  background: var(--sf-neutral-bg);
+}
+
+.goal-progress-bar > span {
+  display: block;
+  height: 100%;
+}
+
+.goal-progress-bar .is-completed {
+  background: var(--sf-ok-text);
+}
+
+.goal-progress-bar .is-progress {
+  background: var(--sf-warn-text);
+}
+
+.goal-progress-bar .is-none {
+  background: var(--sf-neutral-bg);
+}
+
+/* The student list opened out under a goal. Matches .sf-archive-detail's inset,
+   since both are a panel's worth of content living inside a table row. */
+.goal-students {
+  padding: 4px 12px 8px;
+}
+
+.goal-students-more {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}

@@ -542,6 +542,65 @@
   gap: 14px;
 }
 
+/* One block per subject, stacked. Generous space between them and a rule above
+   each: a grade's areas are four separate sets that happen to share headings,
+   and if Maths' Strengths sat 14px from Science's Strengths they would read as
+   one long list of eight cards. */
+.area-subject-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.area-subject-group + .area-subject-group {
+  padding-top: 24px;
+  border-top: 1px solid var(--sf-border);
+}
+
+/* Subject name, its count and its own Add area on one line. The button is
+   pushed right; the count stays beside the name it belongs to. */
+.area-subject-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.area-subject-head h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.area-subject-head .sf-panel-note {
+  margin-right: auto;
+}
+
+/* A subject holds at most four areas, so the section grid counts in factors of
+   four rather than filling with as many 280px tracks as happen to fit. Three
+   tracks would leave every subject wrapped 3+1 with a hole beside the fourth
+   card, three times down the page. 4 → 2 → 1 always comes out square.
+   The 4-up step waits until 1720px, measured rather than guessed: the card's
+   action row needs 289px of inner width for Unpublish + Edit + Delete, so a
+   325px track. Any narrower and three cards in a row wrap 2+1 while the fourth,
+   reading Publish instead of Unpublish, does not — a ragged row of four. */
+.area-subject-group .area-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 780px) {
+  .area-subject-group .area-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 1720px) {
+  .area-subject-group .area-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 .area-card {
   border-radius: 16px;
   padding: 18px 18px 16px;
@@ -1420,4 +1479,96 @@
   width: 15px;
   height: 15px;
   accent-color: var(--sf-accent);
+}
+/* Student goals ---------------------------------------------------------- */
+
+/* Says once, above the table, that these belong to students rather than to the
+   grade — the distinction the whole tab turns on, and the reason there is no
+   Add button beside the heading. */
+.goals-panel-intro {
+  margin: -6px 0 14px;
+  max-width: 78ch;
+}
+
+/* Pillar names run long ("Engaged Community Member") and a student can be
+   building three at once, so the cell wraps rather than stretching the table
+   past the viewport. */
+.goals-skill-cell {
+  max-width: 260px;
+  font-size: 12.5px;
+  color: var(--sf-text-muted);
+}
+
+/* One student's goals, opened out under their row. Cards rather than a nested
+   table: a goal is a title, a sentence and two tags, which is a paragraph
+   shape, and the same shape the student sees in their own portal. */
+.student-goal-list {
+  list-style: none;
+  margin: 0;
+  padding: 14px 12px 4px;
+  display: grid;
+  gap: 10px;
+}
+
+.student-goal {
+  background: var(--sf-card);
+  border: 1px solid var(--sf-card-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.student-goal-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.student-goal-head h4 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+/* The status pill is pushed to the far end, so a column of goals can be read
+   down its right edge for progress without reading the titles. Wrapped in a
+   span of our own: the shared Badge is a Tailwind component with no stable
+   class to hang a layout rule on. */
+.student-goal-status {
+  margin-left: auto;
+  display: inline-flex;
+}
+
+/* Two tags, told apart by tint rather than by position alone: the goal's type,
+   and the Portrait of a Graduate skill it builds. Both carry their own words,
+   so colour is reinforcement and never the only signal (WCAG 1.4.1). */
+.student-goal-tag {
+  padding: 2px 10px;
+  border-radius: var(--sf-radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.student-goal-tag.is-category {
+  background: #eef2ff;
+  color: #3538cd;
+}
+
+.student-goal-tag.is-skill {
+  background: #f4f3ff;
+  color: #6941c6;
+}
+
+.student-goal-desc {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: var(--sf-text-muted);
+}
+
+.student-goal-meta {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--sf-text-dim);
 }

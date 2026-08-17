@@ -1,18 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { PlusSignIcon } from "@hugeicons/core-free-icons";
 import {
   goalCategories,
   goalTemplates,
-  gradeGoalsFor,
   isPastSemester,
   type GradeGoal
 } from "@/lib/data/academicGoals";
+import {
+  deleteGoal,
+  goalsInScope,
+  sameScope,
+  saveGoal,
+  type GoalScope
+} from "@/lib/academic-goals-store";
+import { gradeLabel, gradesForSchool, schools } from "@/lib/data/schools";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/base/buttons/button";
 import { Combobox } from "@/components/shared/Combobox";
+import { StudentGoalsPanel } from "./StudentGoalsPanel";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Sheet,
@@ -37,6 +46,12 @@ const categoryOptions: ComboOption[] = goalCategories.map((category) => ({
 const templateOptions: ComboOption[] = goalTemplates.map((template) => ({
   value: template.title,
   label: template.title
+}));
+
+/** Every school, so a goal can be set for a grade other than the one on screen. */
+const schoolOptions: ComboOption[] = schools.map((school) => ({
+  value: school.id,
+  label: school.name
 }));
 
 let seq = 0;
@@ -68,6 +83,9 @@ function formatDateRange(from: string, to: string): string {
 }
 
 type Draft = {
+  /** The scope the goal is being written to — starts as the grade on screen. */
+  schoolId: string;
+  grade: string;
   title: string;
   description: string;
   category: string;
@@ -76,8 +94,10 @@ type Draft = {
   semesterTo: string;
 };
 
-function emptyDraft(): Draft {
+function emptyDraft(scope: GoalScope): Draft {
   return {
+    schoolId: scope.schoolId,
+    grade: scope.grade,
     title: "",
     description: "",
     category: goalCategories[0]?.title ?? "",
@@ -93,33 +113,44 @@ function emptyDraft(): Draft {
  * and end dates. Once a goal's semester end date has passed, it moves to
  * the read-only Goal History tab.
  *
+ * Student goals sit beside them on a third tab: those are personal goals a
+ * student or their teacher wrote for one student, not goals an admin set for
+ * the grade, so they are read-only here.
+ *
  * Tabs are local rather than routed, mirroring Skills & Development's
- * identical drill-down (`GradeScopeEditor`): the two panels are the same
- * grade's goals viewed two ways, so keeping them on one URL means the
- * school/grade drilled into stays in the address bar.
+ * identical drill-down (`GradeScopeEditor`): the panels are the same grade's
+ * goals viewed three ways, so keeping them on one URL means the school/grade
+ * drilled into stays in the address bar.
  */
-const TABS = ["Goals", "Goal History"] as const;
+const TABS = ["Goals", "Student goals", "Goal History"] as const;
 
 export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade: string }) {
-  const [goals, setGoals] = useState<GradeGoal[]>(() => gradeGoalsFor(schoolId, grade));
+  const router = useRouter();
+  const scope: GoalScope = { schoolId, grade };
+
+  const [goals, setGoals] = useState<GradeGoal[]>(() => goalsInScope(scope));
   const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[0]);
 
   useEffect(() => {
-    setGoals(gradeGoalsFor(schoolId, grade));
+    setGoals(goalsInScope({ schoolId, grade }));
   }, [schoolId, grade]);
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Draft>(emptyDraft());
+  const [draft, setDraft] = useState<Draft>(() => emptyDraft(scope));
 
   const startAdd = () => {
-    setDraft(emptyDraft());
+    setDraft(emptyDraft(scope));
     setEditingId(null);
     setIsAdding(true);
   };
 
   const startEdit = (goal: GradeGoal) => {
     setDraft({
+      // A goal in this table belongs to this grade; changing either field in the
+      // drawer moves it.
+      schoolId,
+      grade,
       title: goal.title,
       description: goal.description,
       category: goal.category,
@@ -136,7 +167,19 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
     setEditingId(null);
   };
 
+  /** Switching school keeps the grade only if the new school teaches it. */
+  const setDraftSchool = (nextSchoolId: string) => {
+    const grades = gradesForSchool(nextSchoolId);
+    setDraft({
+      ...draft,
+      schoolId: nextSchoolId,
+      grade: grades.includes(draft.grade) ? draft.grade : ""
+    });
+  };
+
   const canSave =
+    draft.schoolId !== "" &&
+    draft.grade !== "" &&
     draft.title.trim() !== "" &&
     draft.description.trim() !== "" &&
     draft.semesterName.trim() !== "" &&
@@ -149,8 +192,10 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
       return;
     }
 
+    const target: GoalScope = { schoolId: draft.schoolId, grade: draft.grade };
+
     const goal: GradeGoal = {
-      id: editingId ?? nextId(`${schoolId}-${grade}`),
+      id: editingId ?? nextId(`${target.schoolId}-${target.grade}`),
       title: draft.title.trim(),
       description: draft.description.trim(),
       category: draft.category,
@@ -161,14 +206,23 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
       }
     };
 
-    setGoals((current) =>
-      editingId ? current.map((item) => (item.id === editingId ? goal : item)) : [...current, goal]
-    );
+    saveGoal(target, goal, editingId ? scope : undefined);
+    // Re-read rather than patch the list: a goal written to another grade — or
+    // moved out of this one by an edit — has to leave this table.
+    setGoals(goalsInScope(scope));
     cancel();
+
+    /* Goals only ever show on their own grade's page, so a goal set for another
+       scope would land somewhere the admin can't see from here. Follow it, and
+       the page title and breadcrumb confirm where it went. */
+    if (!sameScope(target, scope)) {
+      router.push(`/academic-goals/${target.schoolId}/${encodeURIComponent(target.grade)}`);
+    }
   };
 
   const remove = (id: string) => {
-    setGoals((current) => current.filter((item) => item.id !== id));
+    deleteGoal(scope, id);
+    setGoals(goalsInScope(scope));
     if (editingId === id) {
       cancel();
     }
@@ -186,6 +240,11 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
      a single open state — they were already mutually exclusive (each setter
      clears the other), and a drawer can only show one of them at a time. */
   const isFormOpen = isAdding || editingId !== null;
+
+  const gradeOptions: ComboOption[] = gradesForSchool(draft.schoolId).map((value) => ({
+    value,
+    label: gradeLabel(value)
+  }));
 
   const fields = (
     <div className="list-editor-form list-editor-form--drawer">
@@ -206,6 +265,37 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
           ariaLabel="Start from a goal template"
         />
       </label>
+
+      {/* Which grade the goal is being set for. Defaults to the grade whose page
+          the drawer was opened from, so the common case is a no-op, but a goal
+          that belongs to another grade — or the whole of another school, one
+          grade at a time — no longer means backing out to the school list
+          first. Sits above the goal's own fields because it is the thing that
+          decides who the goal is for. */}
+      <div className="sf-field-row">
+        <label className="sf-field">
+          <span>School</span>
+          <Combobox
+            options={schoolOptions}
+            value={draft.schoolId}
+            onChange={setDraftSchool}
+            placeholder="Select a school"
+            ariaLabel="School this goal is for"
+          />
+        </label>
+
+        <label className="sf-field">
+          <span>Grade</span>
+          <Combobox
+            options={gradeOptions}
+            value={draft.grade}
+            onChange={(next) => setDraft({ ...draft, grade: next })}
+            placeholder="Select a grade"
+            disabled={draft.schoolId === ""}
+            ariaLabel="Grade this goal is for"
+          />
+        </label>
+      </div>
 
       <label className="sf-field">
         <span>Goal name</span>
@@ -296,8 +386,8 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
           <SheetTitle>{editingId ? "Edit goal" : "Set a goal"}</SheetTitle>
           <SheetDescription>
             {editingId
-              ? "Update this goal's details, category or semester."
-              : "Name the goal, tag a category, and assign it to a semester."}
+              ? "Update this goal's grade, details, category or semester."
+              : "Pick the school and grade it's for, name it, tag a category, and assign it to a semester."}
           </SheetDescription>
         </SheetHeader>
 
@@ -331,6 +421,10 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
           ))}
         </TabsList>
       </Tabs>
+
+      {tab === "Student goals" ? (
+        <StudentGoalsPanel schoolId={schoolId} grade={grade} />
+      ) : null}
 
       {tab === "Goals" ? (
         <div className="sf-panel">
@@ -407,7 +501,11 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
 
           {formDrawer}
         </div>
-      ) : (
+      ) : null}
+
+      {/* Named rather than an else branch: with a third tab beside them, "not
+          Goals" is no longer the same thing as "Goal History". */}
+      {tab === "Goal History" ? (
         <div className="sf-panel">
           <div className="sf-panel-head">
             <h2>Goal history</h2>
@@ -447,7 +545,7 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
             </div>
           )}
         </div>
-      )}
+      ) : null}
     </>
   );
 }

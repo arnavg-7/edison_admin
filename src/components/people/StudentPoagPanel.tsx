@@ -9,7 +9,7 @@ import { usePoag } from "@/lib/poag-store";
 import { formatSalesforceStamp } from "@/lib/format";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PoagLevelTrack } from "@/components/skills-development/PoagLevelTrack";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Combobox } from "@/components/shared/Combobox";
 
 /**
  * A student's Portrait of a Graduate, as the admin sees it on their 360.
@@ -55,27 +55,32 @@ export function StudentPoagPanel({
 
   return (
     <>
-      {/* Chips, matching what the student and their teachers see. */}
-      <Tabs
-        value={subject.id}
-        onValueChange={setSubjectId}
-        className="sf-scope-views sf-subject-chips"
-      >
-        <TabsList aria-label="Subject">
-          {gradeSubjects.map((entry) => (
-            <TabsTrigger key={entry.id} value={entry.id}>
-              {entry.name}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-
       <div className="sf-panel">
         <div className="sf-panel-head">
           <h2>Edison Portrait of a Graduate</h2>
-          <span className="sf-panel-note">
-            {subject.name} · {subjectPillars.length} of {pillars.length} pillars
-          </span>
+          <div className="sf-panel-head-end">
+            <span className="sf-panel-note">
+              {subjectPillars.length} of {pillars.length} pillars
+            </span>
+            {/* A scope, not a filter, and so no "All subjects" option: a rating
+                is one teacher's judgement in one class, and v1 defines no rule
+                for merging Critical Thinking in Calculus with the same pillar
+                in Geology. The same dropdown the Development areas tab uses. */}
+            {gradeSubjects.length > 1 ? (
+              <label className="sf-field sf-field--inline">
+                <span>Subject</span>
+                <Combobox
+                  value={subject.id}
+                  options={gradeSubjects.map((entry) => ({
+                    value: entry.id,
+                    label: entry.name
+                  }))}
+                  onChange={setSubjectId}
+                  ariaLabel="Subject to show ratings for"
+                />
+              </label>
+            ) : null}
+          </div>
         </div>
 
         {subjectPillars.length === 0 ? (
@@ -111,8 +116,8 @@ export function StudentPoagPanel({
                           {current.ratedBy}
                           {/* Period as well as the date: a rating belongs to a
                               marking period, and the date is only when it was
-                              filed. The subject is not repeated — the chip and
-                              the panel note already scope the whole table. */}
+                              filed. The subject is not repeated — the
+                              dropdown above already scopes the whole table. */}
                           <span className="poag-rater-when">
                             {current.period} · {formatSalesforceStamp(current.ratedAt)}
                           </span>

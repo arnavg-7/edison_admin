@@ -3749,17 +3749,10 @@ nav.sf-pagination {
   color: var(--sf-text);
 }
 
-/* Subject chips. A grade's development areas are one set per subject, so this
-   is a place you stand rather than a filter — same control the student's own
-   screen uses, and the segmented style already carries "pick one of these" in
-   this app. */
-.sf-subject-chips {
-  margin-bottom: 4px;
-}
-
-/* Names the subject on an archived area card. The live editor does not need it
-   — you are standing in one subject — but the history shows every subject's set
-   at once, where four cards called Strengths would look like duplicates. */
+/* Names the subject on an area card that has no subject heading above it to say
+   so: every card in the history, where each term shows every subject's set at
+   once and four cards called Strengths would look like duplicates, and the
+   orphan block in the live editor. */
 .area-subjects {
   margin-left: auto;
   padding: 2px 8px;

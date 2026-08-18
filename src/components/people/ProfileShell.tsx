@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
@@ -92,7 +93,28 @@ const FACULTY_TABS: { id: TabId; label: string }[] = [
 export function ProfileShell({ person }: { person: Person }) {
   const isStudent = person.kind === "student";
   const tabs = isStudent ? STUDENT_TABS : FACULTY_TABS;
-  const [tab, setTab] = useState<TabId>("personal");
+  /* The open tab lives in the URL as well as in state, so a link can point at a
+     section rather than only at a person — Goals' student lists link straight to
+     a student's Goals tab, which is the whole reason for going there. Replace,
+     not push: flipping tabs is not navigation to be stepped back through. */
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const requested = searchParams.get("tab");
+  const initialTab =
+    requested && tabs.some((entry) => entry.id === requested) ? (requested as TabId) : "personal";
+
+  const [tab, setTab] = useState<TabId>(initialTab);
+
+  const openTab = (next: TabId) => {
+    setTab(next);
+    const params = new URLSearchParams(searchParams.toString());
+    // Personal details is the default, so it needs no param.
+    if (next === "personal") params.delete("tab");
+    else params.set("tab", next);
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
 
   // Only the editable sections hold local state. Enrollment, grades, attendance
   // and classes render straight from `person` because Admin can't change them.
@@ -182,7 +204,7 @@ export function ProfileShell({ person }: { person: Person }) {
         </div>
       ) : null}
 
-      <Tabs value={tab} onValueChange={(value) => setTab(value as TabId)} className="sf-section-tabs">
+      <Tabs value={tab} onValueChange={(value) => openTab(value as TabId)} className="sf-section-tabs">
         <TabsList variant="line" aria-label="Profile sections">
           {tabs.map((item) => (
             <TabsTrigger key={item.id} value={item.id}>

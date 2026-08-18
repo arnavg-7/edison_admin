@@ -24,24 +24,36 @@ import { usePoag } from "@/lib/poag-store";
 export function GoalProgressCell({
   schoolId,
   grade,
-  goal
+  goal,
+  studentQuery = ""
 }: {
   schoolId: string;
   grade: string;
   goal: GradeGoal;
+  /** Narrows the tally to the students whose name matches — see the filter bar. */
+  studentQuery?: string;
 }) {
   /* The live scale, so a renamed level is respected rather than the seed being
      assumed — the required level on the goal is one of these labels. */
   const { levels } = usePoag();
   const levelLabels = useMemo(() => levels.map((level) => level.label), [levels]);
 
-  const tally = useMemo(
-    () => gradeGoalTally(gradeGoalStatuses(schoolId, grade, goal, levelLabels)),
-    [schoolId, grade, goal, levelLabels]
-  );
+  const tally = useMemo(() => {
+    const rows = gradeGoalStatuses(schoolId, grade, goal, levelLabels);
+    const term = studentQuery.trim().toLowerCase();
+    /* Counted over the filtered population, not the whole grade: a tally that
+       ignored the student filter would contradict the list it sits above. */
+    return gradeGoalTally(
+      term ? rows.filter((row) => row.student.name.toLowerCase().includes(term)) : rows
+    );
+  }, [schoolId, grade, goal, levelLabels, studentQuery]);
 
   if (tally.total === 0) {
-    return <span className="sf-panel-note">No students enrolled</span>;
+    return (
+      <span className="sf-panel-note">
+        {studentQuery.trim() === "" ? "No students enrolled" : "No matching students"}
+      </span>
+    );
   }
 
   const auto = goal.measurement.type === "auto";

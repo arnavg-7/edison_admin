@@ -60,6 +60,9 @@ const schoolOptions: ComboOption[] = schools.map((school) => ({
   label: school.name
 }));
 
+/** Filter sentinel: no narrowing on that field. */
+const ALL = "all";
+
 let seq = 0;
 const nextId = (scope: string) => `gg-local-${scope}-${Date.now()}-${seq++}`;
 
@@ -288,13 +291,48 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
     }
   };
 
-  const current = goals.filter((goal) => !isPastSemester(goal));
-  const history = goals.filter((goal) => isPastSemester(goal));
+  /* Narrowing the list, not the scope. School and Grade are the exception: they
+     are the route this screen is, so changing them navigates rather than
+     filtering — a Grade 9 screen showing Grade 10 goals would be lying. */
+  const [goalQuery, setGoalQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState(ALL);
+  const [measuredFilter, setMeasuredFilter] = useState(ALL);
+  /* Held here rather than inside each goal's student list, so a name typed once
+     applies to every goal on the screen — and the tallies follow it, which is how
+     "how are the Sharmas doing across this grade" gets answered. */
+  const [studentQuery, setStudentQuery] = useState("");
+
+  const matchesFilters = (goal: GradeGoal) => {
+    const term = goalQuery.trim().toLowerCase();
+    if (term && !`${goal.title} ${goal.description}`.toLowerCase().includes(term)) return false;
+    if (categoryFilter !== ALL && goal.category !== categoryFilter) return false;
+    if (measuredFilter !== ALL && goal.measurement.type !== measuredFilter) return false;
+    return true;
+  };
+
+  const allCurrent = goals.filter((goal) => !isPastSemester(goal));
+  const current = allCurrent.filter(matchesFilters);
+  const history = goals.filter((goal) => isPastSemester(goal)).filter(matchesFilters);
 
   /* No active goals — the empty state owns the CTA, so the panel head hides its
      own. This used to also require `!isAdding`, because the inline form replaced
      the empty state; the drawer opens over it, so the empty state should stay. */
-  const hasNoCurrentGoals = current.length === 0;
+  /* Distinguishes "this grade has no goals" from "your filters match none of
+     them" — the empty state and its call to action are only right for the first. */
+  const hasNoCurrentGoals = allCurrent.length === 0;
+  const filtersNarrowed = current.length !== allCurrent.length;
+  const anyFilter =
+    goalQuery.trim() !== "" ||
+    categoryFilter !== ALL ||
+    measuredFilter !== ALL ||
+    studentQuery.trim() !== "";
+
+  const clearFilters = () => {
+    setGoalQuery("");
+    setCategoryFilter(ALL);
+    setMeasuredFilter(ALL);
+    setStudentQuery("");
+  };
 
   /* Add and edit are one form in one drawer, so `isAdding` and `editingId` share
      a single open state — they were already mutually exclusive (each setter
@@ -553,6 +591,98 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
               </Button>}
           </div>
 
+          {/* Under the heading, inside the panel it filters — the school and grade
+              pickers move the screen, the rest narrow what is on it. */}
+          {hasNoCurrentGoals ? null : (
+            <div className="sf-filter-bar sf-filter-bar--flush">
+              <label className="sf-field sf-field--search">
+                <span>Search goals</span>
+                <input
+                  type="search"
+                  value={goalQuery}
+                  placeholder="Goal name or description"
+                  onChange={(event) => setGoalQuery(event.target.value)}
+                />
+              </label>
+
+              <label className="sf-field">
+                <span>School</span>
+                <Combobox
+                  options={schoolOptions}
+                  value={schoolId}
+                  onChange={(nextSchool) => {
+                    /* Straight to that school's first grade: a school alone is not
+                       a scope this screen can render. */
+                    const first = gradesForSchool(nextSchool)[0];
+                    if (first) router.push(`/academic-goals/${nextSchool}/${encodeURIComponent(first)}`);
+                  }}
+                />
+              </label>
+
+              <label className="sf-field">
+                <span>Grade</span>
+                <Combobox
+                  options={gradesForSchool(schoolId).map((entry) => ({
+                    value: entry,
+                    label: gradeLabel(entry)
+                  }))}
+                  value={grade}
+                  onChange={(nextGrade) =>
+                    router.push(`/academic-goals/${schoolId}/${encodeURIComponent(nextGrade)}`)
+                  }
+                />
+              </label>
+
+              <label className="sf-field">
+                <span>Category</span>
+                <Combobox
+                  options={[{ value: ALL, label: "All categories" }, ...categoryOptions]}
+                  value={categoryFilter}
+                  onChange={setCategoryFilter}
+                />
+              </label>
+
+              <label className="sf-field">
+                <span>Measured</span>
+                <Combobox
+                  options={[
+                    { value: ALL, label: "Manual and auto" },
+                    { value: "manual", label: "Manual" },
+                    { value: "auto", label: "Auto" }
+                  ]}
+                  value={measuredFilter}
+                  onChange={setMeasuredFilter}
+                />
+              </label>
+
+              <label className="sf-field sf-field--search">
+                <span>Student</span>
+                <input
+                  type="search"
+                  value={studentQuery}
+                  placeholder="Narrow every goal to one student"
+                  onChange={(event) => setStudentQuery(event.target.value)}
+                />
+              </label>
+
+              <p className="sf-filter-note">
+                {current.length} of {allCurrent.length} goal
+                {allCurrent.length === 1 ? "" : "s"}
+                {studentQuery.trim() !== ""
+                  ? ` · progress shown for students matching “${studentQuery.trim()}”`
+                  : ""}
+                {anyFilter ? (
+                  <>
+                    {" · "}
+                    <button type="button" className="sf-inline-btn" onClick={clearFilters}>
+                      Clear filters
+                    </button>
+                  </>
+                ) : null}
+              </p>
+            </div>
+          )}
+
           {hasNoCurrentGoals ? (
             <EmptyState
               title="No current goals"
@@ -631,7 +761,12 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
                         </td>
                         <td>{formatDateRange(goal.semester.from, goal.semester.to)}</td>
                         <td>
-                          <GoalProgressCell schoolId={schoolId} grade={grade} goal={goal} />
+                          <GoalProgressCell
+                            schoolId={schoolId}
+                            grade={grade}
+                            goal={goal}
+                            studentQuery={studentQuery}
+                          />
                         </td>
                         <td>
                           <div className="sf-row-actions">
@@ -652,7 +787,12 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
                       {isOpen ? (
                         <tr className="sf-subrow" id={detailId}>
                           <td colSpan={7}>
-                            <GradeGoalStudents schoolId={schoolId} grade={grade} goal={goal} />
+                            <GradeGoalStudents
+                              schoolId={schoolId}
+                              grade={grade}
+                              goal={goal}
+                              studentQuery={studentQuery}
+                            />
                           </td>
                         </tr>
                       ) : null}
@@ -741,14 +881,24 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
                       </td>
                       <td>{formatDateRange(goal.semester.from, goal.semester.to)}</td>
                       <td>
-                        <GoalProgressCell schoolId={schoolId} grade={grade} goal={goal} />
+                        <GoalProgressCell
+                            schoolId={schoolId}
+                            grade={grade}
+                            goal={goal}
+                            studentQuery={studentQuery}
+                          />
                       </td>
                     </tr>
 
                     {isOpen ? (
                       <tr className="sf-subrow" id={detailId}>
                         <td colSpan={6}>
-                          <GradeGoalStudents schoolId={schoolId} grade={grade} goal={goal} />
+                          <GradeGoalStudents
+                              schoolId={schoolId}
+                              grade={grade}
+                              goal={goal}
+                              studentQuery={studentQuery}
+                            />
                         </td>
                       </tr>
                     ) : null}

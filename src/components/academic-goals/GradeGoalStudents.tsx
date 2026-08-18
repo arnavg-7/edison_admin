@@ -31,11 +31,14 @@ const FIRST_PAGE = 20;
 export function GradeGoalStudents({
   schoolId,
   grade,
-  goal
+  goal,
+  studentQuery = ""
 }: {
   schoolId: string;
   grade: string;
   goal: GradeGoal;
+  /** Set on the screen's filter bar; this panel's own box narrows further. */
+  studentQuery?: string;
 }) {
   const { levels } = usePoag();
   const levelLabels = useMemo(() => levels.map((level) => level.label), [levels]);
@@ -53,10 +56,14 @@ export function GradeGoalStudents({
 
   const matching = useMemo(() => {
     const term = query.trim().toLowerCase();
+    const outer = studentQuery.trim().toLowerCase();
     return rows
       .filter((row) => status === ALL || row.status === status)
+      /* Both narrow: the bar's name applies to every goal on the screen, this
+         panel's box narrows within one of them. */
+      .filter((row) => !outer || row.student.name.toLowerCase().includes(outer))
       .filter((row) => !term || row.student.name.toLowerCase().includes(term));
-  }, [rows, query, status]);
+  }, [rows, query, status, studentQuery]);
 
   const shown = showAll ? matching : matching.slice(0, FIRST_PAGE);
   const hidden = matching.length - shown.length;
@@ -117,11 +124,14 @@ export function GradeGoalStudents({
               {shown.map((row) => (
                 <tr key={row.student.id}>
                   <td>
-                    {/* Only the students with a 360 record are links. */}
+                    {/* Only the students with a 360 record are links, and the link
+                        opens their Goals tab rather than Personal details — you
+                        clicked a name in a goal's student list, so their goals are
+                        what you came for. */}
                     {row.student.personId ? (
                       <Link
                         className="sf-bar-group-link"
-                        href={`/people/student/${row.student.personId}`}
+                        href={`/people/student/${row.student.personId}?tab=goals`}
                       >
                         {row.student.name}
                       </Link>

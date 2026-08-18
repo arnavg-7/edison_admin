@@ -505,23 +505,8 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
                 />
               </label>
             </div>
-
-            {/* POAG levels are held per subject, so a goal has to say which
-                reading counts. "Any subject" is a stated rule, not a gap. */}
-            <p className="sf-field-hint">
-              {draft.subjectId === ""
-                ? "A student meets this once they reach the level in any subject their grade is taught."
-                : "Only that subject's rating counts towards this goal."}{" "}
-              Nobody sets a status by hand: the system re-checks on every rating change, and a
-              student still short of the level when the semester ends reads Not met.
-            </p>
           </>
-        ) : (
-          <p className="sf-field-hint">
-            Students move their own status through Not started, In progress and Completed. The
-            grade&rsquo;s spread is on the goal&rsquo;s row here.
-          </p>
-        )}
+        ) : null}
       </fieldset>
 
       {/* Cohort targets, in their own group below the per-student measurement —
@@ -530,95 +515,106 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
       <fieldset className="goal-fieldset">
         <legend>Targets for the grade</legend>
 
-        {draft.thresholds.length === 0 ? (
-          <p className="sf-field-hint">
-            Optional. Without one the goal is tracked per student only; with one an admin can see at
-            a glance whether the grade as a whole is where it should be.
-          </p>
-        ) : null}
-
         {draft.thresholds.map((threshold, index) => (
-          <div className="goal-threshold-row" key={threshold.id}>
-            <Combobox
-              options={[
-                { value: "floor", label: "At least" },
-                { value: "ceiling", label: "No more than" }
-              ]}
-              value={threshold.kind}
-              onChange={(kind) =>
-                setDraft({
-                  ...draft,
-                  thresholds: draft.thresholds.map((entry, i) =>
-                    i === index ? { ...entry, kind: kind as GoalThreshold["kind"] } : entry
-                  )
-                })
-              }
-              ariaLabel={`Target ${index + 1} kind`}
-            />
+          /* A card per target, not one wrapping line. At the drawer's width a
+             sentence of three controls wrapped to four rows with nothing tying
+             them together; boxed and labelled, each target stays one object. */
+          <div className="goal-threshold" key={threshold.id}>
+            <div className="goal-threshold-head">
+              <span>Target {index + 1}</span>
+              <Button
+                color="tertiary"
+                size="xs"
+                onClick={() =>
+                  setDraft({
+                    ...draft,
+                    thresholds: draft.thresholds.filter((_, i) => i !== index)
+                  })
+                }
+              >
+                Remove<span className="sf-sr-only"> target {index + 1}</span>
+              </Button>
+            </div>
 
-            {/* A whole percent. Clamped on entry rather than validated after: a
-                target of 140% is not a mistake worth an error message. */}
-            <div className="goal-threshold-percent">
-              <input
-                type="number"
-                min={0}
-                max={100}
-                value={threshold.percent}
-                aria-label={`Target ${index + 1} percentage`}
-                onChange={(event) =>
+            <div className="goal-threshold-row">
+              <Combobox
+                options={[
+                  { value: "floor", label: "At least" },
+                  { value: "ceiling", label: "No more than" }
+                ]}
+                value={threshold.kind}
+                onChange={(kind) =>
                   setDraft({
                     ...draft,
                     thresholds: draft.thresholds.map((entry, i) =>
-                      i === index
-                        ? {
-                            ...entry,
-                            percent: Math.max(0, Math.min(100, Number(event.target.value) || 0))
-                          }
-                        : entry
+                      i === index ? { ...entry, kind: kind as GoalThreshold["kind"] } : entry
                     )
                   })
                 }
+                className="goal-threshold-kind"
+                ariaLabel={`Target ${index + 1} kind`}
               />
-              <span aria-hidden>%</span>
+
+              {/* sf-input, the app's shared field class: without it this had no
+                  border or background and read as plain text. Clamped on entry
+                  rather than validated after — 140% is not worth an error. */}
+              <span className="goal-threshold-percent">
+                <input
+                  type="number"
+                  className="sf-input"
+                  min={0}
+                  max={100}
+                  value={threshold.percent}
+                  aria-label={`Target ${index + 1} percentage`}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      thresholds: draft.thresholds.map((entry, i) =>
+                        i === index
+                          ? {
+                              ...entry,
+                              percent: Math.max(0, Math.min(100, Number(event.target.value) || 0))
+                            }
+                          : entry
+                      )
+                    })
+                  }
+                />
+                <span aria-hidden>%</span>
+              </span>
             </div>
 
-            <span className="goal-threshold-word">
-              {threshold.kind === "floor" ? "at or above" : "at"}
-            </span>
+            <div className="goal-threshold-row">
+              <span className="goal-threshold-word">
+                of students {threshold.kind === "floor" ? "at or above" : "at"}
+              </span>
 
-            <Combobox
-              options={draftLevels.map((level) => ({ value: level, label: level }))}
-              value={threshold.level}
-              onChange={(level) =>
-                setDraft({
-                  ...draft,
-                  thresholds: draft.thresholds.map((entry, i) =>
-                    i === index ? { ...entry, level } : entry
-                  )
-                })
-              }
-              placeholder="Level"
-              ariaLabel={`Target ${index + 1} level`}
-            />
-
-            <Button
-              color="secondary-destructive"
-              size="xs"
-              onClick={() =>
-                setDraft({
-                  ...draft,
-                  thresholds: draft.thresholds.filter((_, i) => i !== index)
-                })
-              }
-            >
-              Remove<span className="sf-sr-only"> target {index + 1}</span>
-            </Button>
+              <Combobox
+                options={draftLevels.map((level) => ({ value: level, label: level }))}
+                value={threshold.level}
+                onChange={(level) =>
+                  setDraft({
+                    ...draft,
+                    thresholds: draft.thresholds.map((entry, i) =>
+                      i === index ? { ...entry, level } : entry
+                    )
+                  })
+                }
+                placeholder="Pick a level"
+                className="goal-threshold-level"
+                ariaLabel={`Target ${index + 1} level`}
+              />
+            </div>
           </div>
         ))}
 
-        <button
-          type="button"
-          className="sf-inline-btn"
+        {/* A button, not a faint text link: adding a target is the action this
+            group exists for, and it was the least visible thing in it. */}
+        <Button
+          color="secondary"
+          size="sm"
+          className="justify-self-start"
+          iconLeading={<HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2} />}
           onClick={() =>
             setDraft({
               ...draft,
@@ -634,16 +630,8 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
             })
           }
         >
-          Add a target
-        </button>
-
-        {/* The levels a target can name change with the measurement type, so say
-            which vocabulary is in play rather than leaving the dropdown to hint. */}
-        <p className="sf-field-hint">
-          {draft.measurementType === "auto"
-            ? "Levels are the Portrait of a Graduate scale."
-            : "Levels are the statuses students report: Not started, In progress, Completed."}
-        </p>
+          {draft.thresholds.length === 0 ? "Add a target" : "Add another target"}
+        </Button>
       </fieldset>
     </div>
   );

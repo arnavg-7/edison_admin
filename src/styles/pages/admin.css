@@ -1678,14 +1678,18 @@
 /* Goals list: toggle, lock, definition ----------------------------------- */
 
 /* The count and the list-widening controls, on one line under the filter fields.
-   Spans the bar so the toggle sits at the far end rather than as one more field
-   competing for width — where its label ran past the edge and clipped. */
+   Spans the bar so the toggle is not one more field competing for width, where
+   its label ran past the edge and clipped.
+
+   Grouped left rather than pushed apart: space-between left the switch alone at
+   the far edge with a gap between it and anything it related to, which read as
+   a stray control rather than as one of three statements about what this list
+   currently contains. */
 .sf-filter-foot {
   flex-basis: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 20px;
   flex-wrap: wrap;
 }
 
@@ -1694,8 +1698,13 @@
 }
 
 /* Not a filter field: it widens what the list is rather than narrowing it, so it
-   lays out as control-then-label instead of a stacked label-over-input. */
+   lays out as control-then-label instead of a stacked label-over-input.
+
+   display: flex is the load-bearing line — .sf-field is a grid, so flex-direction
+   alone did nothing and the switch sat on its own row above the words, which is
+   what made it read as a stray control. */
 .sf-field--toggle {
+  display: flex;
   flex-direction: row;
   align-items: center;
   gap: 10px;

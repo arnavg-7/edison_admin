@@ -1488,15 +1488,6 @@
   max-width: 78ch;
 }
 
-/* Where an action is denied, the row carries the reason instead of a dead
-   button — "visibility is broad; editing is narrow", and an admin who cannot
-   edit is owed the sentence explaining which rule stopped them. */
-.goal-readonly {
-  display: block;
-  max-width: 22ch;
-  line-height: 1.4;
-}
-
 /* A goal's expanded detail: its rollup, then its students. */
 .goal-detail {
   display: grid;
@@ -1682,4 +1673,105 @@
   margin-top: 2px;
   font-weight: 500;
   color: var(--sf-text-muted);
+}
+
+/* Goals list: toggle, lock, definition ----------------------------------- */
+
+/* The count and the list-widening controls, on one line under the filter fields.
+   Spans the bar so the toggle sits at the far end rather than as one more field
+   competing for width — where its label ran past the edge and clipped. */
+.sf-filter-foot {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.sf-filter-foot .sf-filter-note {
+  flex-basis: auto;
+}
+
+/* Not a filter field: it widens what the list is rather than narrowing it, so it
+   lays out as control-then-label instead of a stacked label-over-input. */
+.sf-field--toggle {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+/* :not([role="switch"]) because the switch itself renders as a span — without it
+   the control picks up the label's type styles. */
+.sf-field--toggle > span:not([role="switch"]) {
+  font-size: 12.5px;
+  color: var(--sf-text);
+  white-space: nowrap;
+}
+
+.sf-field--toggle .sf-field-hint {
+  display: inline;
+}
+
+/* Replaces the two-line sentence that used to explain a locked row. Sized to the
+   row's action buttons so a locked row and an editable one are the same height —
+   the whole point of the change. */
+.goal-lock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid transparent;
+  border-radius: var(--sf-radius-cta);
+  background: transparent;
+  color: var(--sf-text-dim);
+  cursor: help;
+}
+
+.goal-lock:hover,
+.goal-lock:focus-visible {
+  background: var(--sf-plot);
+  color: var(--sf-text-muted);
+}
+
+/* The window and auto-metric contract, moved out of the list. Definition pairs
+   rather than a table: five short facts about one record, not rows to compare. */
+.goal-definition > dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px 24px;
+  margin: 0;
+  padding: 14px 16px;
+  background: var(--sf-plot);
+  border-radius: 16px;
+}
+
+.goal-definition dt {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sf-text-dim);
+}
+
+.goal-definition dd {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sf-text);
+}
+
+.goal-definition-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--sf-text-muted);
+}
+
+.goal-definition-sub code {
+  font-size: 11px;
+  word-break: break-all;
 }

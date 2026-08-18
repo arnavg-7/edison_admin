@@ -2,19 +2,19 @@
 
 import { Fragment, useMemo, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowRight01Icon, PlusSignIcon } from "@hugeicons/core-free-icons";
+import { ArrowRight01Icon, PlusSignIcon, SquareLock02Icon } from "@hugeicons/core-free-icons";
 import {
-  CREATOR_ROLES,
   CREATOR_ROLE_LABELS,
   SCOPE_TYPES,
   SCOPE_TYPE_LABELS,
+  aggregates,
   canArchive,
   canEditDefinition,
   goalSchoolId,
+  measurementBadge,
   rollup,
   scopeLabel,
   sessionLabel,
-  targetSentence,
   visibleTo,
   whyReadOnly,
   type Goal
@@ -23,11 +23,13 @@ import { useGoals } from "@/lib/goals-store";
 import { useAdminActor, useAdminScope } from "@/lib/admin-scope";
 import { useMounted } from "@/lib/use-mounted";
 import { schools } from "@/lib/data/schools";
-import { formatDateRangeOnly } from "@/lib/format";
 import { Button } from "@/components/base/buttons/button";
 import { Combobox } from "@/components/shared/Combobox";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { GoalDefinition } from "./GoalDefinition";
 import { GoalDrawer } from "./GoalDrawer";
 import { GoalAssignments } from "./GoalAssignments";
 import { GoalRollup } from "./GoalRollup";
@@ -61,7 +63,10 @@ export function GoalsBoard({
   const mounted = useMounted();
 
   const [scopeType, setScopeType] = useState<string>(ALL);
-  const [creator, setCreator] = useState<string>(ALL);
+  /* Off by default: an admin manages admin goals. Faculty and student goals are
+     visibility-only for them, so they are behind a toggle rather than mixed into
+     the list they work in every day. */
+  const [showOthers, setShowOthers] = useState(false);
   const [schoolFilter, setSchoolFilter] = useState<string>(initialSchool ?? ALL);
   const [gradeFilter, setGradeFilter] = useState<string>(initialGrade ?? ALL);
   const [showArchived, setShowArchived] = useState(false);
@@ -87,7 +92,12 @@ export function GoalsBoard({
       .filter((goal) => visibleTo(actor, goal))
       .filter((goal) => (showArchived ? true : goal.isActive))
       .filter((goal) => scopeType === ALL || goal.scopeType === scopeType)
-      .filter((goal) => creator === ALL || goal.creatorRole === creator)
+      .filter(
+        (goal) =>
+          showOthers ||
+          goal.creatorRole === "district_admin" ||
+          goal.creatorRole === "school_admin"
+      )
       .filter((goal) => {
         if (effectiveSchool === ALL) return true;
         /* A district goal reaches into every school, so it belongs in a school's
@@ -108,7 +118,16 @@ export function GoalsBoard({
           !term ||
           `${goal.title} ${goal.description} ${goal.createdBy}`.toLowerCase().includes(term)
       );
-  }, [goals, actor, showArchived, scopeType, creator, effectiveSchool, gradeFilter, query, assignments]);
+  }, [goals, actor, showArchived, scopeType, showOthers, effectiveSchool, gradeFilter, query, assignments]);
+
+  /* How many rows the toggle would add, so the label can say what it reveals
+     rather than leaving the count to be discovered by flipping it. */
+  const othersCount = goals.filter(
+    (goal) =>
+      visibleTo(actor, goal) &&
+      goal.isActive &&
+      (goal.creatorRole === "faculty" || goal.creatorRole === "student")
+  ).length;
 
   const archivedCount = goals.filter((goal) => visibleTo(actor, goal) && !goal.isActive).length;
 
@@ -166,18 +185,6 @@ export function GoalsBoard({
           />
         </label>
 
-        <label className="sf-field">
-          <span>Set by</span>
-          <Combobox
-            options={[
-              { value: ALL, label: "Anyone" },
-              ...CREATOR_ROLES.map((role) => ({ value: role, label: CREATOR_ROLE_LABELS[role] }))
-            ]}
-            value={creator}
-            onChange={setCreator}
-          />
-        </label>
-
         {/* No School field for a school admin — the sidebar names their school. */}
         {scopedSchool ? null : (
           <label className="sf-field">
@@ -210,21 +217,39 @@ export function GoalsBoard({
           />
         </label>
 
-        <p className="sf-filter-note">
-          {visible.length} goal{visible.length === 1 ? "" : "s"}
-          {archivedCount > 0 ? (
-            <>
-              {" · "}
-              <button
-                type="button"
-                className="sf-inline-btn"
-                onClick={() => setShowArchived((current) => !current)}
-              >
-                {showArchived ? "Hide" : "Show"} {archivedCount} archived
-              </button>
-            </>
-          ) : null}
-        </p>
+        {/* The count and the two "widen this list" controls share a line under
+            the filters. The toggle was a filter field, where its label ran past
+            the bar's right edge and clipped; it also belongs with Show archived
+            rather than among the fields that narrow. */}
+        <div className="sf-filter-foot">
+          <p className="sf-filter-note">
+            {visible.length} goal{visible.length === 1 ? "" : "s"}
+            {archivedCount > 0 ? (
+              <>
+                {" · "}
+                <button
+                  type="button"
+                  className="sf-inline-btn"
+                  onClick={() => setShowArchived((current) => !current)}
+                >
+                  {showArchived ? "Hide" : "Show"} {archivedCount} archived
+                </button>
+              </>
+            ) : null}
+          </p>
+
+          {/* A switch, not a filter option: it widens what the list is rather
+              than narrowing it, and it says how much wider. */}
+          <label className="sf-field sf-field--toggle">
+            <Switch checked={showOthers} onCheckedChange={setShowOthers} />
+            <span>
+              Show faculty &amp; student goals{" "}
+              <span className="sf-field-hint">
+                view only{othersCount > 0 ? ` · ${othersCount}` : ""}
+              </span>
+            </span>
+          </label>
+        </div>
       </div>
 
       <div className="sf-panel">
@@ -249,7 +274,6 @@ export function GoalsBoard({
                   <th scope="col">Scope</th>
                   <th scope="col">Set by</th>
                   <th scope="col">Measurement</th>
-                  <th scope="col">Window</th>
                   <th scope="col">Progress</th>
                   <th scope="col" aria-label="Actions" />
                 </tr>
@@ -261,7 +285,6 @@ export function GoalsBoard({
                   const rows = assignments(goal);
                   const totals = rollup(goal, rows);
                   const readOnly = whyReadOnly(actor, goal);
-                  const target = targetSentence(goal);
 
                   return (
                     <Fragment key={goal.id}>
@@ -306,37 +329,33 @@ export function GoalsBoard({
                           </div>
                         </td>
                         <td>
-                          {goal.measurementType === "auto" ? (
-                            <>
-                              <StatusBadge tone="ok">Auto</StatusBadge>
-                              <div className="list-editor-item-detail">{target}</div>
-                            </>
-                          ) : (
-                            <>
-                              <StatusBadge tone="neutral">Manual</StatusBadge>
-                              <div className="list-editor-item-detail">
-                                A person sets the status
-                              </div>
-                            </>
-                          )}
+                          {/* One badge, one line. The metric is not named because
+                              POAG level is the only one this release, and the
+                              operator and target are what differ between rows. */}
+                          <StatusBadge tone={goal.measurementType === "auto" ? "ok" : "neutral"}>
+                            {measurementBadge(goal)}
+                          </StatusBadge>
                         </td>
                         <td>
+                          {/* Only an aggregating goal gets a percentage. A
+                              faculty or student goal shows the bare count: a %
+                              in this column reads as a rollup, and those are
+                              excluded from every rollup in R1. */}
                           <div className="list-editor-item-title">
-                            {sessionLabel(goal.academicSessionId)}
+                            {aggregates(goal)
+                              ? `${Math.round(totals.pct)}%`
+                              : `${totals.met} of ${totals.total} met`}
                           </div>
                           <div className="list-editor-item-detail">
-                            {formatDateRangeOnly(goal.startDate, goal.endDate)}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="list-editor-item-title">
-                            {Math.round(totals.pct)}%
-                          </div>
-                          <div className="list-editor-item-detail">
-                            {totals.met} of {totals.total} met
-                            {/* Named, not silently dropped: an excluded student
-                                is a roster change, not a gap in the data. */}
-                            {totals.inactive > 0 ? ` · ${totals.inactive} left the scope` : ""}
+                            {[
+                              aggregates(goal) ? `${totals.met} of ${totals.total} met` : null,
+                              /* Named, not silently dropped: an excluded student
+                                 is a roster change, not a gap in the data. */
+                              totals.inactive > 0 ? `${totals.inactive} left the scope` : null,
+                              aggregates(goal) ? null : "not in rollups"
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
                           </div>
                         </td>
                         <td>
@@ -374,15 +393,31 @@ export function GoalsBoard({
                               )}
                             </div>
                           ) : (
-                            <span className="sf-panel-note goal-readonly">{readOnly}</span>
+                            /* A lock, not a sentence: the prose cost two lines on
+                               every locked row. The icon says "not yours to
+                               change"; the tooltip says which rule, and it is a
+                               button so keyboard and touch reach it too. */
+                            <Tooltip>
+                              <TooltipTrigger
+                                render={
+                                  <button type="button" className="goal-lock" aria-label={readOnly ?? "Read-only"}>
+                                    <HugeiconsIcon icon={SquareLock02Icon} size={16} strokeWidth={2} />
+                                  </button>
+                                }
+                              />
+                              <TooltipContent className="max-w-64">{readOnly}</TooltipContent>
+                            </Tooltip>
                           )}
                         </td>
                       </tr>
 
                       {isOpen ? (
                         <tr className="sf-subrow" id={detailId}>
-                          <td colSpan={7}>
+                          <td colSpan={6}>
                             <div className="goal-detail">
+                              {/* What the list no longer carries: the window, and
+                                  the full auto-metric contract. */}
+                              <GoalDefinition goal={goal} />
                               <GoalRollup goal={goal} rows={rows} />
                               <GoalAssignments goal={goal} rows={rows} />
                             </div>

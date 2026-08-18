@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  aggregates,
   breakdownFor,
   breakdownLevelFor,
   meanLevelLabel,
@@ -21,6 +22,12 @@ import {
  * Read-only aggregation, computed rather than stored.
  */
 export function GoalRollup({ goal, rows }: { goal: Goal; rows: GoalAssignment[] }) {
+  /* Faculty- and student-created goals are excluded from every rollup in R1, so
+     there is no aggregate to show — not a zero, and not a figure framed as one
+     that later turns out never to have counted. The student list below still
+     shows each individual's real progress. */
+  if (!aggregates(goal)) return null;
+
   const totals = rollup(goal, rows);
   const level = breakdownLevelFor(goal);
   const breakdown = level ? breakdownFor(goal, level) : [];

@@ -130,6 +130,13 @@ export const TARGET_OPERATOR_LABELS: Record<TargetOperator, string> = {
   eq: "exactly"
 };
 
+/** Symbols for the list view, where the words cost a line they cannot afford. */
+export const TARGET_OPERATOR_SYMBOLS: Record<TargetOperator, string> = {
+  gte: "\u2265",
+  lte: "\u2264",
+  eq: "="
+};
+
 export type Goal = {
   id: string;
   title: string;
@@ -233,6 +240,21 @@ export function metricLabel(metricKey: string | null): string | null {
 export function metricPillar(metricKey: string | null): string | null {
   if (!metricKey?.startsWith("poag_level.")) return null;
   return metricKey.slice("poag_level.".length);
+}
+
+/**
+ * The measurement, short enough for a table cell: `Auto · \u2265 Applying`.
+ *
+ * The metric is not named. POAG level is the only live auto-metric this release,
+ * so "POAG level" on every auto row is a word that distinguishes nothing — and
+ * the operator and target are the two things that differ between rows. The full
+ * definition (metric key, operator in words, window, source system) is in the
+ * expanded detail, where there is room for it to mean something.
+ */
+export function measurementBadge(goal: Goal): string {
+  if (goal.measurementType !== "auto") return "Manual";
+  const symbol = goal.targetOperator ? TARGET_OPERATOR_SYMBOLS[goal.targetOperator] : "\u2265";
+  return goal.targetValue ? `Auto \u00b7 ${symbol} ${goal.targetValue}` : "Auto";
 }
 
 /** "POAG level · Critical Thinking reaches at least Applying". */
@@ -590,9 +612,22 @@ export function meanLevelLabel(mean: number): string {
  * individual goal has nothing below it worth grouping.
  */
 export function breakdownLevelFor(goal: Goal): "school" | "grade" | null {
+  if (!aggregates(goal)) return null;
   if (goal.scopeType === "district") return "school";
   if (goal.scopeType === "school") return "grade";
   return null;
+}
+
+/**
+ * Whether this goal feeds rollup reporting at all.
+ *
+ * Only admin-created goals aggregate in R1. A teacher's class goal and a
+ * student's own goal are real records with real progress, but they are not
+ * comparable across a district — one teacher's "completed" is not another's — so
+ * they are kept out of every aggregate rather than quietly averaged in.
+ */
+export function aggregates(goal: Goal): boolean {
+  return goal.creatorRole === "district_admin" || goal.creatorRole === "school_admin";
 }
 
 /* ── Permissions (Sheet 2) ────────────────────────────────────────────── */
@@ -626,8 +661,11 @@ export function creatableScopes(actor: AdminActor): ScopeType[] {
 export function canEditDefinition(actor: AdminActor, goal: Goal): boolean {
   if (goal.creatorRole === "student" || goal.creatorRole === "faculty") return false;
   if (actor.role === "district_admin") return true;
-  // School admin: their own school's goals, never the district's.
-  if (goal.creatorRole === "district_admin") return false;
+  /* A school admin runs every admin goal scoped to their own school, including
+     one the district office wrote at their school, grade or class level — those
+     sit at their level, not above it, and the goals above it are not on their
+     screen at all. Departs from rulebook Q1, which answered view-and-report-only;
+     flagged rather than silently reinterpreted. */
   return goalSchoolId(goal) === actor.schoolId;
 }
 
@@ -654,29 +692,45 @@ export function canArchive(actor: AdminActor, goal: Goal): boolean {
   return canEditDefinition(actor, goal);
 }
 
-/** Why an action is unavailable, for the UI to say rather than just disable. */
+/**
+ * Why the actions are unavailable, as a tooltip rather than a sentence in the row.
+ *
+ * Prose in the cell cost two lines on every locked row and pushed the rest of the
+ * table down for something most rows never say. A lock carries "you cannot change
+ * this" on its own; the reason is what the tooltip is for, and it varies because
+ * "the student wrote it" and "their teacher wrote it" are different situations
+ * with different escalation paths.
+ */
 export function whyReadOnly(actor: AdminActor, goal: Goal): string | null {
   if (goal.creatorRole === "student") {
-    return "Student-authored goals are read-only to staff.";
+    return "Written by the student. Read-only to staff \u2014 nobody else may edit or re-status it.";
   }
   if (goal.creatorRole === "faculty") {
-    return "Created by faculty — only its author may change the definition.";
+    return `Written by ${goal.createdBy}. Only its author may change the definition; you can still record progress.`;
   }
-  if (actor.role === "school_admin" && goal.creatorRole === "district_admin") {
-    return "Set by the district office. View and report only.";
-  }
-  if (goalSchoolId(goal) !== null && goalSchoolId(goal) !== actor.schoolId && actor.role === "school_admin") {
+  if (actor.role === "school_admin" && goalSchoolId(goal) !== actor.schoolId) {
     return "Belongs to another school.";
   }
   return null;
 }
 
-/** Visibility: broad, unlike editing. A school admin sees all in their school. */
+/**
+ * Whether this goal belongs on the actor's screen at all.
+ *
+ * A school admin's list stops at their own scope. District-wide goals are left
+ * out of the query rather than shown locked: anything above their level is the
+ * district office's to run, and they escalate rather than monitor it here. It
+ * also keeps the locked treatment meaning one thing for this role — faculty and
+ * student goals — instead of two.
+ *
+ * The trade-off is deliberate and worth knowing: a school admin cannot see their
+ * own students' progress on a district goal from this screen. It is still on each
+ * student's 360.
+ */
 export function visibleTo(actor: AdminActor, goal: Goal): boolean {
   if (actor.role === "district_admin") return true;
-  const schoolId = goalSchoolId(goal);
-  // A district-wide goal covers their school's students, so they see it.
-  return schoolId === null || schoolId === actor.schoolId;
+  if (goal.scopeType === "district") return false;
+  return goalSchoolId(goal) === actor.schoolId;
 }
 
 /* ── Seeds ────────────────────────────────────────────────────────────── */

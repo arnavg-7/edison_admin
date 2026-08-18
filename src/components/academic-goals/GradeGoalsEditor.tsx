@@ -6,7 +6,6 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { PlusSignIcon } from "@hugeicons/core-free-icons";
 import {
   goalCategories,
-  goalTemplates,
   isPastSemester,
   type GradeGoal
 } from "@/lib/data/academicGoals";
@@ -27,7 +26,9 @@ import { GoalProgressCell } from "./GoalProgressCell";
 import { StudentGoalsPanel } from "./StudentGoalsPanel";
 import { HugeiconsIcon as ExpandIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import Link from "next/link";
 import { usePoag } from "@/lib/poag-store";
+import { useGoalTemplates } from "@/lib/goal-templates-store";
 import { subjectsForGrade } from "@/lib/data/poagCoverage";
 import { targetSentence } from "@/lib/data/gradeGoalProgress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -50,11 +51,7 @@ const categoryOptions: ComboOption[] = goalCategories.map((category) => ({
   label: category.title
 }));
 
-/** Published templates, offered as a starting point for a new goal's name. */
-const templateOptions: ComboOption[] = goalTemplates.map((template) => ({
-  value: template.title,
-  label: template.title
-}));
+
 
 /** Every school, so a goal can be set for a grade other than the one on screen. */
 const schoolOptions: ComboOption[] = schools.map((school) => ({
@@ -157,6 +154,42 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
   }, [schoolId, grade]);
 
   const { pillars, levels } = usePoag();
+
+  /* Published only — a draft template pre-filling a real goal would be worse than
+     typing it out. Live from the store, so a template added in System Settings is
+     offered here without a reload. */
+  const { published: templates } = useGoalTemplates();
+
+  const templateOptions: ComboOption[] = templates.map((template) => ({
+    value: template.id,
+    label: template.title
+  }));
+
+  /**
+   * Applies a whole template, not just its name.
+   *
+   * A template that filled only the title was a shortcut for typing. Filling the
+   * description, category and measurement is what makes two schools' goals the
+   * same goal — which is the reason templates are district-wide at all. The fields
+   * stay editable afterwards: it is a starting point, not a lock.
+   */
+  const applyTemplate = (id: string) => {
+    const template = templates.find((entry) => entry.id === id);
+    if (!template) return;
+
+    setDraft((current) => ({
+      ...current,
+      title: template.title,
+      description: template.description,
+      category: template.category,
+      measurementType: template.measurement.type,
+      pillarKey: template.measurement.type === "auto" ? template.measurement.pillarKey : "",
+      requiredLevel:
+        template.measurement.type === "auto" ? template.measurement.requiredLevel : "",
+      subjectId:
+        template.measurement.type === "auto" ? (template.measurement.subjectId ?? "") : ""
+    }));
+  };
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -317,18 +350,33 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
           A datalist is drawn by the browser: Chrome hangs its own caret on the
           input on hover, so the field looked like a dropdown the app doesn't
           have anywhere else, and the list it opened matched nothing in the
-          filter bar. Picking a template fills the name below, which stays a
-          plain text field — the name is still free text, the template is only a
-          starting point. */}
+          filter bar.
+
+          Picking one now fills the name, description, category and measurement —
+          every field below stays editable, so it is a starting point rather than
+          a lock. */}
       <label className="sf-field sf-field--prestep">
         <span>Start from a template</span>
         <Combobox
           options={templateOptions}
           value=""
-          onChange={(title) => setDraft({ ...draft, title })}
-          placeholder="Optional — pick a published template"
+          onChange={applyTemplate}
+          placeholder={
+            templateOptions.length === 0
+              ? "No published templates yet"
+              : "Optional — pick a published template"
+          }
+          disabled={templateOptions.length === 0}
           ariaLabel="Start from a goal template"
         />
+        {/* The templates live in System Settings, so the field says where to go
+            rather than leaving an admin to hunt for the list they just saw. */}
+        <span className="sf-field-hint">
+          Fills the name, description, category and measurement.{" "}
+          <Link className="sf-inline-link" href="/system-settings/goal-templates">
+            Manage templates
+          </Link>
+        </span>
       </label>
 
       {/* Which grade the goal is being set for. Defaults to the grade whose page

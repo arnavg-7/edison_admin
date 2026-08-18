@@ -3,7 +3,7 @@
 import { Fragment, useMemo, useState } from "react";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { ArrowRight01Icon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import {
   STUDENT_GOAL_CATEGORIES,
   goalProgress,
@@ -15,7 +15,11 @@ import {
 import { usePoag } from "@/lib/poag-store";
 import { useMounted } from "@/lib/use-mounted";
 import { formatDateOnly } from "@/lib/format";
+import { addedGoalsFor, removeStudentGoal } from "@/lib/student-goals-store";
+import { gradeRoster } from "@/lib/data/studentRoster";
+import { Button } from "@/components/base/buttons/button";
 import { Combobox } from "@/components/shared/Combobox";
+import { StudentGoalDrawer } from "./StudentGoalDrawer";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
@@ -29,9 +33,11 @@ const ALL = "all";
  * is who is working on what, and whether anyone has written nothing. So the row
  * is a summary of one student's set, and the goals themselves are behind it.
  *
- * Read-only, like the Portrait of a Graduate panel on a 360: a personal goal is
- * an agreement between a student and their teacher, and an admin editing one
- * would be rewriting a conversation they were not in.
+ * An admin may set a goal for one student here, and may withdraw one they set.
+ * They may never move a status: a personal goal's progress is what the student or
+ * their teacher reports, and a status an admin typed would be a claim about work
+ * they did not see. So there is an Add on this panel and no status control on any
+ * row — including the rows an admin wrote.
  */
 export function StudentGoalsPanel({ schoolId, grade }: { schoolId: string; grade: string }) {
   /* Pillars come from the live store rather than the seed, so the skill filter
@@ -46,11 +52,46 @@ export function StudentGoalsPanel({ schoolId, grade }: { schoolId: string; grade
   const [category, setCategory] = useState<string>(ALL);
   const [pillarKey, setPillarKey] = useState<string>(ALL);
   const [expanded, setExpanded] = useState<string[]>([]);
+  const [adding, setAdding] = useState<string | null>(null);
+  /* Bumped after a write so the merge below re-reads the store, which is a plain
+     module map rather than React state. */
+  const [writeCount, setWriteCount] = useState(0);
 
-  const rows = useMemo(
-    () => studentGoalsFor(schoolId, grade, pillars),
-    [schoolId, grade, pillars]
-  );
+  /* The row id for a student, derived the one way so the merge below and the
+     expander agree. */
+  const rowIdFor = (studentName: string) =>
+    gradeRoster(schoolId, grade).find((entry) => entry.name === studentName)?.id ??
+    `student-${studentName.replace(/\s+/g, "-").toLowerCase()}`;
+
+  const rows = useMemo(() => {
+    const seeded = studentGoalsFor(schoolId, grade, pillars);
+    const added = addedGoalsFor(schoolId, grade);
+    if (added.size === 0) return seeded;
+
+    /* Merged on top of what the students and their teachers wrote, not instead of
+       it. A student the admin has just set a goal for may not have written one, so
+       they need a row of their own — the list is "students with goals", and they
+       now have one. */
+    const roster = gradeRoster(schoolId, grade);
+    const merged = seeded.map((row) =>
+      added.has(row.studentName)
+        ? { ...row, goals: [...(added.get(row.studentName) ?? []), ...row.goals] }
+        : row
+    );
+
+    for (const [studentName, goals] of added) {
+      if (merged.some((row) => row.studentName === studentName)) continue;
+      const student = roster.find((entry) => entry.name === studentName);
+      merged.push({
+        id: rowIdFor(studentName),
+        studentName,
+        personId: student?.personId ?? null,
+        goals
+      });
+    }
+    return merged;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schoolId, grade, pillars, writeCount]);
   const enrolled = gradeStudentCount(schoolId, grade);
 
   const matchesGoal = (goal: StudentGoal) =>
@@ -93,16 +134,27 @@ export function StudentGoalsPanel({ schoolId, grade }: { schoolId: string; grade
     <div className="sf-panel">
       <div className="sf-panel-head">
         <h2>Student goals</h2>
-        <span className="sf-panel-note">
-          {rows.length} of {enrolled} students have set goals
-        </span>
+        <div className="sf-panel-head-end">
+          <span className="sf-panel-note">
+            {rows.length} of {enrolled} students have goals
+          </span>
+          <Button
+            size="sm"
+            onClick={() => setAdding("")}
+            iconLeading={<HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2} />}
+          >
+            Set a goal for a student
+          </Button>
+        </div>
       </div>
 
-      {/* Set by the student or by a teacher with them — never by an admin, so
-          this panel has no Add. Said once, here, rather than on every row. */}
+      {/* The split this panel turns on, said once here rather than on every row:
+          an admin may write an individual goal, and never a status. */}
       <p className="sf-panel-note goals-panel-intro">
-        Personal goals students set for themselves, or that a teacher sets with them. Each is
-        tagged with the Portrait of a Graduate skill it builds. Read-only for admins.
+        Goals belonging to one student — written by the student, by a teacher with them, or by an
+        admin for that student alone. Each is tagged with the Portrait of a Graduate skill it
+        builds. Progress is reported by the student or their teacher; setting a goal here does not
+        set its status.
       </p>
 
       <div className="sf-filter-bar sf-filter-bar--flush">
@@ -158,7 +210,10 @@ export function StudentGoalsPanel({ schoolId, grade }: { schoolId: string; grade
                   const personal = row.goals.length - academic;
                   /* Goals are sorted soonest-first, so the first one still open
                      is the deadline that matters. */
-                  const next = row.goals.find((goal) => goal.status !== "Achieved");
+                  /* The nearest deadline still open. Prefers a dated goal over an
+                     undated one, since the column is about when something is due. */
+                  const open = row.goals.filter((goal) => goal.status !== "Achieved");
+                  const next = open.find((goal) => goal.due !== "") ?? open[0];
 
                   const skillNames = [...new Set(row.goals.map((goal) => goal.pillarTitle))];
 
@@ -227,7 +282,16 @@ export function StudentGoalsPanel({ schoolId, grade }: { schoolId: string; grade
                               .join(" · ") || "Nothing outstanding"}
                           </div>
                         </td>
-                        <td>{next ? formatDateOnly(next.due) : "All achieved"}</td>
+                        {/* Three states, not two: a date, a goal that has none
+                            yet, and nothing left open. Handing "" to the date
+                            formatter threw and took the panel down with it. */}
+                        <td>
+                          {!next
+                            ? "All achieved"
+                            : next.due === ""
+                              ? "No date set"
+                              : formatDateOnly(next.due)}
+                        </td>
                       </tr>
 
                       {isOpen ? (
@@ -252,8 +316,32 @@ export function StudentGoalsPanel({ schoolId, grade }: { schoolId: string; grade
                                   </div>
                                   <p className="student-goal-desc">{goal.description}</p>
                                   <p className="student-goal-meta">
-                                    Due {formatDateOnly(goal.due)} · Set by{" "}
+                                    {goal.due ? `Due ${formatDateOnly(goal.due)} · ` : ""}Set by{" "}
                                     {goal.setByRole === "Student" ? "the student" : goal.setBy}
+                                    {/* Withdrawable, because an admin who set the
+                                        wrong goal should be able to take it back —
+                                        which is not the same as changing how far
+                                        along the student says they are. */}
+                                    {goal.setByRole === "Admin" ? (
+                                      <>
+                                        {" · "}
+                                        <button
+                                          type="button"
+                                          className="sf-inline-btn"
+                                          onClick={() => {
+                                            removeStudentGoal(
+                                              schoolId,
+                                              grade,
+                                              row.studentName,
+                                              goal.id
+                                            );
+                                            setWriteCount((count) => count + 1);
+                                          }}
+                                        >
+                                          Withdraw
+                                        </button>
+                                      </>
+                                    ) : null}
                                   </p>
                                 </li>
                               ))}
@@ -276,6 +364,25 @@ export function StudentGoalsPanel({ schoolId, grade }: { schoolId: string; grade
           ) : null}
         </>
       )}
+
+      {adding !== null ? (
+        <StudentGoalDrawer
+          schoolId={schoolId}
+          grade={grade}
+          student={adding}
+          onClose={() => setAdding(null)}
+          onSaved={(studentName) => {
+            setWriteCount((count) => count + 1);
+            /* Opened straight away: an admin who just set a goal wants to see it
+               land, and it is one row in a list of two dozen. Keyed by row id, the
+               same value the expander uses — a student's name is not it. */
+            const rowId = rowIdFor(studentName);
+            setExpanded((current) =>
+              current.includes(rowId) ? current : [...current, rowId]
+            );
+          }}
+        />
+      ) : null}
     </div>
   );
 }

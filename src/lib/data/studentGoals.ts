@@ -9,9 +9,12 @@
  * loose intention ("join public speaking club") ties back to something the
  * school actually measures.
  *
- * Admins read these; they do not write them. A goal is between a student and
- * their teacher, and an admin who edited one would be overwriting a
- * conversation they were not part of.
+ * An admin can set one of these for an individual student — a plan agreed in a
+ * meeting, say — but never move a status. Writing a goal and reporting progress on
+ * it are different acts, and only the second needs to have been there: a status an
+ * admin typed would be a claim about work they did not see. So the panel offers an
+ * Add and no status control, and a goal the student or their teacher wrote stays
+ * entirely theirs.
  *
  * TODO: replace with real reads once the Admin DB student-goals contract
  * exists. Everything below is derived deterministically from the student's name
@@ -50,12 +53,26 @@ export type StudentGoal = {
   pillarKey: string;
   /** The pillar's shown name at the time of reading, for display only. */
   pillarTitle: string;
-  /** ISO date the student is working to. */
+  /**
+   * ISO date the student is working to, or "" for a goal with no date set.
+   *
+   * Empty is a real state, not missing data: a goal agreed in a meeting often has
+   * no deadline yet. Anything reading this has to cope with "" — sorting puts
+   * undated goals last, and nothing may hand "" to a date formatter.
+   */
   due: string;
   status: StudentGoalStatus;
-  /** Who wrote it: the student themselves, or a named teacher. */
+  /** Who wrote it: the student, a named teacher, or an admin. */
   setBy: string;
-  setByRole: "Student" | "Faculty";
+  /**
+   * Admin is a third author, not a third owner.
+   *
+   * An admin can set a goal for one student — a plan agreed in a meeting, say —
+   * but the status stays the student's and their teacher's to move. Writing the
+   * goal and reporting progress on it are different acts, and only the second
+   * needs to have been there.
+   */
+  setByRole: "Student" | "Faculty" | "Admin";
 };
 
 export type StudentGoalRow = {
@@ -301,7 +318,13 @@ export function studentGoalsFor(
     }
 
     // Soonest first: the goal with the nearest deadline is the live one.
-    goals.sort((a, b) => a.due.localeCompare(b.due));
+    /* Soonest first, and undated last rather than first: "" sorts before every
+       real date, which would put a goal with no deadline at the top of a list
+       ordered by urgency. */
+    goals.sort((a, b) => {
+      if (a.due === "" || b.due === "") return a.due === "" ? 1 : -1;
+      return a.due.localeCompare(b.due);
+    });
 
     return { id: entry.id, studentName: entry.name, personId: entry.personId, goals };
   });

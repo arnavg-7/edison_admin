@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { gradeGoalsFor, isPastSemester } from "@/lib/data/academicGoals";
-import { gradeGoalStatusTone, studentGoalStatus } from "@/lib/data/gradeGoalProgress";
+import {
+  gradeGoalStatusTone,
+  isAchieved,
+  studentGoalStatus,
+  targetSentence
+} from "@/lib/data/gradeGoalProgress";
 import { gradeLabel } from "@/lib/data/schools";
 import { formatDateRangeOnly, formatSalesforceStamp } from "@/lib/format";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -34,8 +39,8 @@ export function StudentGradeGoalsPanel({
   // screen keeps them under its own Goal History tab.
   const goals = gradeGoalsFor(schoolId, grade).filter((goal) => !isPastSemester(goal));
 
-  const done = goals.filter(
-    (goal) => studentGoalStatus(schoolId, grade, goal.id, studentName)?.status === "Completed"
+  const done = goals.filter((goal) =>
+    isAchieved(studentGoalStatus(schoolId, grade, goal, studentName)?.status)
   ).length;
 
   return (
@@ -44,7 +49,7 @@ export function StudentGradeGoalsPanel({
         <h2>{gradeLabel(grade)} goals</h2>
         {goals.length > 0 ? (
           <span className="sf-panel-note">
-            {done} of {goals.length} completed
+            {done} of {goals.length} achieved
           </span>
         ) : null}
       </div>
@@ -54,7 +59,8 @@ export function StudentGradeGoalsPanel({
         <Link className="sf-inline-link" href={`/academic-goals/${schoolId}/${grade}`}>
           Goals
         </Link>
-        . {studentName} reports their own progress on each — read-only here.
+        . {studentName} reports their own progress on the manual ones; the auto ones are measured
+        from their Portrait of a Graduate rating. Read-only here either way.
       </p>
 
       {goals.length === 0 ? (
@@ -70,13 +76,14 @@ export function StudentGradeGoalsPanel({
                 <th scope="col">Goal</th>
                 <th scope="col">Category</th>
                 <th scope="col">Semester</th>
+                <th scope="col">Measured</th>
                 <th scope="col">Status</th>
                 <th scope="col">Last updated</th>
               </tr>
             </thead>
             <tbody>
               {goals.map((goal) => {
-                const record = studentGoalStatus(schoolId, grade, goal.id, studentName);
+                const record = studentGoalStatus(schoolId, grade, goal, studentName);
                 const status = record?.status ?? "Not started";
 
                 return (
@@ -93,14 +100,32 @@ export function StudentGradeGoalsPanel({
                       </div>
                     </td>
                     <td>
+                      <StatusBadge tone={goal.measurement.type === "auto" ? "ok" : "neutral"}>
+                        {goal.measurement.type === "auto" ? "Auto" : "Manual"}
+                      </StatusBadge>
+                      {goal.measurement.type === "auto" ? (
+                        <div className="list-editor-item-detail">{targetSentence(goal)}</div>
+                      ) : null}
+                    </td>
+                    <td>
                       <StatusBadge tone={gradeGoalStatusTone(status)}>{status}</StatusBadge>
+                      {/* The reading behind an auto status, so "At risk" is a
+                          fact about a level rather than a verdict with no cause. */}
+                      {record?.level ? (
+                        <div className="list-editor-item-detail">
+                          At {record.level}
+                          {record.levelSubject ? ` · ${record.levelSubject}` : ""}
+                        </div>
+                      ) : null}
                     </td>
                     {/* Nothing reported yet is said in words — an empty cell
                         reads as missing data rather than as "not started". */}
                     <td>
                       {record?.updatedAt
                         ? formatSalesforceStamp(record.updatedAt)
-                        : "Not reported yet"}
+                        : goal.measurement.type === "auto"
+                          ? "Not rated yet"
+                          : "Not reported yet"}
                     </td>
                   </tr>
                 );

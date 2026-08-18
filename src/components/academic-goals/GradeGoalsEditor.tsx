@@ -19,6 +19,7 @@ import {
 } from "@/lib/academic-goals-store";
 import { gradeLabel, gradesForSchool, schools } from "@/lib/data/schools";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/base/buttons/button";
 import { Combobox } from "@/components/shared/Combobox";
 import { GradeGoalStudents } from "./GradeGoalStudents";
@@ -26,6 +27,9 @@ import { GoalProgressCell } from "./GoalProgressCell";
 import { StudentGoalsPanel } from "./StudentGoalsPanel";
 import { HugeiconsIcon as ExpandIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { usePoag } from "@/lib/poag-store";
+import { subjectsForGrade } from "@/lib/data/poagCoverage";
+import { targetSentence } from "@/lib/data/gradeGoalProgress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Sheet,
@@ -96,6 +100,15 @@ type Draft = {
   semesterName: string;
   semesterFrom: string;
   semesterTo: string;
+  /* Measurement, held flat rather than as the union the record uses: a drawer
+     keeps every field a user might switch back to, so toggling to Manual and
+     back must not lose the pillar they had already picked. It is narrowed to the
+     union on save. */
+  measurementType: "manual" | "auto";
+  pillarKey: string;
+  requiredLevel: string;
+  /** "" means any subject. */
+  subjectId: string;
 };
 
 function emptyDraft(scope: GoalScope): Draft {
@@ -107,7 +120,11 @@ function emptyDraft(scope: GoalScope): Draft {
     category: goalCategories[0]?.title ?? "",
     semesterName: "",
     semesterFrom: "",
-    semesterTo: ""
+    semesterTo: "",
+    measurementType: "manual",
+    pillarKey: "",
+    requiredLevel: "",
+    subjectId: ""
   };
 }
 
@@ -139,6 +156,8 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
     setGoals(goalsInScope({ schoolId, grade }));
   }, [schoolId, grade]);
 
+  const { pillars, levels } = usePoag();
+
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   /* Which goals are opened out onto their student list. Several at once, so two
@@ -157,6 +176,22 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
     setIsAdding(true);
   };
 
+  /* Pillars and levels come from the POAG store, not the seed: the goal's target
+     is one of those labels, so a renamed level has to be offered here or a goal
+     could be written against wording that no longer exists. */
+  const pillarOptions: ComboOption[] = pillars.map((pillar) => ({
+    value: pillar.rubricKey,
+    label: pillar.displayTitle
+  }));
+  const levelOptions: ComboOption[] = levels.map((level) => ({
+    value: level.label,
+    label: level.label
+  }));
+  const subjectOptions: ComboOption[] = [
+    { value: "", label: "Any subject" },
+    ...subjectsForGrade(grade).map((subject) => ({ value: subject.id, label: subject.name }))
+  ];
+
   const startEdit = (goal: GradeGoal) => {
     setDraft({
       // A goal in this table belongs to this grade; changing either field in the
@@ -168,7 +203,11 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
       category: goal.category,
       semesterName: goal.semester.name,
       semesterFrom: goal.semester.from,
-      semesterTo: goal.semester.to
+      semesterTo: goal.semester.to,
+      measurementType: goal.measurement.type,
+      pillarKey: goal.measurement.type === "auto" ? goal.measurement.pillarKey : "",
+      requiredLevel: goal.measurement.type === "auto" ? goal.measurement.requiredLevel : "",
+      subjectId: goal.measurement.type === "auto" ? (goal.measurement.subjectId ?? "") : ""
     });
     setIsAdding(false);
     setEditingId(goal.id);
@@ -197,7 +236,11 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
     draft.semesterName.trim() !== "" &&
     draft.semesterFrom !== "" &&
     draft.semesterTo !== "" &&
-    draft.semesterFrom <= draft.semesterTo;
+    draft.semesterFrom <= draft.semesterTo &&
+    /* An auto goal with no pillar or no target level would evaluate every student
+       against nothing, so it cannot be saved half-specified. */
+    (draft.measurementType === "manual" ||
+      (draft.pillarKey !== "" && draft.requiredLevel !== ""));
 
   const save = () => {
     if (!canSave) {
@@ -215,7 +258,17 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
         name: draft.semesterName.trim(),
         from: draft.semesterFrom,
         to: draft.semesterTo
-      }
+      },
+      measurement:
+        draft.measurementType === "auto"
+          ? {
+              type: "auto",
+              pillarKey: draft.pillarKey,
+              requiredLevel: draft.requiredLevel,
+              // "" is the any-subject rule, stored as null.
+              subjectId: draft.subjectId === "" ? null : draft.subjectId
+            }
+          : { type: "manual" }
     };
 
     saveGoal(target, goal, editingId ? scope : undefined);
@@ -370,6 +423,83 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
         </label>
       </div>
 
+      {/* The second decision, and a separate one from what the goal says: who
+          settles whether it is done. Its own group, because picking Auto changes
+          what the rest of the form asks for. */}
+      <fieldset className="goal-fieldset">
+        <legend>How progress is measured</legend>
+
+        <div className="tone-options">
+          <label className="tone-option">
+            <input
+              type="radio"
+              name="goal-measurement"
+              checked={draft.measurementType === "manual"}
+              onChange={() => setDraft({ ...draft, measurementType: "manual" })}
+            />
+            <span className="tone-name">Manual — the student reports their status</span>
+          </label>
+          <label className="tone-option">
+            <input
+              type="radio"
+              name="goal-measurement"
+              checked={draft.measurementType === "auto"}
+              onChange={() => setDraft({ ...draft, measurementType: "auto" })}
+            />
+            <span className="tone-name">Auto — measured from the POAG rating</span>
+          </label>
+        </div>
+
+        {draft.measurementType === "auto" ? (
+          <>
+            <label className="sf-field">
+              <span>Pillar</span>
+              <Combobox
+                options={pillarOptions}
+                value={draft.pillarKey}
+                onChange={(next) => setDraft({ ...draft, pillarKey: next })}
+                placeholder="Select a pillar"
+              />
+            </label>
+
+            <div className="sf-field-row">
+              <label className="sf-field">
+                <span>Level to reach</span>
+                <Combobox
+                  options={levelOptions}
+                  value={draft.requiredLevel}
+                  onChange={(next) => setDraft({ ...draft, requiredLevel: next })}
+                  placeholder="Select a level"
+                />
+              </label>
+
+              <label className="sf-field">
+                <span>Measured in</span>
+                <Combobox
+                  options={subjectOptions}
+                  value={draft.subjectId}
+                  onChange={(next) => setDraft({ ...draft, subjectId: next })}
+                />
+              </label>
+            </div>
+
+            {/* POAG levels are held per subject, so a goal has to say which
+                reading counts. "Any subject" is a stated rule, not a gap. */}
+            <p className="sf-field-hint">
+              {draft.subjectId === ""
+                ? "A student meets this once they reach the level in any subject their grade is taught."
+                : "Only that subject's rating counts towards this goal."}{" "}
+              Nobody sets a status by hand: the system re-checks on every rating change, and a
+              student still short of the level when the semester ends reads Not met.
+            </p>
+          </>
+        ) : (
+          <p className="sf-field-hint">
+            Students move their own status through Not started, In progress and Completed. The
+            grade&rsquo;s spread is on the goal&rsquo;s row here.
+          </p>
+        )}
+      </fieldset>
     </div>
   );
 
@@ -473,6 +603,7 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
                     <th scope="col">Goal</th>
                     <th scope="col">Category</th>
                     <th scope="col">Semester</th>
+                    <th scope="col">Measured</th>
                     <th scope="col">Dates</th>
                     {/* An admin sets the goal; the students report where they
                         are with it. This column is that report, summed. */}
@@ -515,9 +646,22 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
                         </td>
                         <td>{goal.category}</td>
                         <td>{goal.semester.name}</td>
+                        <td>
+                          {/* The type, and for an auto goal the target it is
+                              measured against — that target is the goal, so it
+                              belongs on the row rather than one click in. */}
+                          <StatusBadge
+                            tone={goal.measurement.type === "auto" ? "ok" : "neutral"}
+                          >
+                            {goal.measurement.type === "auto" ? "Auto" : "Manual"}
+                          </StatusBadge>
+                          {goal.measurement.type === "auto" ? (
+                            <div className="list-editor-item-detail">{targetSentence(goal)}</div>
+                          ) : null}
+                        </td>
                         <td>{formatDateRange(goal.semester.from, goal.semester.to)}</td>
                         <td>
-                          <GoalProgressCell schoolId={schoolId} grade={grade} goalId={goal.id} />
+                          <GoalProgressCell schoolId={schoolId} grade={grade} goal={goal} />
                         </td>
                         <td>
                           <div className="sf-row-actions">
@@ -537,13 +681,8 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
 
                       {isOpen ? (
                         <tr className="sf-subrow" id={detailId}>
-                          <td colSpan={6}>
-                            <GradeGoalStudents
-                              schoolId={schoolId}
-                              grade={grade}
-                              goalId={goal.id}
-                              goalTitle={goal.title}
-                            />
+                          <td colSpan={7}>
+                            <GradeGoalStudents schoolId={schoolId} grade={grade} goal={goal} />
                           </td>
                         </tr>
                       ) : null}
@@ -575,27 +714,77 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
             />
           ) : (
             <div className="sf-table-wrap">
-              <table className="sf-table">
+              <table className="sf-table sf-table--expandable">
                 <thead>
                   <tr>
                     <th scope="col">Goal</th>
                     <th scope="col">Category</th>
                     <th scope="col">Semester</th>
+                    <th scope="col">Measured</th>
                     <th scope="col">Dates</th>
+                    {/* A closed goal's outcome is the point of keeping it: who met
+                        it, and on an auto goal who was short when the window shut.
+                        Without this the failure case was recorded nowhere an admin
+                        could read it. */}
+                    <th scope="col">Outcome</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {history.map((goal) => (
-                    <tr key={goal.id}>
+                  {history.map((goal) => {
+                    const isOpen = openGoals.includes(goal.id);
+                    const detailId = `${goal.id}-history-students`;
+
+                    return (
+                    <Fragment key={goal.id}>
+                    <tr>
                       <td>
-                        <div className="list-editor-item-title">{goal.title}</div>
-                        <div className="list-editor-item-detail">{goal.description}</div>
+                        <div className="sf-row-expander">
+                          <button
+                            type="button"
+                            className={isOpen ? "sf-row-toggle is-open" : "sf-row-toggle"}
+                            aria-expanded={isOpen}
+                            aria-controls={detailId}
+                            onClick={() => toggleGoal(goal.id)}
+                          >
+                            <ExpandIcon icon={ArrowRight01Icon} size={15} strokeWidth={2} />
+                            <span className="sf-sr-only">
+                              {isOpen
+                                ? `Hide the outcome for ${goal.title}`
+                                : `Show the outcome for ${goal.title}`}
+                            </span>
+                          </button>
+                          <div>
+                            <div className="list-editor-item-title">{goal.title}</div>
+                            <div className="list-editor-item-detail">{goal.description}</div>
+                          </div>
+                        </div>
                       </td>
                       <td>{goal.category}</td>
                       <td>{goal.semester.name}</td>
+                      <td>
+                        <StatusBadge tone={goal.measurement.type === "auto" ? "ok" : "neutral"}>
+                          {goal.measurement.type === "auto" ? "Auto" : "Manual"}
+                        </StatusBadge>
+                        {goal.measurement.type === "auto" ? (
+                          <div className="list-editor-item-detail">{targetSentence(goal)}</div>
+                        ) : null}
+                      </td>
                       <td>{formatDateRange(goal.semester.from, goal.semester.to)}</td>
+                      <td>
+                        <GoalProgressCell schoolId={schoolId} grade={grade} goal={goal} />
+                      </td>
                     </tr>
-                  ))}
+
+                    {isOpen ? (
+                      <tr className="sf-subrow" id={detailId}>
+                        <td colSpan={6}>
+                          <GradeGoalStudents schoolId={schoolId} grade={grade} goal={goal} />
+                        </td>
+                      </tr>
+                    ) : null}
+                    </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

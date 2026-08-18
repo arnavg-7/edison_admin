@@ -6,10 +6,16 @@
  * admin's job is to watch the spread — one goal that half the grade has not
  * started is a different problem from one goal that two students are stuck on.
  *
- * Three steps, not five and not a percentage: the student picks from what their
- * portal offers, and it offers Not started, In progress and Completed. This is
- * separate from a student's own personal goals (see studentGoals), which the
- * student writes themselves and which carry the finer-grained scale.
+ * Two kinds of goal, two ways a status arrives, and they must not share a
+ * vocabulary. A MANUAL goal's status is reported: the student picks from what
+ * their portal offers — Not started, In progress, Completed. An AUTO goal's
+ * status is computed from their Portrait of a Graduate rating against the level
+ * the goal requires, and nobody types it; "Not met" there is the semester having
+ * closed with the student short of the target, which is the outcome an admin most
+ * needs to see coming.
+ *
+ * Both are admin-created. A student's own goals live separately (see
+ * studentGoals) and carry their own finer-grained scale.
  *
  * The status is the student's to set. An admin reads it and never writes it —
  * an admin marking a goal Completed on a student's behalf is a claim about work
@@ -19,16 +25,43 @@
  * derived deterministically from the goal and the student.
  */
 
+import { seedPoagLevels, seedPoagPillars } from "./poag";
+import { subjectsForGrade } from "./poagCoverage";
+import { subjects } from "./systemSettings";
+import { poagStudentRecord } from "./poagStudent";
 import { gradeRoster, rosterSeed, type RosterStudent } from "./studentRoster";
+import { isPastSemester, type GradeGoal } from "./academicGoals";
 
-export const GRADE_GOAL_STATUSES = ["Not started", "In progress", "Completed"] as const;
+/** Reported by the student on a manual goal. */
+export const MANUAL_GOAL_STATUSES = ["Not started", "In progress", "Completed"] as const;
+
+/**
+ * Computed on an auto goal. Never set by a person.
+ *
+ * Four rather than two because "not met" is only true once the window has closed.
+ * While it is open, a student short of the target is either within reach of it or
+ * not, and those call for different attention — which is the whole reason to
+ * track the level rather than wait for a verdict.
+ */
+export const AUTO_GOAL_STATUSES = ["Met", "On track", "At risk", "Not met"] as const;
+
+export const GRADE_GOAL_STATUSES = [...MANUAL_GOAL_STATUSES, ...AUTO_GOAL_STATUSES] as const;
 export type GradeGoalStatus = (typeof GRADE_GOAL_STATUSES)[number];
+
+/** Which vocabulary a goal's students can be in. */
+export function statusesForGoal(goal: GradeGoal): readonly GradeGoalStatus[] {
+  return goal.measurement.type === "auto" ? AUTO_GOAL_STATUSES : MANUAL_GOAL_STATUSES;
+}
 
 export type GradeGoalStudentStatus = {
   student: RosterStudent;
   status: GradeGoalStatus;
   /** When the student last moved it — null while they have never touched it. */
   updatedAt: string | null;
+  /** Auto goals only: the level the rating currently sits at. */
+  level?: string;
+  /** Auto goals only: which subject that reading came from. */
+  levelSubject?: string;
 };
 
 /**
@@ -44,14 +77,79 @@ const UPDATED_AT = [
   "2026-06-30T15:22:00-04:00"
 ];
 
-/** Every student in the grade, with where they say they are on one goal. */
+/**
+ * The student's current level on the goal's pillar, and where it was read.
+ *
+ * A subject-scoped goal reads that subject only. An unscoped one takes the
+ * student's best reading across the subjects their grade is taught — the rule the
+ * goal's own `subjectId: null` states, rather than an average, which POAG defines
+ * no meaning for.
+ */
+function currentLevel(
+  goal: GradeGoal,
+  student: RosterStudent,
+  grade: string,
+  levels: string[]
+): { index: number; subject: string } | null {
+  if (goal.measurement.type !== "auto") return null;
+
+  const pillar = seedPoagPillars.find(
+    (entry) => entry.rubricKey === (goal.measurement as { pillarKey: string }).pillarKey
+  );
+  if (!pillar) return null;
+
+  const gradeSubjects = subjectsForGrade(grade);
+  const scoped = goal.measurement.subjectId;
+  const candidates = scoped
+    ? gradeSubjects.filter((subject) => subject.id === scoped)
+    : gradeSubjects;
+  if (candidates.length === 0) return null;
+
+  let best: { index: number; subject: string } | null = null;
+  for (const subject of candidates) {
+    const record = poagStudentRecord(student.id, subject.id, [pillar], levels.length)[0];
+    const index = record?.entries[0]?.level ?? 0;
+    if (!best || index > best.index) best = { index, subject: subject.name };
+  }
+  return best;
+}
+
+/** Every student in the grade, with where they stand on one goal. */
 export function gradeGoalStatuses(
   schoolId: string,
   grade: string,
-  goalId: string
+  goal: GradeGoal,
+  /** The live rating scale, so a renamed or added level is respected. */
+  levels: string[] = [...seedPoagLevels]
 ): GradeGoalStudentStatus[] {
+  const closed = isPastSemester(goal);
+  const target =
+    goal.measurement.type === "auto" ? levels.indexOf(goal.measurement.requiredLevel) : -1;
+
   return gradeRoster(schoolId, grade).map((student) => {
-    const key = rosterSeed(goalId, student.name);
+    const key = rosterSeed(goal.id, student.name);
+
+    if (goal.measurement.type === "auto") {
+      const reading = currentLevel(goal, student, grade, levels);
+      const index = reading?.index ?? 0;
+      const gap = target - index;
+
+      /* Met the moment the rating clears the target, whether or not the window
+         has closed — the goal was to reach a level, not to reach it on a date.
+         Short of it, the window decides: still open, how far short; closed, the
+         goal simply was not met. */
+      const status: GradeGoalStatus =
+        gap <= 0 ? "Met" : closed ? "Not met" : gap === 1 ? "On track" : "At risk";
+
+      return {
+        student,
+        status,
+        // The system evaluated it, so there is always a timestamp.
+        updatedAt: UPDATED_AT[key % UPDATED_AT.length],
+        level: levels[index] ?? levels[0],
+        levelSubject: reading?.subject
+      };
+    }
 
     /* Weighted rather than an even third each: a goal a grade is part-way
        through is the normal case, and three equal buckets made every goal on
@@ -70,17 +168,23 @@ export function gradeGoalStatuses(
 }
 
 export type GradeGoalTally = {
-  completed: number;
-  inProgress: number;
-  notStarted: number;
+  /** Completed on a manual goal, Met on an auto one — the goal achieved. */
+  achieved: number;
+  /** Underway but not there: In progress, or On track. */
+  underway: number;
+  /** Not started on a manual goal; At risk or Not met on an auto one. */
+  behind: number;
   total: number;
 };
 
 export function gradeGoalTally(rows: GradeGoalStudentStatus[]): GradeGoalTally {
+  const count = (...statuses: GradeGoalStatus[]) =>
+    rows.filter((row) => statuses.includes(row.status)).length;
+
   return {
-    completed: rows.filter((row) => row.status === "Completed").length,
-    inProgress: rows.filter((row) => row.status === "In progress").length,
-    notStarted: rows.filter((row) => row.status === "Not started").length,
+    achieved: count("Completed", "Met"),
+    underway: count("In progress", "On track"),
+    behind: count("Not started", "At risk", "Not met"),
     total: rows.length
   };
 }
@@ -89,19 +193,42 @@ export function gradeGoalTally(rows: GradeGoalStudentStatus[]): GradeGoalTally {
 export function studentGoalStatus(
   schoolId: string,
   grade: string,
-  goalId: string,
-  studentName: string
+  goal: GradeGoal,
+  studentName: string,
+  levels?: string[]
 ): GradeGoalStudentStatus | null {
   return (
-    gradeGoalStatuses(schoolId, grade, goalId).find(
+    gradeGoalStatuses(schoolId, grade, goal, levels).find(
       (row) => row.student.name === studentName
     ) ?? null
   );
 }
 
-/** Badge tone for the three steps — the words carry the meaning, this reinforces. */
-export function gradeGoalStatusTone(status: GradeGoalStatus): "ok" | "warn" | "neutral" {
-  if (status === "Completed") return "ok";
-  if (status === "In progress") return "warn";
+/** The goal reached, whichever vocabulary it is counted in. */
+export function isAchieved(status: GradeGoalStatus | undefined): boolean {
+  return status === "Completed" || status === "Met";
+}
+
+/** Badge tone — the words carry the meaning, this only reinforces it. */
+export function gradeGoalStatusTone(status: GradeGoalStatus): "ok" | "warn" | "error" | "neutral" {
+  if (status === "Completed" || status === "Met") return "ok";
+  if (status === "In progress" || status === "On track") return "warn";
+  if (status === "At risk" || status === "Not met") return "error";
   return "neutral";
+}
+
+/** "Applying in Critical Thinking · any subject" — the target, in words. */
+export function targetSentence(goal: GradeGoal): string | null {
+  if (goal.measurement.type !== "auto") return null;
+  // Bound locally: the narrowing above does not survive into the callbacks.
+  const { pillarKey, requiredLevel, subjectId } = goal.measurement;
+
+  const pillar = seedPoagPillars.find((entry) => entry.rubricKey === pillarKey);
+  /* Read from the whole subject list, not one grade's: a goal names a subject by
+     id, and which grades happen to be taught it is a different question. */
+  const subject = subjectId
+    ? (subjects.find((entry) => entry.id === subjectId)?.name ?? "one subject")
+    : "any subject";
+
+  return `${requiredLevel} in ${pillar?.displayTitle ?? pillarKey} · ${subject}`;
 }

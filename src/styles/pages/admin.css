@@ -1657,3 +1657,31 @@
   font-weight: 500;
   color: var(--sf-text-muted);
 }
+
+/* Goal measurement ------------------------------------------------------- */
+
+/* The measurement question, grouped in the drawer. Its own box because picking
+   Auto changes what the rest of the form asks for — as one more field in a flat
+   column it read as though it were just another attribute of the goal. */
+.goal-fieldset {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--sf-card-border);
+  border-radius: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.goal-fieldset > legend {
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sf-text-muted);
+}
+
+/* The radio pair stacks: each label is a sentence rather than a word, so side by
+   side they wrapped mid-clause. */
+.goal-fieldset .tone-options {
+  flex-direction: column;
+  gap: 8px;
+}

@@ -3,10 +3,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  GRADE_GOAL_STATUSES,
+  statusesForGoal,
   gradeGoalStatusTone,
   gradeGoalStatuses
 } from "@/lib/data/gradeGoalProgress";
+import type { GradeGoal } from "@/lib/data/academicGoals";
+import { usePoag } from "@/lib/poag-store";
 import { formatSalesforceStamp } from "@/lib/format";
 import { Button } from "@/components/base/buttons/button";
 import { Combobox } from "@/components/shared/Combobox";
@@ -29,21 +31,24 @@ const FIRST_PAGE = 20;
 export function GradeGoalStudents({
   schoolId,
   grade,
-  goalId,
-  goalTitle
+  goal
 }: {
   schoolId: string;
   grade: string;
-  goalId: string;
-  goalTitle: string;
+  goal: GradeGoal;
 }) {
+  const { levels } = usePoag();
+  const levelLabels = useMemo(() => levels.map((level) => level.label), [levels]);
+
+  const auto = goal.measurement.type === "auto";
+
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<string>(ALL);
   const [showAll, setShowAll] = useState(false);
 
   const rows = useMemo(
-    () => gradeGoalStatuses(schoolId, grade, goalId),
-    [schoolId, grade, goalId]
+    () => gradeGoalStatuses(schoolId, grade, goal, levelLabels),
+    [schoolId, grade, goal, levelLabels]
   );
 
   const matching = useMemo(() => {
@@ -58,7 +63,7 @@ export function GradeGoalStudents({
 
   const statusOptions = [
     { value: ALL, label: "All statuses" },
-    ...GRADE_GOAL_STATUSES.map((entry) => ({ value: entry, label: entry }))
+    ...statusesForGoal(goal).map((entry) => ({ value: entry, label: entry }))
   ];
 
   return (
@@ -86,7 +91,7 @@ export function GradeGoalStudents({
               setStatus(next);
               setShowAll(false);
             }}
-            ariaLabel={`Filter ${goalTitle} by student status`}
+            ariaLabel={`Filter ${goal.title} by student status`}
           />
         </label>
       </div>
@@ -100,7 +105,12 @@ export function GradeGoalStudents({
               <tr>
                 <th scope="col">Student</th>
                 <th scope="col">Status</th>
-                <th scope="col">Last updated by the student</th>
+                {/* Who moved it depends on the type, so the column says which —
+                    "updated by the student" on an auto goal would be wrong. */}
+                <th scope="col">
+                  {auto ? "Current level" : "Last updated by the student"}
+                </th>
+                {auto ? <th scope="col">Last evaluated</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -122,11 +132,27 @@ export function GradeGoalStudents({
                   <td>
                     <StatusBadge tone={gradeGoalStatusTone(row.status)}>{row.status}</StatusBadge>
                   </td>
-                  {/* Never started means never reported, so there is no date to
-                      show — said in words rather than left as an empty cell. */}
-                  <td>
-                    {row.updatedAt ? formatSalesforceStamp(row.updatedAt) : "Not reported yet"}
-                  </td>
+                  {auto ? (
+                    <>
+                      {/* The reading the status came from: "At risk" is then a
+                          fact about a level, not a verdict with no cause. */}
+                      <td>
+                        <div className="list-editor-item-title">{row.level ?? "Not rated"}</div>
+                        {row.levelSubject ? (
+                          <div className="list-editor-item-detail">{row.levelSubject}</div>
+                        ) : null}
+                      </td>
+                      <td>
+                        {row.updatedAt ? formatSalesforceStamp(row.updatedAt) : "Not rated yet"}
+                      </td>
+                    </>
+                  ) : (
+                    /* Never started means never reported, so there is no date to
+                       show — said in words rather than left as an empty cell. */
+                    <td>
+                      {row.updatedAt ? formatSalesforceStamp(row.updatedAt) : "Not reported yet"}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

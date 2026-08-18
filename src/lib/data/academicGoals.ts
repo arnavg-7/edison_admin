@@ -73,12 +73,47 @@ export type GoalSemester = {
   to: string;
 };
 
+/**
+ * How a goal's progress is decided. The two are not variants of a status — they
+ * are two different answers to "who says whether this is done".
+ *
+ * MANUAL: the admin sets the goal, the student reports where they stand. The
+ * admin's job is to watch the spread.
+ *
+ * AUTO — POAG level: the goal names a level the student has to reach, and the
+ * system compares their current Portrait of a Graduate rating against it. Nobody
+ * types a status; falling short when the semester closes *is* the goal not being
+ * met, and that is the case an admin most needs to see coming.
+ *
+ * Both are admin-created goals. A student's own goals live separately — see
+ * studentGoals — and carry their own scale.
+ */
+export type GoalMeasurement =
+  | { type: "manual" }
+  | {
+      type: "auto";
+      /** `rubricKey` of the pillar being tracked. */
+      pillarKey: string;
+      /** The level the student has to reach, as a label from the live scale. */
+      requiredLevel: string;
+      /**
+       * Which subject's rating to read, or null for "any subject".
+       *
+       * POAG levels are held per subject and the handoff spec defines no
+       * cross-subject level, so a goal has to say which reading counts. Null is a
+       * stated rule rather than a gap: the student meets it once they reach the
+       * level in any subject the pillar is rated in.
+       */
+      subjectId: string | null;
+    };
+
 export type GradeGoal = {
   id: string;
   title: string;
   description: string;
   category: string;
   semester: GoalSemester;
+  measurement: GoalMeasurement;
 };
 
 type GradeGoalSeed = {
@@ -87,10 +122,18 @@ type GradeGoalSeed = {
   description: string;
   category: string;
   semester: GoalSemester;
+  /** Omitted on a seed means manual, which is the default type. */
+  measurement?: GoalMeasurement;
 };
 
+const MANUAL: GoalMeasurement = { type: "manual" };
+
 function buildGradeGoals(scope: string, seeds: GradeGoalSeed[]): GradeGoal[] {
-  return seeds.map((seed) => ({ id: `gg-${scope}-${seed.key}`, ...seed }));
+  return seeds.map(({ measurement, ...seed }) => ({
+    id: `gg-${scope}-${seed.key}`,
+    measurement: measurement ?? MANUAL,
+    ...seed
+  }));
 }
 
 const TIME_ZONE = "America/New_York";
@@ -124,11 +167,41 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       semester: FALL_2026
     },
     {
+      key: "critical-thinking",
+      title: "Reach Applying in Critical Thinking",
+      description:
+        "Measured on the Mathematics rating — reasoning through an unfamiliar problem is what this grade is working on.",
+      category: "Academic achievement",
+      semester: FALL_2026,
+      measurement: {
+        type: "auto",
+        pillarKey: "Critical Thinker & Problem Solver",
+        requiredLevel: "Applying",
+        subjectId: "sub-math"
+      }
+    },
+    {
       key: "poag-past",
       title: "Personalized Own Academic Goal: Semester",
       description: "Student-authored goal reviewed with an advisor at the start of the semester.",
       category: "Academic achievement",
       semester: SPRING_2026
+    },
+    {
+      /* A closed window, so the failure case is on screen: a student who did not
+         reach the level by the end date reads Not met, and nobody typed that. */
+      key: "resilience-past",
+      title: "Reach Innovating in Resilience",
+      description:
+        "Spring stretch target on the Science rating. Closed at the end of the semester on the ratings as they stood.",
+      category: "Social & emotional",
+      semester: SPRING_2026,
+      measurement: {
+        type: "auto",
+        pillarKey: "Adaptive & Resilient",
+        requiredLevel: "Innovating",
+        subjectId: "sub-science"
+      }
     }
   ]),
   [scopeKey("edison-hs", "10")]: buildGradeGoals(scopeKey("edison-hs", "10"), [
@@ -145,6 +218,24 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       description: "Structured goal for students below 85% attendance this semester.",
       category: "Attendance & engagement",
       semester: FALL_2026
+    },
+    {
+      /* Scoped to one subject, unlike the Grade 9 goal: the level has to be
+         reached in Mathematics specifically, not wherever it happens first. */
+      /* Unscoped, unlike the Grade 9 goal: the level counts wherever the student
+         reaches it first, which is the rule `subjectId: null` states. */
+      key: "communication",
+      title: "Reach Innovating in Effective Communication",
+      description:
+        "Counts once the student reaches Innovating in any subject they are taught — wherever their strongest work is.",
+      category: "Social & emotional",
+      semester: FALL_2026,
+      measurement: {
+        type: "auto",
+        pillarKey: "Effective Communicator",
+        requiredLevel: "Innovating",
+        subjectId: null
+      }
     },
     {
       key: "attendance-past",

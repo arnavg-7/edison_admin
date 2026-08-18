@@ -55,11 +55,6 @@ function slug(name: string): string {
   return name.replace(/\s+/g, "-").toLowerCase();
 }
 
-/* A district-scoped goal resolves to every student in every grade, so this is
-   called a few hundred times per rollup. The result is a pure function of school
-   + grade, so it is built once and shared. */
-const rosterCache = new Map<string, RosterStudent[]>();
-
 /**
  * The grade's students, real 360 records first.
  *
@@ -68,10 +63,6 @@ const rosterCache = new Map<string, RosterStudent[]>();
  * buried a screen down among generated ones.
  */
 export function gradeRoster(schoolId: string, grade: string): RosterStudent[] {
-  const cacheKey = `${schoolId}:${grade}`;
-  const cached = rosterCache.get(cacheKey);
-  if (cached) return cached;
-
   const school = schools.find((entry) => entry.id === schoolId);
   if (!school) return [];
 
@@ -104,6 +95,5 @@ export function gradeRoster(schoolId: string, grade: string): RosterStudent[] {
     roster.push({ id: `student-${slug(name)}`, name, personId: null });
   }
 
-  rosterCache.set(cacheKey, roster);
   return roster;
 }

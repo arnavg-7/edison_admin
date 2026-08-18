@@ -40,7 +40,7 @@ import { useReportFilters } from "@/lib/filters";
  * Where TrendStatCard's badge used to say "+2.3 pts", the trend line itself —
  * still visible, still real — is now the whole story.
  */
-export function HomeMetrics({ afterStats }: { afterStats?: ReactNode }) {
+export function HomeMetrics({ footer }: { footer?: ReactNode }) {
   const { filters } = useReportFilters();
   const scope = { school: filters.school, grades: filters.grades };
   // Reporting's scope shape is one grade deep and carries a section; Home's
@@ -91,13 +91,6 @@ export function HomeMetrics({ afterStats }: { afterStats?: ReactNode }) {
             Analytics' Students' Status funnel also shows. */}
         <StatCard title="At-Risk Students" value={atRiskStudents} asOf={REPORTS.studentsStatus.asOf} />
       </div>
-
-      {/* Slot between the KPI tiles and the chart sections, so Needs Attention
-          can sit directly under the headline figures without this component
-          having to know what goes there. It can't be composed from the page
-          instead: the tiles and the charts are one component, because both
-          read the same scoped figures. */}
-      {afterStats}
 
       <div className="sf-card-grid">
         <h2 className="sf-grid-section-title">Enrollment</h2>
@@ -164,6 +157,12 @@ export function HomeMetrics({ afterStats }: { afterStats?: ReactNode }) {
           className="sf-col-12"
         />
       </div>
+
+      {/* A slot at the foot rather than a child, so the page decides what sits
+          below the charts without this component having to know. It cannot be
+          composed from the page instead: the tiles and the charts are one
+          component, because both read the same scoped figures. */}
+      {footer}
     </>
   );
 }

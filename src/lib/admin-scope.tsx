@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { schools, type School } from "@/lib/data/schools";
+import type { AdminActor } from "@/lib/data/goals";
 import { useMounted } from "@/lib/use-mounted";
 
 /**
@@ -124,4 +125,18 @@ export function useAdminScope(): AdminScopeValue {
   }
 
   return context;
+}
+
+/**
+ * The signed-in admin as the Goals permission matrix describes them.
+ *
+ * The matrix distinguishes district_admin from school_admin, and that is exactly
+ * what the scope switcher already decides — so the two must not become separate
+ * notions of who you are. Derived, never stored.
+ */
+export function useAdminActor(): AdminActor {
+  const { schoolId } = useAdminScope();
+  return schoolId
+    ? { role: "school_admin", schoolId }
+    : { role: "district_admin", schoolId: null };
 }

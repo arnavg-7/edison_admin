@@ -47,13 +47,16 @@ export const ADMIN_ROLE_LABEL = "Super Admin";
 /**
  * Sections whose first screen is "pick a school".
  *
+ * Academic Goals is not one of them any more: it is a single board that clamps
+ * itself to the admin's scope, so there is no picker to skip past.
+ *
  * A school admin has already answered that question by being who they are, so
  * their nav links skip it and point straight at their school — see
  * `sectionHref`. Listing them here rather than testing the id at each call site
  * keeps the set in one place, next to the routes it names.
  */
 export const SCOPED_SECTIONS: Section[] = SECTIONS.filter((section) =>
-  ["skills-development", "academic-goals"].includes(section.id)
+  ["skills-development"].includes(section.id)
 );
 
 /**

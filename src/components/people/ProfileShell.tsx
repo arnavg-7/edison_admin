@@ -9,17 +9,15 @@ import {
   REQUIRED_PERSONAL_FIELDS,
   deriveProfileStatus,
   type AlertRecord,
-  type GoalRecord,
   type Person,
   type PersonKind,
   type ReadOnlyField
 } from "@/lib/data/people";
 import { useUsers } from "@/lib/users-store";
 import { gradeConfigHref, resolveGradeScope } from "@/lib/data/skillsDevelopment";
-import { academicGoalsHref } from "@/lib/data/academicGoals";
 import { DevelopmentAreasEditor } from "@/components/skills-development/DevelopmentAreasEditor";
 import { SkillsProfileEditor } from "@/components/skills-development/SkillsProfileEditor";
-import { StudentGradeGoalsPanel } from "./StudentGradeGoalsPanel";
+import { StudentGoalsPanel } from "./StudentGoalsPanel";
 import { StudentPoagPanel } from "./StudentPoagPanel";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -28,15 +26,9 @@ import { Button } from "@/components/base/buttons/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatSalesforceStamp } from "@/lib/format";
 
-const GOAL_STATUSES: GoalRecord["status"][] = ["On track", "At risk", "Complete", "Overdue"];
 const ALERT_STATUSES: AlertRecord["status"][] = ["Open", "Acknowledged", "Resolved"];
 
 type ComboOption<T extends string> = { value: T; label: string };
-
-const GOAL_STATUS_OPTIONS: ComboOption<GoalRecord["status"]>[] = GOAL_STATUSES.map((status) => ({
-  value: status,
-  label: status
-}));
 
 const ALERT_STATUS_OPTIONS: ComboOption<AlertRecord["status"]>[] = ALERT_STATUSES.map((status) => ({
   value: status,
@@ -94,9 +86,9 @@ export function ProfileShell({ person }: { person: Person }) {
   const tabs = isStudent ? STUDENT_TABS : FACULTY_TABS;
   const [tab, setTab] = useState<TabId>("personal");
 
-  // Only the editable sections hold local state. Enrollment, grades, attendance
-  // and classes render straight from `person` because Admin can't change them.
-  const [goals, setGoals] = useState<GoalRecord[]>(person.goals ?? []);
+  /* Only the editable sections hold local state. Enrollment, grades, attendance
+     and classes render straight from `person` because Admin can't change them.
+     Goals moved to the goals store, which is where their history lives. */
   const [alertRecords, setAlertRecords] = useState<AlertRecord[]>(person.alerts);
 
   const gradeScope = isStudent ? resolveGradeScope(person.school, person.group) : null;
@@ -108,26 +100,6 @@ export function ProfileShell({ person }: { person: Person }) {
   const missingRequired = REQUIRED_PERSONAL_FIELDS[person.kind].filter(
     (label) => (filledLabels.get(label) ?? "").trim() === ""
   );
-
-  const adjustCheckpoint = (goalId: string, delta: number) => {
-    setGoals((current) =>
-      current.map((g) =>
-        g.id === goalId
-          ? {
-              ...g,
-              checkpointsMet: Math.max(0, Math.min(g.checkpointsTotal, g.checkpointsMet + delta)),
-              lastUpdated: new Date().toISOString()
-            }
-          : g
-      )
-    );
-  };
-
-  const setGoalStatus = (goalId: string, status: GoalRecord["status"]) => {
-    setGoals((current) =>
-      current.map((g) => (g.id === goalId ? { ...g, status, lastUpdated: new Date().toISOString() } : g))
-    );
-  };
 
   const setAlertStatus = (alertId: string, status: AlertRecord["status"]) => {
     setAlertRecords((current) =>
@@ -337,110 +309,11 @@ export function ProfileShell({ person }: { person: Person }) {
       ) : null}
 
       {/* ----------------------------------------------------------- goals */}
-      {/* Two kinds of goal, and the distinction matters: the grade's goals were
-          set by an admin and the student reports progress on them, while the
-          individual ones below belong to this student. Grade goals lead, since
-          they are the ones every student in the grade is measured against. */}
-      {tab === "goals" && gradeScope ? (
-        <StudentGradeGoalsPanel
-          schoolId={gradeScope.schoolId}
-          grade={gradeScope.grade}
-          studentName={person.name}
-        />
-      ) : null}
+      {/* One panel, not two: the rulebook makes every goal one record type, so
+          splitting the tab by creator would imply three things were being
+          tracked. The list labels each row's scope and creator instead. */}
+      {tab === "goals" ? <StudentGoalsPanel studentName={person.name} /> : null}
 
-      {tab === "goals" ? (
-        <Panel
-          title="Individual goals"
-          note="Editable in Admin · templates configured in Academic Goals"
-        >
-          <p className="sf-card-hint">
-            Checkpoint and status changes apply to this student only, not to the shared goal
-            template. TODO: local state only until the Admin DB contract exists.
-          </p>
-          {!goals.length ? (
-            <EmptyState
-              title="No goals recorded"
-              message="No active or historic goals for this student."
-              action={
-                <Button size="sm" href={academicGoalsHref(person.school, person.group)}>
-                  Add Goal
-                </Button>
-              }
-            />
-          ) : (
-            <Table
-              head={["Goal", "Category", "Checkpoints", "Status", "Target", "Last updated"]}
-              widths={["28%", "16%", "15%", "14%", "12%", "15%"]}
-              rows={goals.map((g) => [
-                g.title,
-                g.category,
-                <div className="sf-stepper" key="c">
-                  <button
-                    type="button"
-                    className="sf-stepper-btn"
-                    onClick={() => adjustCheckpoint(g.id, -1)}
-                    disabled={g.checkpointsMet <= 0}
-                    aria-label={`Decrease checkpoints met for ${g.title}`}
-                  >
-                    −
-                  </button>
-                  <span>
-                    {g.checkpointsMet} of {g.checkpointsTotal}
-                  </span>
-                  <button
-                    type="button"
-                    className="sf-stepper-btn"
-                    onClick={() => adjustCheckpoint(g.id, 1)}
-                    disabled={g.checkpointsMet >= g.checkpointsTotal}
-                    aria-label={`Increase checkpoints met for ${g.title}`}
-                  >
-                    +
-                  </button>
-                </div>,
-                <Combobox
-                  key="s"
-                  options={GOAL_STATUS_OPTIONS}
-                  value={g.status}
-                  onChange={(next) => setGoalStatus(g.id, next)}
-                  placeholder="Status"
-                  ariaLabel={`Status for ${g.title}`}
-                />,
-                g.target,
-                <span key="u" style={{ whiteSpace: "nowrap" }}>
-                  {formatSalesforceStamp(g.lastUpdated)}
-                </span>
-              ])}
-            />
-          )}
-          <Link className="sf-inline-link" href="/academic-goals">
-            Open Academic Goals →
-          </Link>
-        </Panel>
-      ) : null}
-
-      {/* ------------------------------------------- portrait of a graduate */}
-      {tab === "poag" ? (
-        gradeScope ? (
-          /* Unlike the two tabs below, this is *this student's* record rather
-             than the grade's shared configuration — a rating is made about a
-             named student by their class's teacher. */
-          <StudentPoagPanel
-            studentId={person.id}
-            studentName={person.name}
-            grade={gradeScope.grade}
-          />
-        ) : (
-          <Panel title="Skills profile" note="Edison Portrait of a Graduate">
-            <EmptyState
-              title="No grade configured"
-              message={`${person.school} has no matching grade in Skills & Development yet, so there is no Portrait of a Graduate content to rate against.`}
-            />
-          </Panel>
-        )
-      ) : null}
-
-      {/* ---------------------------------------------------------- skills */}
       {tab === "skills" ? (
         gradeScope ? (
           <>

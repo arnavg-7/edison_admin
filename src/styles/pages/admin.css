@@ -1480,69 +1480,156 @@
   height: 15px;
   accent-color: var(--sf-accent);
 }
-/* Student goals ---------------------------------------------------------- */
+/* Goals ------------------------------------------------------------------ */
 
-/* Says once, above the table, that these belong to students rather than to the
-   grade — the distinction the whole tab turns on, and the reason there is no
-   Add button beside the heading. */
+/* Says once, above the list, what these are and where they are edited. */
 .goals-panel-intro {
   margin: -6px 0 14px;
   max-width: 78ch;
 }
 
-/* Pillar names run long ("Engaged Community Member") and a student can be
-   building three at once, so the cell wraps rather than stretching the table
-   past the viewport. */
-.goals-skill-cell {
-  max-width: 260px;
-  font-size: 12.5px;
-  color: var(--sf-text-muted);
+/* Where an action is denied, the row carries the reason instead of a dead
+   button — "visibility is broad; editing is narrow", and an admin who cannot
+   edit is owed the sentence explaining which rule stopped them. */
+.goal-readonly {
+  display: block;
+  max-width: 22ch;
+  line-height: 1.4;
 }
 
-/* One student's goals, opened out under their row. Cards rather than a nested
-   table: a goal is a title, a sentence and two tags, which is a paragraph
-   shape, and the same shape the student sees in their own portal. */
-.student-goal-list {
-  list-style: none;
-  margin: 0;
-  padding: 14px 12px 4px;
+/* A goal's expanded detail: its rollup, then its students. */
+.goal-detail {
   display: grid;
-  gap: 10px;
+  gap: 22px;
+  padding: 16px 12px 8px;
 }
 
-.student-goal {
-  background: var(--sf-card);
-  border: 1px solid var(--sf-card-border);
-  border-radius: 14px;
-  padding: 14px 16px;
-}
-
-.student-goal-head {
+.goal-rollup-head {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
 }
 
-.student-goal-head h4 {
+.goal-rollup-head h3,
+.goal-students .goal-rollup-head h3 {
   margin: 0;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--sf-text);
 }
 
-/* The status pill is pushed to the far end, so a column of goals can be read
-   down its right edge for progress without reading the titles. Wrapped in a
-   span of our own: the shared Badge is a Tailwind component with no stable
-   class to hang a layout rule on. */
-.student-goal-status {
-  margin-left: auto;
-  display: inline-flex;
+/* The headline percentage. Large because it is the one figure the row above
+   summarised and the reader came here to see. */
+.goal-rollup-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 12px;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--sf-text);
 }
 
-/* Two tags, told apart by tint rather than by position alone: the goal's type,
-   and the Portrait of a Graduate skill it builds. Both carry their own words,
-   so colour is reinforcement and never the only signal (WCAG 1.4.1). */
+/* The mean sits beside the percentage, not under it: the two are a pair —
+   how many cleared the bar, and how far along everyone is. */
+.goal-rollup-mean {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--sf-text-muted);
+}
+
+.goal-rollup .sf-subtable {
+  margin-bottom: 10px;
+}
+
+/* Three segments in one track, sized by share of the cohort. Decoration only:
+   every figure it encodes is written beside it, so nothing here asks anyone to
+   tell colours apart (WCAG 1.4.1). */
+.goal-progress-bar {
+  display: flex;
+  height: 6px;
+  width: 180px;
+  border-radius: var(--sf-radius-pill);
+  overflow: hidden;
+  background: var(--sf-neutral-bg);
+}
+
+.goal-progress-bar > span {
+  display: block;
+  height: 100%;
+}
+
+.goal-progress-bar .is-met {
+  background: var(--sf-ok-text);
+}
+
+.goal-progress-bar .is-partial {
+  background: var(--sf-warn-text);
+}
+
+/* The student list opened out under a goal. Matches .sf-archive-detail's inset,
+   since both are a panel's worth of content inside a table row. */
+.goal-students {
+  padding: 0;
+}
+
+.goal-students-more {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* An assignment for a student who left the scope: kept, attributed, and out of
+   the live figures. Dimmed rather than hidden, because deleting it is exactly
+   what the rulebook forbids. */
+.sf-subtable tr[data-inactive] > td {
+  opacity: 0.6;
+}
+
+/* One assignment's append-only trail, with the status writer above it. */
+.goal-history {
+  padding: 12px 0 4px;
+  display: grid;
+  gap: 12px;
+}
+
+/* Status, note and the commit button on one line — recording a change is a
+   single act, and stacking the three read as three separate decisions. */
+.goal-history-write {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  background: var(--sf-plot);
+  border-radius: 14px;
+}
+
+.goal-history-write .sf-field--search {
+  flex: 1 1 220px;
+}
+
+/* Drawer: the two independent choices, each in its own group. The rulebook's
+   key principle is that scope and measurement are not the same question, and
+   one flat column of fields would read as though they were. */
+.goal-fieldset {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--sf-card-border);
+  border-radius: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.goal-fieldset > legend {
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sf-text-muted);
+}
+
 .student-goal-tag {
   padding: 2px 10px;
   border-radius: var(--sf-radius-pill);
@@ -1559,67 +1646,6 @@
 .student-goal-tag.is-skill {
   background: #f4f3ff;
   color: #6941c6;
-}
-
-.student-goal-desc {
-  margin: 8px 0 0;
-  font-size: 12.5px;
-  color: var(--sf-text-muted);
-}
-
-.student-goal-meta {
-  margin: 8px 0 0;
-  font-size: 12px;
-  color: var(--sf-text-dim);
-}
-
-/* Grade goal progress ---------------------------------------------------- */
-
-/* Count, bar, breakdown — stacked in one table cell. */
-.goal-progress {
-  min-width: 170px;
-}
-
-/* Three segments in one track, sized by share of the grade. Decoration only:
-   every figure it encodes is written above and below it, so the cell never asks
-   anyone to tell three colours apart (WCAG 1.4.1). */
-.goal-progress-bar {
-  display: flex;
-  height: 6px;
-  margin: 6px 0 5px;
-  border-radius: var(--sf-radius-pill);
-  overflow: hidden;
-  background: var(--sf-neutral-bg);
-}
-
-.goal-progress-bar > span {
-  display: block;
-  height: 100%;
-}
-
-.goal-progress-bar .is-completed {
-  background: var(--sf-ok-text);
-}
-
-.goal-progress-bar .is-progress {
-  background: var(--sf-warn-text);
-}
-
-.goal-progress-bar .is-none {
-  background: var(--sf-neutral-bg);
-}
-
-/* The student list opened out under a goal. Matches .sf-archive-detail's inset,
-   since both are a panel's worth of content living inside a table row. */
-.goal-students {
-  padding: 4px 12px 8px;
-}
-
-.goal-students-more {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
 }
 
 /* Admin scope ------------------------------------------------------------ */

@@ -12,6 +12,7 @@ import { AdminUsersProvider } from "@/lib/admin-users-store";
 import { SchoolSetupProvider } from "@/lib/school-setup-store";
 import { PoagProvider } from "@/lib/poag-store";
 import { AdminScopeProvider } from "@/lib/admin-scope";
+import { GoalsProvider } from "@/lib/goals-store";
 import { cn } from "@/lib/utils";
 
 /** The app's only typeface. `--font-inter` feeds Tailwind's font-sans/font-mono
@@ -37,6 +38,7 @@ export default function RootLayout({
             <AdminUsersProvider>
               <SchoolSetupProvider>
                 <PoagProvider>
+                  <GoalsProvider>
                   <a className="sf-skip-link" href="#main-content">
                     Skip to main content
                   </a>
@@ -47,6 +49,7 @@ export default function RootLayout({
                     </SidebarInset>
                     <ScrollReset />
                   </SidebarProvider>
+                  </GoalsProvider>
                 </PoagProvider>
               </SchoolSetupProvider>
             </AdminUsersProvider>

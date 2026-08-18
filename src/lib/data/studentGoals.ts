@@ -1,7 +1,7 @@
 /**
  * Personal goals belonging to one student, not to their grade.
  *
- * Distinct from the grade goals the rest of Academic Goals deals in: those are
+ * Distinct from the grade goals the rest of Goals deals in: those are
  * written by an admin and apply to everyone in a grade, while these are written
  * by the student, or by a teacher alongside them, and belong to that student
  * alone. Each carries a type — academic work, or the personal and social side —

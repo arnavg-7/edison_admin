@@ -311,7 +311,7 @@ export function SkillsProfileEditor({ schoolId, grade }: { schoolId: string; gra
 
   /**
    * Skill creation goes in a right-side drawer, matching both the areas tab and
-   * the goals editor on the sibling Academic Goals grade screen. Inline, the form
+   * the goals editor on the sibling Goals grade screen. Inline, the form
    * pushed the whole card grid down the page.
    *
    * Renaming stays in place: it edits one field on one card, and the card is the

@@ -86,7 +86,7 @@ export default function GoalsSchoolPickerPage() {
 
   return (
     <SchoolPickerGate section="/academic-goals">
-      <h1 className="sf-page-title">Academic Goals</h1>
+      <h1 className="sf-page-title">Goals</h1>
       <p className="sf-page-sub">
         Goals set for students, configured per grade. Pick a school, then a grade.
       </p>

@@ -38,9 +38,9 @@ export default function AcademicGoalsLayout({ children }: { children: React.Reac
           <BreadcrumbList>
             <BreadcrumbItem>
               {isDistrict ? (
-                <BreadcrumbLink render={<Link href="/academic-goals" />}>Academic Goals</BreadcrumbLink>
+                <BreadcrumbLink render={<Link href="/academic-goals" />}>Goals</BreadcrumbLink>
               ) : (
-                <BreadcrumbPage>Academic Goals</BreadcrumbPage>
+                <BreadcrumbPage>Goals</BreadcrumbPage>
               )}
             </BreadcrumbItem>
             <BreadcrumbSeparator />

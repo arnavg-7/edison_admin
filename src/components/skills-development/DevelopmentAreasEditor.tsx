@@ -371,7 +371,7 @@ export function DevelopmentAreasEditor({
 
   /**
    * Area create/edit lives in a right-side drawer, matching the goals editor on
-   * the sibling Academic Goals grade screen. Inline, the same form pushed the
+   * the sibling Goals grade screen. Inline, the same form pushed the
    * whole card grid down when adding, and on edit it replaced the card being
    * edited — so the thing you were changing disappeared while you changed it.
    */

@@ -3,7 +3,7 @@ import { isWithinWindow, type DateWindow } from "@/lib/date-range";
 // TODO: replace with real sources. Categories map to: at-risk (derived from
 // Salesforce attendance, goals, assignments and grades), overdue alerts (Alerts
 // SLA field), pending config (unconfigured items across Portal Config /
-// Academic Goals / System Settings).
+// Goals / System Settings).
 //
 // At-risk signals use only data Edison actually holds. An earlier draft included
 // a well-being rule taken from the reference screenshots; well-being is not in

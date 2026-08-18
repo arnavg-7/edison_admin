@@ -32,7 +32,7 @@ export default async function GoalsForGradePage({
           <Link
             href="/academic-goals"
             className="sf-back-btn"
-            aria-label="Back to Academic Goals"
+            aria-label="Back to Goals"
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={2} />
           </Link>

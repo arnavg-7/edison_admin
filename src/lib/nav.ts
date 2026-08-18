@@ -31,7 +31,7 @@ export const SECTIONS: Section[] = [
   { id: "reporting", label: "Reporting & Analytics", href: "/reporting" },
   { id: "people-360", label: "Student & Faculty 360", href: "/people" },
   { id: "skills-development", label: "Skills & Development", href: "/skills-development" },
-  { id: "academic-goals", label: "Academic Goals", href: "/academic-goals" },
+  { id: "academic-goals", label: "Goals", href: "/academic-goals" },
   { id: "alerts", label: "Alerts & Notifications", href: "/alerts" },
   { id: "user-management", label: "User Management", href: "/user-management" },
   /* Above System Settings and below User Management: it is district structure

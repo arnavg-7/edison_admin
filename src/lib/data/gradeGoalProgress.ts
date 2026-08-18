@@ -1,7 +1,7 @@
 /**
  * How far each student has got with the goals an admin set for their grade.
  *
- * The other half of Academic Goals. An admin writes one goal for a whole grade;
+ * The other half of Goals. An admin writes one goal for a whole grade;
  * every student in that grade then reports where they are with it, and the
  * admin's job is to watch the spread — one goal that half the grade has not
  * started is a different problem from one goal that two students are stuck on.

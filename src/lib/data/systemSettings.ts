@@ -216,7 +216,7 @@ const MONTHS = [
 ];
 
 /** Formats a YYYY-MM-DD string without going through Date/timezone
-    conversion — the same reasoning as Academic Goals' semester dates: a
+    conversion — the same reasoning as Goals' semester dates: a
     plain calendar date shown a day early or late (from a UTC/local shift)
     reads as a real bug, not a rounding quirk. */
 export function formatPlainDate(iso: string): string {

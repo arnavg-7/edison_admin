@@ -352,7 +352,7 @@ export function ProfileShell({ person }: { person: Person }) {
       {tab === "goals" ? (
         <Panel
           title="Individual goals"
-          note="Editable in Admin · templates configured in Academic Goals"
+          note="Editable in Admin · templates configured in Goals"
         >
           <p className="sf-card-hint">
             Checkpoint and status changes apply to this student only, not to the shared goal
@@ -414,7 +414,7 @@ export function ProfileShell({ person }: { person: Person }) {
             />
           )}
           <Link className="sf-inline-link" href="/academic-goals">
-            Open Academic Goals →
+            Open Goals →
           </Link>
         </Panel>
       ) : null}

@@ -50,9 +50,9 @@ export function StudentGradeGoalsPanel({
       </div>
 
       <p className="sf-panel-note goals-panel-intro">
-        Goals set for the whole grade in{" "}
+        Set for the whole grade in{" "}
         <Link className="sf-inline-link" href={`/academic-goals/${schoolId}/${grade}`}>
-          Academic Goals
+          Goals
         </Link>
         . {studentName} reports their own progress on each — read-only here.
       </p>

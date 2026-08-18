@@ -83,6 +83,32 @@ export type GoalMeasurement =
       subjectId: string | null;
     };
 
+/**
+ * A target the grade as a whole has to hit, not any one student.
+ *
+ * The per-student measurement says where each student stands; a threshold says
+ * what the spread has to look like. Two shapes, because they answer opposite
+ * questions:
+ *
+ *   floor    at least 70% of students at or above Applying
+ *   ceiling  no more than 10% of students at Learning
+ *
+ * A floor is the ambition; a ceiling is the thing you cannot let happen. Both are
+ * needed: a grade can clear a floor and still be leaving a tail behind, and a
+ * single average would hide either one.
+ *
+ * `level` names a value from the goal's own vocabulary — a POAG level on an auto
+ * goal, a status on a manual one — so a threshold reads the same way whichever
+ * kind of goal it is on.
+ */
+export type GoalThreshold = {
+  id: string;
+  kind: "floor" | "ceiling";
+  level: string;
+  /** Whole percent of the grade's students. */
+  percent: number;
+};
+
 export type GradeGoal = {
   id: string;
   title: string;
@@ -90,6 +116,8 @@ export type GradeGoal = {
   category: string;
   semester: GoalSemester;
   measurement: GoalMeasurement;
+  /** Cohort targets. Empty means the goal is tracked per student only. */
+  thresholds: GoalThreshold[];
 };
 
 type GradeGoalSeed = {
@@ -100,14 +128,17 @@ type GradeGoalSeed = {
   semester: GoalSemester;
   /** Omitted on a seed means manual, which is the default type. */
   measurement?: GoalMeasurement;
+  /** Omitted means no cohort target — per-student tracking only. */
+  thresholds?: GoalThreshold[];
 };
 
 const MANUAL: GoalMeasurement = { type: "manual" };
 
 function buildGradeGoals(scope: string, seeds: GradeGoalSeed[]): GradeGoal[] {
-  return seeds.map(({ measurement, ...seed }) => ({
+  return seeds.map(({ measurement, thresholds, ...seed }) => ({
     id: `gg-${scope}-${seed.key}`,
     measurement: measurement ?? MANUAL,
+    thresholds: thresholds ?? [],
     ...seed
   }));
 }
@@ -172,7 +203,13 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Attendance improvement plan",
       description: "Structured goal for students below 85% attendance this semester.",
       category: "Attendance & engagement",
-      semester: FALL_2026
+      semester: FALL_2026,
+      /* On a manual goal the levels are the statuses, so the same two shapes read
+         just as naturally: most of the grade finished, hardly any never begun. */
+      thresholds: [
+        { id: "th-att-floor", kind: "floor", level: "Completed", percent: 60 },
+        { id: "th-att-ceiling", kind: "ceiling", level: "Not started", percent: 15 }
+      ]
     },
     {
       key: "critical-thinking",
@@ -186,7 +223,11 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
         pillarKey: "Critical Thinker & Problem Solver",
         requiredLevel: "Applying",
         subjectId: "sub-math"
-      }
+      },
+      thresholds: [
+        { id: "th-ct-floor", kind: "floor", level: "Applying", percent: 70 },
+        { id: "th-ct-ceiling", kind: "ceiling", level: "Learning", percent: 10 }
+      ]
     },
     {
       key: "poag-past",
@@ -225,7 +266,13 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Attendance improvement plan",
       description: "Structured goal for students below 85% attendance this semester.",
       category: "Attendance & engagement",
-      semester: FALL_2026
+      semester: FALL_2026,
+      /* On a manual goal the levels are the statuses, so the same two shapes read
+         just as naturally: most of the grade finished, hardly any never begun. */
+      thresholds: [
+        { id: "th-att-floor", kind: "floor", level: "Completed", percent: 60 },
+        { id: "th-att-ceiling", kind: "ceiling", level: "Not started", percent: 15 }
+      ]
     },
     {
       /* Scoped to one subject, unlike the Grade 9 goal: the level has to be

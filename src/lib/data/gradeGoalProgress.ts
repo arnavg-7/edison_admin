@@ -30,7 +30,7 @@ import { subjectsForGrade } from "./poagCoverage";
 import { subjects } from "./systemSettings";
 import { poagStudentRecord } from "./poagStudent";
 import { gradeRoster, rosterSeed, type RosterStudent } from "./studentRoster";
-import { isPastSemester, type GradeGoal } from "./academicGoals";
+import { isPastSemester, type GoalThreshold, type GradeGoal } from "./academicGoals";
 
 /** Reported by the student on a manual goal. */
 export const MANUAL_GOAL_STATUSES = ["Not started", "In progress", "Completed"] as const;
@@ -231,4 +231,102 @@ export function targetSentence(goal: GradeGoal): string | null {
     : "any subject";
 
   return `${requiredLevel} in ${pillar?.displayTitle ?? pillarKey} · ${subject}`;
+}
+
+/* ── Cohort thresholds ─────────────────────────────────────────────────── */
+
+/**
+ * The ordered vocabulary a goal's thresholds are written against.
+ *
+ * An auto goal's levels are the POAG scale; a manual goal's are its statuses.
+ * Ordered lowest to highest either way, which is what makes "at or above" mean
+ * something — a threshold is a statement about a position in this list.
+ */
+export function goalLevels(goal: GradeGoal, levels: string[] = [...seedPoagLevels]): string[] {
+  return goal.measurement.type === "auto" ? levels : [...MANUAL_GOAL_STATUSES];
+}
+
+/** Where one student sits in that vocabulary. */
+function studentLevel(row: GradeGoalStudentStatus, goal: GradeGoal): string | null {
+  return goal.measurement.type === "auto" ? (row.level ?? null) : row.status;
+}
+
+/** How many students sit at each level, for the spread a threshold judges. */
+export function levelDistribution(
+  goal: GradeGoal,
+  rows: GradeGoalStudentStatus[],
+  levels?: string[]
+): { level: string; count: number; percent: number }[] {
+  const vocabulary = goalLevels(goal, levels);
+  const total = rows.length;
+
+  return vocabulary.map((level) => {
+    const count = rows.filter((row) => studentLevel(row, goal) === level).length;
+    return { level, count, percent: total === 0 ? 0 : (count / total) * 100 };
+  });
+}
+
+export type ThresholdResult = {
+  threshold: GoalThreshold;
+  /** Students counted by the rule — at or above for a floor, at for a ceiling. */
+  count: number;
+  total: number;
+  actual: number;
+  met: boolean;
+  /** The rule in words, so no screen has to reconstruct it. */
+  sentence: string;
+};
+
+/**
+ * Whether the grade is holding one threshold.
+ *
+ * A floor counts everyone at or above the level; a ceiling counts only those at
+ * it. That asymmetry is deliberate and matches how the two are written: "70% at
+ * or above Applying" is about a body of students clearing a bar, while "no more
+ * than 10% at Learning" is about a specific group being too large.
+ */
+export function evaluateThreshold(
+  goal: GradeGoal,
+  threshold: GoalThreshold,
+  rows: GradeGoalStudentStatus[],
+  levels?: string[]
+): ThresholdResult {
+  const vocabulary = goalLevels(goal, levels);
+  const target = vocabulary.indexOf(threshold.level);
+  const total = rows.length;
+
+  const count = rows.filter((row) => {
+    const level = studentLevel(row, goal);
+    if (level === null) return false;
+    const index = vocabulary.indexOf(level);
+    if (index < 0 || target < 0) return false;
+    return threshold.kind === "floor" ? index >= target : index === target;
+  }).length;
+
+  const actual = total === 0 ? 0 : (count / total) * 100;
+
+  return {
+    threshold,
+    count,
+    total,
+    actual,
+    /* An empty grade holds every threshold rather than failing them all: there is
+       nobody to be below the floor or above the ceiling. */
+    met: total === 0 ? true : threshold.kind === "floor" ? actual >= threshold.percent : actual <= threshold.percent,
+    sentence: thresholdSentence(threshold)
+  };
+}
+
+export function thresholdSentence(threshold: GoalThreshold): string {
+  return threshold.kind === "floor"
+    ? `At least ${threshold.percent}% of students at or above ${threshold.level}`
+    : `No more than ${threshold.percent}% of students at ${threshold.level}`;
+}
+
+export function evaluateThresholds(
+  goal: GradeGoal,
+  rows: GradeGoalStudentStatus[],
+  levels?: string[]
+): ThresholdResult[] {
+  return goal.thresholds.map((threshold) => evaluateThreshold(goal, threshold, rows, levels));
 }

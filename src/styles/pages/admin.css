@@ -1685,3 +1685,130 @@
   flex-direction: column;
   gap: 8px;
 }
+
+/* Goal targets ----------------------------------------------------------- */
+
+/* One target as a sentence built from controls: kind, percent, level. Laid out on
+   one line because it reads as a sentence — "At least [70]% at or above [Applying]"
+   — and stacked fields would break the phrase that makes it legible. */
+.goal-threshold-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.goal-threshold-row > *:first-child {
+  min-width: 130px;
+}
+
+.goal-threshold-percent {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.goal-threshold-percent input {
+  width: 68px;
+  text-align: right;
+}
+
+.goal-threshold-word {
+  font-size: 12.5px;
+  color: var(--sf-text-muted);
+  white-space: nowrap;
+}
+
+/* The cohort verdict on a goal's row. Its own line under the tally because it is a
+   different claim: the tally counts students, this judges the spread. */
+.goal-target-chip {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 1px 8px;
+  border-radius: var(--sf-radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.goal-target-chip.is-met {
+  background: var(--sf-ok-bg);
+  color: var(--sf-ok-text);
+}
+
+.goal-target-chip.is-missed {
+  background: var(--sf-error-bg);
+  color: var(--sf-error-text);
+}
+
+.goal-targets-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.goal-targets-head h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+/* The distribution the targets were read from. A bar per level, so a failed
+   ceiling shows not just that a share is too big but where the students are. */
+.goal-spread {
+  margin-top: 12px;
+}
+
+.goal-spread ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.goal-spread li {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr) 90px;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.goal-spread-level {
+  color: var(--sf-text);
+}
+
+.goal-spread-bar {
+  display: block;
+  height: 6px;
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-neutral-bg);
+  overflow: hidden;
+}
+
+.goal-spread-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--sf-accent);
+}
+
+.goal-spread-figure {
+  text-align: right;
+  font-weight: 500;
+  color: var(--sf-text);
+}
+
+/* A goal's expanded detail: the cohort verdict, then its students. Spaced apart
+   because they answer different questions — without the gap the spread bars ran
+   straight into the student search and read as one control group. */
+.goal-detail {
+  display: grid;
+  gap: 24px;
+  padding: 14px 12px 4px;
+}
+
+.goal-detail .goal-students {
+  padding: 0;
+}

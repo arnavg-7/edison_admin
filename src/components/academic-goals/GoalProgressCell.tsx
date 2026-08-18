@@ -1,7 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { gradeGoalStatuses, gradeGoalTally } from "@/lib/data/gradeGoalProgress";
+import {
+  evaluateThresholds,
+  gradeGoalStatuses,
+  gradeGoalTally
+} from "@/lib/data/gradeGoalProgress";
 import type { GradeGoal } from "@/lib/data/academicGoals";
 import { usePoag } from "@/lib/poag-store";
 
@@ -37,6 +41,16 @@ export function GoalProgressCell({
      assumed — the required level on the goal is one of these labels. */
   const { levels } = usePoag();
   const levelLabels = useMemo(() => levels.map((level) => level.label), [levels]);
+
+  /* Whether the grade is holding its cohort targets — the headline an admin scans
+     for, since a goal can be progressing student by student and still be failing
+     the spread it was set to produce. */
+  const targets = useMemo(() => {
+    if (goal.thresholds.length === 0) return null;
+    const rows = gradeGoalStatuses(schoolId, grade, goal, levelLabels);
+    const results = evaluateThresholds(goal, rows, levelLabels);
+    return { met: results.filter((result) => result.met).length, total: results.length };
+  }, [schoolId, grade, goal, levelLabels]);
 
   const tally = useMemo(() => {
     const rows = gradeGoalStatuses(schoolId, grade, goal, levelLabels);
@@ -76,6 +90,18 @@ export function GoalProgressCell({
           ? `${tally.underway} on track · ${tally.behind} short`
           : `${tally.underway} in progress · ${tally.behind} not started`}
       </div>
+
+      {/* Read against the whole grade, so it is deliberately not narrowed by the
+          student filter — a target is about the cohort or it is about nothing. */}
+      {targets ? (
+        <div
+          className={
+            targets.met === targets.total ? "goal-target-chip is-met" : "goal-target-chip is-missed"
+          }
+        >
+          {targets.met} of {targets.total} target{targets.total === 1 ? "" : "s"} met
+        </div>
+      ) : null}
     </div>
   );
 }

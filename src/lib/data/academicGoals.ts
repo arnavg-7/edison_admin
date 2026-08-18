@@ -3,30 +3,6 @@ import { schools, scopeKey } from "./schools";
 
 // TODO: replace with the real Admin DB Academic Goals contract.
 
-export const goalTemplates: ListEditorItem[] = [
-  {
-    id: "gt-1",
-    title: "Personalized Own Academic Goal (POAG): Semester",
-    detail: "Student-authored goal reviewed with an advisor at the start of each semester.",
-    status: { tone: "ok", label: "Published" },
-    meta: "Used by 4 schools · 1,204 active goals"
-  },
-  {
-    id: "gt-2",
-    title: "Attendance improvement plan",
-    detail: "Structured goal for students below 85% attendance.",
-    status: { tone: "ok", label: "Published" },
-    meta: "Used by 5 schools · 218 active goals"
-  },
-  {
-    id: "gt-3",
-    title: "Post-secondary readiness",
-    detail: "Grade 12 goal covering applications, testing, and portfolio milestones.",
-    status: { tone: "neutral", label: "Draft" },
-    meta: "Not yet published"
-  }
-];
-
 export const goalCategories: ListEditorItem[] = [
   {
     id: "gc-1",
@@ -149,6 +125,38 @@ export function isPastSemester(goal: GradeGoal): boolean {
 
 const FALL_2026: GoalSemester = { name: "Fall 2026", from: "2026-08-24", to: "2026-12-18" };
 const SPRING_2026: GoalSemester = { name: "Spring 2026", from: "2026-01-12", to: "2026-05-22" };
+const SPRING_2027: GoalSemester = { name: "Spring 2027", from: "2027-01-05", to: "2027-06-11" };
+const FULL_YEAR_2026: GoalSemester = {
+  name: "Full year 2026–27",
+  from: "2026-08-24",
+  to: "2027-06-11"
+};
+
+/**
+ * The semesters a goal can be set for.
+ *
+ * A goal is set *for* a semester, and a semester already has dates — so the dates
+ * are not something an admin should be typing. Two date pickers also let a goal be
+ * written to a window no term actually runs, which then decides whether it counts
+ * as current and, on an auto goal, when falling short becomes Not met. Picking the
+ * semester settles all of that in one field.
+ *
+ * Ordered oldest first, and closed semesters are included so a past goal can still
+ * be opened and edited without its window being silently rewritten.
+ *
+ * TODO: read from the real academic calendar. System Settings > Academic Calendar
+ * is the intended source of truth; these mirror the terms the goal seeds use.
+ */
+export const GOAL_SEMESTERS: GoalSemester[] = [
+  SPRING_2026,
+  FALL_2026,
+  SPRING_2027,
+  FULL_YEAR_2026
+];
+
+export function findSemester(name: string): GoalSemester | undefined {
+  return GOAL_SEMESTERS.find((semester) => semester.name === name);
+}
 
 export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
   [scopeKey("edison-hs", "9")]: buildGradeGoals(scopeKey("edison-hs", "9"), [

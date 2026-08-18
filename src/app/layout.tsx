@@ -11,7 +11,6 @@ import { UsersProvider } from "@/lib/users-store";
 import { AdminUsersProvider } from "@/lib/admin-users-store";
 import { SchoolSetupProvider } from "@/lib/school-setup-store";
 import { PoagProvider } from "@/lib/poag-store";
-import { GoalTemplatesProvider } from "@/lib/goal-templates-store";
 import { AdminScopeProvider } from "@/lib/admin-scope";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +37,6 @@ export default function RootLayout({
             <AdminUsersProvider>
               <SchoolSetupProvider>
                 <PoagProvider>
-                  <GoalTemplatesProvider>
                   <a className="sf-skip-link" href="#main-content">
                     Skip to main content
                   </a>
@@ -49,7 +47,6 @@ export default function RootLayout({
                     </SidebarInset>
                     <ScrollReset />
                   </SidebarProvider>
-                  </GoalTemplatesProvider>
                 </PoagProvider>
               </SchoolSetupProvider>
             </AdminUsersProvider>

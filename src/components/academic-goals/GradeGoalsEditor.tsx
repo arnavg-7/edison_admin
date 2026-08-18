@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { PlusSignIcon } from "@hugeicons/core-free-icons";
 import {
+  GOAL_SEMESTERS,
+  findSemester,
   goalCategories,
   isPastSemester,
   type GradeGoal
@@ -28,7 +30,6 @@ import { HugeiconsIcon as ExpandIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import Link from "next/link";
 import { usePoag } from "@/lib/poag-store";
-import { useGoalTemplates } from "@/lib/goal-templates-store";
 import { subjectsForGrade } from "@/lib/data/poagCoverage";
 import { targetSentence } from "@/lib/data/gradeGoalProgress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -94,9 +95,8 @@ type Draft = {
   title: string;
   description: string;
   category: string;
+  /** The chosen semester's name; its dates come with it — see GOAL_SEMESTERS. */
   semesterName: string;
-  semesterFrom: string;
-  semesterTo: string;
   /* Measurement, held flat rather than as the union the record uses: a drawer
      keeps every field a user might switch back to, so toggling to Manual and
      back must not lose the pillar they had already picked. It is narrowed to the
@@ -116,8 +116,6 @@ function emptyDraft(scope: GoalScope): Draft {
     description: "",
     category: goalCategories[0]?.title ?? "",
     semesterName: "",
-    semesterFrom: "",
-    semesterTo: "",
     measurementType: "manual",
     pillarKey: "",
     requiredLevel: "",
@@ -155,42 +153,6 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
 
   const { pillars, levels } = usePoag();
 
-  /* Published only — a draft template pre-filling a real goal would be worse than
-     typing it out. Live from the store, so a template added in System Settings is
-     offered here without a reload. */
-  const { published: templates } = useGoalTemplates();
-
-  const templateOptions: ComboOption[] = templates.map((template) => ({
-    value: template.id,
-    label: template.title
-  }));
-
-  /**
-   * Applies a whole template, not just its name.
-   *
-   * A template that filled only the title was a shortcut for typing. Filling the
-   * description, category and measurement is what makes two schools' goals the
-   * same goal — which is the reason templates are district-wide at all. The fields
-   * stay editable afterwards: it is a starting point, not a lock.
-   */
-  const applyTemplate = (id: string) => {
-    const template = templates.find((entry) => entry.id === id);
-    if (!template) return;
-
-    setDraft((current) => ({
-      ...current,
-      title: template.title,
-      description: template.description,
-      category: template.category,
-      measurementType: template.measurement.type,
-      pillarKey: template.measurement.type === "auto" ? template.measurement.pillarKey : "",
-      requiredLevel:
-        template.measurement.type === "auto" ? template.measurement.requiredLevel : "",
-      subjectId:
-        template.measurement.type === "auto" ? (template.measurement.subjectId ?? "") : ""
-    }));
-  };
-
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   /* Which goals are opened out onto their student list. Several at once, so two
@@ -202,6 +164,12 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
       current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id]
     );
   const [draft, setDraft] = useState<Draft>(() => emptyDraft(scope));
+
+  const semesterOptions: ComboOption[] = GOAL_SEMESTERS.map((semester) => ({
+    value: semester.name,
+    label: semester.name
+  }));
+  const chosenSemester = findSemester(draft.semesterName);
 
   const startAdd = () => {
     setDraft(emptyDraft(scope));
@@ -235,8 +203,6 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
       description: goal.description,
       category: goal.category,
       semesterName: goal.semester.name,
-      semesterFrom: goal.semester.from,
-      semesterTo: goal.semester.to,
       measurementType: goal.measurement.type,
       pillarKey: goal.measurement.type === "auto" ? goal.measurement.pillarKey : "",
       requiredLevel: goal.measurement.type === "auto" ? goal.measurement.requiredLevel : "",
@@ -266,10 +232,9 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
     draft.grade !== "" &&
     draft.title.trim() !== "" &&
     draft.description.trim() !== "" &&
-    draft.semesterName.trim() !== "" &&
-    draft.semesterFrom !== "" &&
-    draft.semesterTo !== "" &&
-    draft.semesterFrom <= draft.semesterTo &&
+    /* A known semester, not any string: the dates ride on it, so an unrecognised
+       name would leave the goal with no window to be measured against. */
+    findSemester(draft.semesterName) !== undefined &&
     /* An auto goal with no pillar or no target level would evaluate every student
        against nothing, so it cannot be saved half-specified. */
     (draft.measurementType === "manual" ||
@@ -287,11 +252,8 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
       title: draft.title.trim(),
       description: draft.description.trim(),
       category: draft.category,
-      semester: {
-        name: draft.semesterName.trim(),
-        from: draft.semesterFrom,
-        to: draft.semesterTo
-      },
+      // Non-null: canSave has already required a known semester.
+      semester: findSemester(draft.semesterName)!,
       measurement:
         draft.measurementType === "auto"
           ? {
@@ -346,39 +308,6 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
 
   const fields = (
     <div className="list-editor-form list-editor-form--drawer">
-      {/* Templates are a Combobox, not the `list=`/<datalist> this used to be.
-          A datalist is drawn by the browser: Chrome hangs its own caret on the
-          input on hover, so the field looked like a dropdown the app doesn't
-          have anywhere else, and the list it opened matched nothing in the
-          filter bar.
-
-          Picking one now fills the name, description, category and measurement —
-          every field below stays editable, so it is a starting point rather than
-          a lock. */}
-      <label className="sf-field sf-field--prestep">
-        <span>Start from a template</span>
-        <Combobox
-          options={templateOptions}
-          value=""
-          onChange={applyTemplate}
-          placeholder={
-            templateOptions.length === 0
-              ? "No published templates yet"
-              : "Optional — pick a published template"
-          }
-          disabled={templateOptions.length === 0}
-          ariaLabel="Start from a goal template"
-        />
-        {/* The templates live in System Settings, so the field says where to go
-            rather than leaving an admin to hunt for the list they just saw. */}
-        <span className="sf-field-hint">
-          Fills the name, description, category and measurement.{" "}
-          <Link className="sf-inline-link" href="/system-settings/goal-templates">
-            Manage templates
-          </Link>
-        </span>
-      </label>
-
       {/* Which grade the goal is being set for. Defaults to the grade whose page
           the drawer was opened from, so the common case is a no-op, but a goal
           that belongs to another grade — or the whole of another school, one
@@ -441,35 +370,28 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
         />
       </label>
 
+      {/* One field, not a name plus two date pickers. A goal is set for a
+          semester and a semester already has dates, so there is nothing here for
+          an admin to type — and no way to write a goal to a window no term runs,
+          which is what decides whether it is current and, on an auto goal, when
+          falling short becomes Not met. */}
       <label className="sf-field">
-        <span>Semester name</span>
-        <input
-          type="text"
+        <span>Semester</span>
+        <Combobox
+          options={semesterOptions}
           value={draft.semesterName}
-          placeholder="e.g. Fall 2026"
-          onChange={(event) => setDraft({ ...draft, semesterName: event.target.value })}
+          onChange={(semesterName) => setDraft({ ...draft, semesterName })}
+          placeholder="Select a semester"
         />
+        {chosenSemester ? (
+          <span className="sf-field-hint">
+            Runs {formatDateRange(chosenSemester.from, chosenSemester.to)}.
+            {isPastSemester({ semester: chosenSemester } as GradeGoal)
+              ? " This semester has ended, so the goal lands in Goal history."
+              : ""}
+          </span>
+        ) : null}
       </label>
-
-      <div className="sf-field-row">
-        <label className="sf-field">
-          <span>Start date</span>
-          <input
-            type="date"
-            value={draft.semesterFrom}
-            onChange={(event) => setDraft({ ...draft, semesterFrom: event.target.value })}
-          />
-        </label>
-
-        <label className="sf-field">
-          <span>End date</span>
-          <input
-            type="date"
-            value={draft.semesterTo}
-            onChange={(event) => setDraft({ ...draft, semesterTo: event.target.value })}
-          />
-        </label>
-      </div>
 
       {/* The second decision, and a separate one from what the goal says: who
           settles whether it is done. Its own group, because picking Auto changes

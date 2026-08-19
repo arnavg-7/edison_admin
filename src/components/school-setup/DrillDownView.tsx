@@ -15,6 +15,7 @@ import {
   type SetupSchool
 } from "@/lib/data/schoolSetup";
 import { useSchoolSetup } from "@/lib/school-setup-store";
+import { useAdminScope } from "@/lib/admin-scope";
 import { useSetupSelection } from "@/lib/school-setup-selection";
 import { Button } from "@/components/base/buttons/button";
 import { Combobox, type ComboboxOption } from "@/components/shared/Combobox";
@@ -68,6 +69,11 @@ function schoolMatches(school: SetupSchool, term: string): boolean {
  */
 export function DrillDownView() {
   const { district } = useSchoolSetup();
+  /* A school admin does not do master setup: the root list holds their school
+     alone and offers no "add school", because adding one — and deleting one,
+     which the detail panel handles — is the district's to do. Everything below
+     the school is theirs and behaves exactly as it does for the district. */
+  const { schoolId } = useAdminScope();
   const { school, grade, batch, kind, query, year, select } = useSetupSelection();
   const [modal, setModal] = useState<SetupModalRequest | null>(null);
   const [importing, setImporting] = useState(false);
@@ -158,15 +164,21 @@ export function DrillDownView() {
       };
     }
 
+    const rootSchools = schoolId
+      ? district.schools.filter((entry) => entry.id === schoolId)
+      : district.schools;
+
     return {
-      heading: `Schools in ${district.name}`,
+      heading: schoolId ? "Your school" : `Schools in ${district.name}`,
       noun: "schools",
       singular: "school",
       head: ["School", "Level", "Principal", "Grades", "Batches", "Seats filled"],
-      total: district.schools.length,
-      add: { mode: "add", kind: "school" },
-      emptyMessage: "Add the first school — every grade, batch and report hangs off it.",
-      rows: district.schools
+      total: rootSchools.length,
+      add: schoolId ? null : { mode: "add", kind: "school" },
+      emptyMessage: schoolId
+        ? "Your school is not in the district tree."
+        : "Add the first school — every grade, batch and report hangs off it.",
+      rows: rootSchools
         .filter((entry) => term === "" || schoolMatches(entry, term))
         .map((entry) => ({
           id: entry.id,

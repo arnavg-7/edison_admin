@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { sectionsFor, sectionHref } from "@/lib/nav";
+import { sectionsFor, sectionHref, sectionLabel } from "@/lib/nav";
 import { useAdminScope } from "@/lib/admin-scope";
 import { ScopeSwitcher } from "./ScopeSwitcher";
 import { NavIcon } from "./NavIcon";
@@ -56,6 +56,7 @@ export function Sidebar() {
                 /* Scoped sections point one level in, so a school admin lands on
                    their grade list rather than a picker holding one school. */
                 const href = sectionHref(section, schoolId);
+                const label = sectionLabel(section, schoolId);
 
                 return (
                   <SidebarMenuItem key={section.id}>
@@ -67,12 +68,12 @@ export function Sidebar() {
                         that value moves again. */}
                     <SidebarMenuButton
                       isActive={isActive}
-                      tooltip={section.label}
+                      tooltip={label}
                       className="rounded-(--sf-radius-control)"
                       render={<Link href={href} aria-current={isActive ? "page" : undefined} />}
                     >
                       <NavIcon name={section.id} />
-                      <span>{section.label}</span>
+                      <span>{label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );

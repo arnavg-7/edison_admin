@@ -12,6 +12,7 @@ import {
   schoolSeats,
   type Seats
 } from "@/lib/data/schoolSetup";
+import { useAdminScope } from "@/lib/admin-scope";
 import { useSchoolSetup } from "@/lib/school-setup-store";
 import { useSetupSelection } from "@/lib/school-setup-selection";
 import { Button, styles as buttonStyles } from "@/components/base/buttons/button";
@@ -41,6 +42,7 @@ import {
  */
 export function SetupDetailPanel({ onEdit }: { onEdit: (request: SetupModalRequest) => void }) {
   const { district, removeSchool, removeGrade, removeBatch } = useSchoolSetup();
+  const { schoolId: scopedSchoolId } = useAdminScope();
   const { school, grade, batch, kind } = useSetupSelection();
 
   const fields: { label: string; value: string }[] = [];
@@ -96,8 +98,14 @@ export function SetupDetailPanel({ onEdit }: { onEdit: (request: SetupModalReque
       { label: "Batches", value: String(batchCount(school)) },
       { label: "Students", value: seats.enrolled.toLocaleString() }
     );
-    edit = { mode: "edit", kind: "school", school };
-    remove = () => removeSchool(school.id);
+    /* The school node itself is the district's to edit and to delete: its name,
+       code and level come off the Genesis roster, and deleting it takes every
+       grade, batch and enrolment with it. A school admin works below this node,
+       where grades and batches edit and delete as normal — so both actions are
+       withheld here rather than one, which is also what the head's `edit &&
+       remove` guard would have done silently. */
+    edit = scopedSchoolId ? null : { mode: "edit", kind: "school", school };
+    remove = scopedSchoolId ? null : () => removeSchool(school.id);
     cascadeNote = `Its ${school.grades.length} grades, ${batchCount(school)} batches and ${seats.enrolled.toLocaleString()} enrolled students go with it.`;
   } else {
     seats = districtSeats(district);

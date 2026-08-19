@@ -121,6 +121,19 @@ export const SCOPED_SECTIONS: Section[] = SECTIONS.filter((section) =>
 );
 
 /**
+ * The section's name for the scope you are administering.
+ *
+ * School Master Setup is the district's structure: adding a school, deleting
+ * one, and everything under it going with it. A school admin does none of that
+ * — what they hold is their own school's grades and batches — so for them the
+ * section is School Management, and the screens behind it drop the school-level
+ * add and delete to match.
+ */
+export function sectionLabel(section: Section, schoolId: string | null): string {
+  return section.id === "school-setup" && schoolId ? "School Management" : section.label;
+}
+
+/**
  * Where a section's nav link goes for the current scope.
  *
  * The redirect on the school-picker pages is the safety net for a bookmark or a

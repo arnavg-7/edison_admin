@@ -13,6 +13,7 @@ import {
   type SetupGrade,
   type SetupSchool
 } from "@/lib/data/schoolSetup";
+import { useAdminScope } from "@/lib/admin-scope";
 import { useSchoolSetup } from "@/lib/school-setup-store";
 import { useSetupSelection } from "@/lib/school-setup-selection";
 import { SetupDetailPanel } from "./SetupDetailPanel";
@@ -117,6 +118,8 @@ function Column({
  */
 export function ColumnsView() {
   const { district } = useSchoolSetup();
+  // Same rule as the drill-down: one school, and no adding another.
+  const { schoolId } = useAdminScope();
   const { school, grade, batch, query, select } = useSetupSelection();
   const [modal, setModal] = useState<SetupModalRequest | null>(null);
   const [importing, setImporting] = useState(false);
@@ -127,6 +130,7 @@ export function ColumnsView() {
   // A school stays listed when the term matches anything beneath it, so a search
   // for a batch name doesn't empty the column you'd have to click through.
   const schoolRows: ColumnRow[] = district.schools
+    .filter((entry) => !schoolId || entry.id === schoolId)
     .filter(
       (entry: SetupSchool) =>
         term === "" ||
@@ -212,7 +216,7 @@ export function ColumnsView() {
             label="Schools"
             rows={schoolRows}
             emptyMessage={term ? "No school matches this search." : "No schools yet."}
-            onAdd={() => setModal({ mode: "add", kind: "school" })}
+            onAdd={schoolId ? undefined : () => setModal({ mode: "add", kind: "school" })}
             addLabel="Add school"
             onImport={() => setImporting(true)}
           />

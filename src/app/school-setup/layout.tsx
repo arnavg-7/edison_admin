@@ -1,5 +1,8 @@
+"use client";
+
 import { Suspense } from "react";
 import { SectionTabs } from "@/components/shared/SectionTabs";
+import { useAdminScope } from "@/lib/admin-scope";
 
 const TABS = [
   { label: "Drill-down", href: "/school-setup" },
@@ -17,14 +20,21 @@ const TABS = [
  * you were looking at and a link to either view still lands where it says.
  */
 export default function SchoolSetupLayout({ children }: { children: React.ReactNode }) {
+  /* Master setup is the district's job — creating and deleting schools. A school
+     admin has the structure inside their own school, which is a different title
+     and a different screen; see sectionLabel in nav.ts, which names the same
+     split in the sidebar. */
+  const { school } = useAdminScope();
+
   return (
     <section className="sf-main">
       <div className="sf-page-head">
         <div>
-          <h1 className="sf-page-title">School Master Setup</h1>
+          <h1 className="sf-page-title">{school ? "School Management" : "School Master Setup"}</h1>
           <p className="sf-page-sub">
-            The district structure Edison360 reports against — schools, the grades they run,
-            and the batches students are enrolled into.
+            {school
+              ? `The structure inside ${school.name} — the grades it runs and the batches students are enrolled into.`
+              : "The district structure Edison360 reports against — schools, the grades they run, and the batches students are enrolled into."}
           </p>
         </div>
       </div>

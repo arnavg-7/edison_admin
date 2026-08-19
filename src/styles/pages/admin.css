@@ -1713,9 +1713,17 @@
 }
 
 /* Two lines that read as one sentence: "At least 70% / of students at or above
-   Applying". The controls carry the numbers, the words carry the grammar. */
+   Applying in Critical Thinking". The controls carry the numbers, the words carry
+   the grammar — including the pillar, which is stated rather than picked because
+   it is the goal's, not the target's.
+
+   Wraps rather than squeezing: the closing clause is a pillar name, and holding
+   the line would have left the level dropdown a hundred pixels wide next to
+   "Engaged Community Member". A wrapped clause still reads as the same
+   sentence; a crushed control does not. */
 .goal-threshold-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   min-width: 0;

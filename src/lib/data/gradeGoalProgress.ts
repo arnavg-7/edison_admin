@@ -85,6 +85,19 @@ const UPDATED_AT = [
  * goal's own `subjectId: null` states, rather than an average, which POAG defines
  * no meaning for.
  */
+/**
+ * The pillar a goal is about, by display title.
+ *
+ * Seeded pillars only — a district-added one falls back to its rubric key. The
+ * live list lives in the POAG store, which is a client hook this data layer
+ * cannot reach; the key is what the goal stores either way, so it degrades to
+ * something true rather than to a blank.
+ */
+export function goalPillarTitle(goal: GradeGoal): string {
+  const pillar = seedPoagPillars.find((entry) => entry.rubricKey === goal.pillarKey);
+  return pillar?.displayTitle ?? goal.pillarKey;
+}
+
 function currentLevel(
   goal: GradeGoal,
   student: RosterStudent,
@@ -93,9 +106,7 @@ function currentLevel(
 ): { index: number; subject: string } | null {
   if (goal.measurement.type !== "auto") return null;
 
-  const pillar = seedPoagPillars.find(
-    (entry) => entry.rubricKey === (goal.measurement as { pillarKey: string }).pillarKey
-  );
+  const pillar = seedPoagPillars.find((entry) => entry.rubricKey === goal.pillarKey);
   if (!pillar) return null;
 
   const gradeSubjects = subjectsForGrade(grade);
@@ -221,26 +232,28 @@ export function gradeGoalStatusTone(status: GradeGoalStatus): "ok" | "warn" | "e
 export function targetSentence(goal: GradeGoal): string | null {
   if (goal.measurement.type !== "auto") return null;
   // Bound locally: the narrowing above does not survive into the callbacks.
-  const { pillarKey, requiredLevel, subjectId } = goal.measurement;
+  const { requiredLevel, subjectId } = goal.measurement;
 
-  const pillar = seedPoagPillars.find((entry) => entry.rubricKey === pillarKey);
   /* Read from the whole subject list, not one grade's: a goal names a subject by
      id, and which grades happen to be taught it is a different question. */
   const subject = subjectId
     ? (subjects.find((entry) => entry.id === subjectId)?.name ?? "one subject")
     : "any subject";
 
-  return `${requiredLevel} in ${pillar?.displayTitle ?? pillarKey} · ${subject}`;
+  return `${requiredLevel} in ${goalPillarTitle(goal)} · ${subject}`;
 }
 
 /* ── Cohort thresholds ─────────────────────────────────────────────────── */
 
 /**
- * The ordered vocabulary a goal's thresholds are written against.
+ * The ordered vocabulary a goal's spread is read in — and, on an auto goal, the
+ * one its thresholds are written against.
  *
  * An auto goal's levels are the POAG scale; a manual goal's are its statuses.
  * Ordered lowest to highest either way, which is what makes "at or above" mean
- * something — a threshold is a statement about a position in this list.
+ * something — a threshold is a statement about a position in this list. Only
+ * auto goals carry thresholds, so only their branch is ever judged against one;
+ * a manual goal still has a spread, it just has no target to hold it to.
  */
 export function goalLevels(goal: GradeGoal, levels: string[] = [...seedPoagLevels]): string[] {
   return goal.measurement.type === "auto" ? levels : [...MANUAL_GOAL_STATUSES];
@@ -313,14 +326,16 @@ export function evaluateThreshold(
     /* An empty grade holds every threshold rather than failing them all: there is
        nobody to be below the floor or above the ceiling. */
     met: total === 0 ? true : threshold.kind === "floor" ? actual >= threshold.percent : actual <= threshold.percent,
-    sentence: thresholdSentence(threshold)
+    sentence: thresholdSentence(goal, threshold)
   };
 }
 
-export function thresholdSentence(threshold: GoalThreshold): string {
+/** "At least 70% of students at or above Applying in Critical Thinking". */
+export function thresholdSentence(goal: GradeGoal, threshold: GoalThreshold): string {
+  const where = `${threshold.level} in ${goalPillarTitle(goal)}`;
   return threshold.kind === "floor"
-    ? `At least ${threshold.percent}% of students at or above ${threshold.level}`
-    : `No more than ${threshold.percent}% of students at ${threshold.level}`;
+    ? `At least ${threshold.percent}% of students at or above ${where}`
+    : `No more than ${threshold.percent}% of students at ${where}`;
 }
 
 export function evaluateThresholds(

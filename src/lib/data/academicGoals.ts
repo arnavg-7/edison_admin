@@ -68,8 +68,6 @@ export type GoalMeasurement =
   | { type: "manual" }
   | {
       type: "auto";
-      /** `rubricKey` of the pillar being tracked. */
-      pillarKey: string;
       /** The level the student has to reach, as a label from the live scale. */
       requiredLevel: string;
       /**
@@ -90,16 +88,19 @@ export type GoalMeasurement =
  * what the spread has to look like. Two shapes, because they answer opposite
  * questions:
  *
- *   floor    at least 70% of students at or above Applying
- *   ceiling  no more than 10% of students at Learning
+ *   floor    at least 70% of students at or above Applying in Critical Thinking
+ *   ceiling  no more than 10% of students at Learning in Critical Thinking
  *
  * A floor is the ambition; a ceiling is the thing you cannot let happen. Both are
  * needed: a grade can clear a floor and still be leaving a tail behind, and a
  * single average would hide either one.
  *
- * `level` names a value from the goal's own vocabulary — a POAG level on an auto
- * goal, a status on a manual one — so a threshold reads the same way whichever
- * kind of goal it is on.
+ * `level` is a position on the POAG scale, always read in the goal's own pillar —
+ * a percentage on its own is not a target, and one that named a second pillar
+ * would be a different goal. Auto goals only: a level is a reading off the
+ * ratings, and the same percentage over statuses students set for themselves
+ * would be a tally of what the grade says about itself, so a manual goal is
+ * tracked per student and carries no cohort target.
  */
 export type GoalThreshold = {
   id: string;
@@ -114,9 +115,20 @@ export type GradeGoal = {
   title: string;
   description: string;
   category: string;
+  /**
+   * `rubricKey` of the pillar this goal is about — required, whichever way it is
+   * measured.
+   *
+   * It sits on the goal rather than inside the auto measurement because it is
+   * what the goal is *for*, not how it is read: a manual goal whose statuses
+   * students report is still a goal about Resilience, and a cohort target of
+   * "70% at or above Applying" means nothing until you know which pillar's
+   * Applying is being counted.
+   */
+  pillarKey: string;
   semester: GoalSemester;
   measurement: GoalMeasurement;
-  /** Cohort targets. Empty means the goal is tracked per student only. */
+  /** Cohort targets, on auto goals only. Empty is per-student tracking. */
   thresholds: GoalThreshold[];
 };
 
@@ -125,10 +137,13 @@ type GradeGoalSeed = {
   title: string;
   description: string;
   category: string;
+  /** Required, like on the record — every goal is about one pillar. */
+  pillarKey: string;
   semester: GoalSemester;
   /** Omitted on a seed means manual, which is the default type. */
   measurement?: GoalMeasurement;
-  /** Omitted means no cohort target — per-student tracking only. */
+  /** Omitted means no cohort target — per-student tracking only. Auto goals
+   *  only; a manual seed carrying one would not survive an edit in the drawer. */
   thresholds?: GoalThreshold[];
 };
 
@@ -196,6 +211,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Personalized Own Academic Goal: Semester",
       description: "Student-authored goal reviewed with an advisor at the start of the semester.",
       category: "Academic achievement",
+      pillarKey: "Resourceful Lifelong Learner",
       semester: FALL_2026
     },
     {
@@ -203,13 +219,8 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Attendance improvement plan",
       description: "Structured goal for students below 85% attendance this semester.",
       category: "Attendance & engagement",
-      semester: FALL_2026,
-      /* On a manual goal the levels are the statuses, so the same two shapes read
-         just as naturally: most of the grade finished, hardly any never begun. */
-      thresholds: [
-        { id: "th-att-floor", kind: "floor", level: "Completed", percent: 60 },
-        { id: "th-att-ceiling", kind: "ceiling", level: "Not started", percent: 15 }
-      ]
+      pillarKey: "Engaged Community Member",
+      semester: FALL_2026
     },
     {
       key: "critical-thinking",
@@ -217,10 +228,10 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       description:
         "Measured on the Mathematics rating — reasoning through an unfamiliar problem is what this grade is working on.",
       category: "Academic achievement",
+      pillarKey: "Critical Thinker & Problem Solver",
       semester: FALL_2026,
       measurement: {
         type: "auto",
-        pillarKey: "Critical Thinker & Problem Solver",
         requiredLevel: "Applying",
         subjectId: "sub-math"
       },
@@ -234,6 +245,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Personalized Own Academic Goal: Semester",
       description: "Student-authored goal reviewed with an advisor at the start of the semester.",
       category: "Academic achievement",
+      pillarKey: "Resourceful Lifelong Learner",
       semester: SPRING_2026
     },
     {
@@ -244,10 +256,10 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       description:
         "Spring stretch target on the Science rating. Closed at the end of the semester on the ratings as they stood.",
       category: "Social & emotional",
+      pillarKey: "Adaptive & Resilient",
       semester: SPRING_2026,
       measurement: {
         type: "auto",
-        pillarKey: "Adaptive & Resilient",
         requiredLevel: "Innovating",
         subjectId: "sub-science"
       }
@@ -259,6 +271,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Personalized Own Academic Goal: Semester",
       description: "Student-authored goal reviewed with an advisor at the start of the semester.",
       category: "Academic achievement",
+      pillarKey: "Resourceful Lifelong Learner",
       semester: FALL_2026
     },
     {
@@ -266,13 +279,8 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Attendance improvement plan",
       description: "Structured goal for students below 85% attendance this semester.",
       category: "Attendance & engagement",
-      semester: FALL_2026,
-      /* On a manual goal the levels are the statuses, so the same two shapes read
-         just as naturally: most of the grade finished, hardly any never begun. */
-      thresholds: [
-        { id: "th-att-floor", kind: "floor", level: "Completed", percent: 60 },
-        { id: "th-att-ceiling", kind: "ceiling", level: "Not started", percent: 15 }
-      ]
+      pillarKey: "Engaged Community Member",
+      semester: FALL_2026
     },
     {
       /* Scoped to one subject, unlike the Grade 9 goal: the level has to be
@@ -284,10 +292,10 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       description:
         "Counts once the student reaches Innovating in any subject they are taught — wherever their strongest work is.",
       category: "Social & emotional",
+      pillarKey: "Effective Communicator",
       semester: FALL_2026,
       measurement: {
         type: "auto",
-        pillarKey: "Effective Communicator",
         requiredLevel: "Innovating",
         subjectId: null
       }
@@ -297,6 +305,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Attendance improvement plan",
       description: "Structured goal for students below 85% attendance last semester.",
       category: "Attendance & engagement",
+      pillarKey: "Engaged Community Member",
       semester: SPRING_2026
     }
   ]),
@@ -306,6 +315,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Personalized Own Academic Goal: Semester",
       description: "Student-authored goal reviewed with an advisor at the start of the semester.",
       category: "Academic achievement",
+      pillarKey: "Resourceful Lifelong Learner",
       semester: FALL_2026
     },
     {
@@ -313,6 +323,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Post-secondary readiness",
       description: "Covers applications, testing, and portfolio milestones this semester.",
       category: "Post-secondary readiness",
+      pillarKey: "Resourceful Lifelong Learner",
       semester: FALL_2026
     },
     {
@@ -320,6 +331,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Post-secondary readiness",
       description: "Covers applications, testing, and portfolio milestones from last semester.",
       category: "Post-secondary readiness",
+      pillarKey: "Resourceful Lifelong Learner",
       semester: SPRING_2026
     }
   ]),
@@ -329,6 +341,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Personalized Own Academic Goal: Semester",
       description: "Student-authored goal reviewed with an advisor at the start of the semester.",
       category: "Academic achievement",
+      pillarKey: "Resourceful Lifelong Learner",
       semester: FALL_2026
     },
     {
@@ -336,6 +349,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Post-secondary readiness",
       description: "Covers applications, testing, and portfolio milestones for graduating seniors.",
       category: "Post-secondary readiness",
+      pillarKey: "Resourceful Lifelong Learner",
       semester: FALL_2026
     },
     {
@@ -343,6 +357,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Post-secondary readiness",
       description: "Covers applications, testing, and portfolio milestones from last semester.",
       category: "Post-secondary readiness",
+      pillarKey: "Resourceful Lifelong Learner",
       semester: SPRING_2026
     }
   ]),
@@ -352,6 +367,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Social readiness check-in",
       description: "Check-in on sharing, listening, and following routines.",
       category: "Social & emotional",
+      pillarKey: "Emotionally Intelligent",
       semester: FALL_2026
     },
     {
@@ -359,6 +375,7 @@ export const gradeGoalsByGrade: Record<string, GradeGoal[]> = {
       title: "Social readiness check-in",
       description: "Check-in on sharing, listening, and following routines.",
       category: "Social & emotional",
+      pillarKey: "Emotionally Intelligent",
       semester: SPRING_2026
     }
   ])

@@ -33,7 +33,7 @@ import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import Link from "next/link";
 import { usePoag } from "@/lib/poag-store";
 import { subjectsForGrade } from "@/lib/data/poagCoverage";
-import { MANUAL_GOAL_STATUSES, targetSentence } from "@/lib/data/gradeGoalProgress";
+import { goalPillarTitle, targetSentence } from "@/lib/data/gradeGoalProgress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Sheet,
@@ -179,12 +179,10 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
     label: semester.name
   }));
   const chosenSemester = findSemester(draft.semesterName);
-  /* What a target can name, following the measurement type the drawer is on. */
-  const draftLevels =
-    draft.measurementType === "auto"
-      ? levels.map((level) => level.label)
-      : [...MANUAL_GOAL_STATUSES];
-
+  /* Named in every target below, so a percentage is never a figure against a
+     bare level. Live list, not the seed: a renamed pillar reads as renamed. */
+  const draftPillarTitle =
+    pillars.find((pillar) => pillar.rubricKey === draft.pillarKey)?.displayTitle ?? "";
   const startAdd = () => {
     setDraft(emptyDraft(scope));
     setEditingId(null);
@@ -218,7 +216,7 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
       category: goal.category,
       semesterName: goal.semester.name,
       measurementType: goal.measurement.type,
-      pillarKey: goal.measurement.type === "auto" ? goal.measurement.pillarKey : "",
+      pillarKey: goal.pillarKey,
       requiredLevel: goal.measurement.type === "auto" ? goal.measurement.requiredLevel : "",
       subjectId: goal.measurement.type === "auto" ? (goal.measurement.subjectId ?? "") : "",
       thresholds: goal.thresholds
@@ -250,10 +248,12 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
     /* A known semester, not any string: the dates ride on it, so an unrecognised
        name would leave the goal with no window to be measured against. */
     findSemester(draft.semesterName) !== undefined &&
-    /* An auto goal with no pillar or no target level would evaluate every student
-       against nothing, so it cannot be saved half-specified. */
-    (draft.measurementType === "manual" ||
-      (draft.pillarKey !== "" && draft.requiredLevel !== ""));
+    /* Every goal names the pillar it is about — a level, a status or a target
+       percentage only means something once you know which pillar it is in. */
+    draft.pillarKey !== "" &&
+    /* An auto goal with no level to reach would evaluate every student against
+       nothing, so it cannot be saved half-specified. */
+    (draft.measurementType === "manual" || draft.requiredLevel !== "");
 
   const save = () => {
     if (!canSave) {
@@ -267,16 +267,22 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
       title: draft.title.trim(),
       description: draft.description.trim(),
       category: draft.category,
+      pillarKey: draft.pillarKey,
       // Non-null: canSave has already required a known semester.
       semester: findSemester(draft.semesterName)!,
-      /* Only targets that name a level survive: a row left half-filled is an
-         intention, not a rule, and would evaluate against nothing. */
-      thresholds: draft.thresholds.filter((threshold) => threshold.level !== ""),
+      /* Targets ride on the measurement type: a manual goal never carries one.
+         They stay in the draft either way, like the pillar does, so toggling to
+         Manual and back does not lose what was typed. Of an auto goal's, only
+         those naming a level survive — a row left half-filled is an intention,
+         not a rule, and would evaluate against nothing. */
+      thresholds:
+        draft.measurementType === "auto"
+          ? draft.thresholds.filter((threshold) => threshold.level !== "")
+          : [],
       measurement:
         draft.measurementType === "auto"
           ? {
               type: "auto",
-              pillarKey: draft.pillarKey,
               requiredLevel: draft.requiredLevel,
               // "" is the any-subject rule, stored as null.
               subjectId: draft.subjectId === "" ? null : draft.subjectId
@@ -423,6 +429,25 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
         />
       </label>
 
+      {/* What the goal is about, asked of every goal and not only the ones the
+          system reads for itself. It used to sit inside the Auto branch, which
+          left a manual goal attached to no pillar and its targets counting a
+          percentage at a level with nothing behind it. */}
+      <label className="sf-field">
+        <span>Pillar</span>
+        <Combobox
+          options={pillarOptions}
+          value={draft.pillarKey}
+          onChange={(next) => setDraft({ ...draft, pillarKey: next })}
+          placeholder="Select a pillar"
+        />
+        <span className="sf-field-hint">
+          The Portrait of a Graduate pillar this goal works on. Every level named
+          below — the one to reach, and any target for the grade — is read in this
+          pillar.
+        </span>
+      </label>
+
       {/* One field, not a name plus two date pickers. A goal is set for a
           semester and a semester already has dates, so there is nothing here for
           an admin to type — and no way to write a goal to a window no term runs,
@@ -475,16 +500,6 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
 
         {draft.measurementType === "auto" ? (
           <>
-            <label className="sf-field">
-              <span>Pillar</span>
-              <Combobox
-                options={pillarOptions}
-                value={draft.pillarKey}
-                onChange={(next) => setDraft({ ...draft, pillarKey: next })}
-                placeholder="Select a pillar"
-              />
-            </label>
-
             <div className="sf-field-row">
               <label className="sf-field">
                 <span>Level to reach</span>
@@ -511,128 +526,143 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
 
       {/* Cohort targets, in their own group below the per-student measurement —
           they are a statement about the spread, which only means anything once
-          you know what is being measured. */}
-      <fieldset className="goal-fieldset">
-        <legend>Targets for the grade</legend>
+          you know what is being measured.
 
-        {draft.thresholds.map((threshold, index) => (
-          /* A card per target, not one wrapping line. At the drawer's width a
-             sentence of three controls wrapped to four rows with nothing tying
-             them together; boxed and labelled, each target stays one object. */
-          <div className="goal-threshold" key={threshold.id}>
-            <div className="goal-threshold-head">
-              <span>Target {index + 1}</span>
-              <Button
-                color="tertiary"
-                size="xs"
-                onClick={() =>
-                  setDraft({
-                    ...draft,
-                    thresholds: draft.thresholds.filter((_, i) => i !== index)
-                  })
-                }
-              >
-                Remove<span className="sf-sr-only"> target {index + 1}</span>
-              </Button>
-            </div>
+          Auto goals only. A target is read off the POAG ratings, which is a
+          measurement of the grade; the same percentage over statuses students
+          set themselves would be a tally of what the grade says about itself,
+          and not something to hold it to. */}
+      {draft.measurementType === "auto" ? (
+        <fieldset className="goal-fieldset">
+          <legend>Targets for the grade</legend>
 
-            <div className="goal-threshold-row">
-              <Combobox
-                options={[
-                  { value: "floor", label: "At least" },
-                  { value: "ceiling", label: "No more than" }
-                ]}
-                value={threshold.kind}
-                onChange={(kind) =>
-                  setDraft({
-                    ...draft,
-                    thresholds: draft.thresholds.map((entry, i) =>
-                      i === index ? { ...entry, kind: kind as GoalThreshold["kind"] } : entry
-                    )
-                  })
-                }
-                className="goal-threshold-kind"
-                ariaLabel={`Target ${index + 1} kind`}
-              />
+          {draft.thresholds.map((threshold, index) => (
+            /* A card per target, not one wrapping line. At the drawer's width a
+               sentence of three controls wrapped to four rows with nothing tying
+               them together; boxed and labelled, each target stays one object. */
+            <div className="goal-threshold" key={threshold.id}>
+              <div className="goal-threshold-head">
+                <span>Target {index + 1}</span>
+                <Button
+                  color="tertiary"
+                  size="xs"
+                  onClick={() =>
+                    setDraft({
+                      ...draft,
+                      thresholds: draft.thresholds.filter((_, i) => i !== index)
+                    })
+                  }
+                >
+                  Remove<span className="sf-sr-only"> target {index + 1}</span>
+                </Button>
+              </div>
 
-              {/* sf-input, the app's shared field class: without it this had no
-                  border or background and read as plain text. Clamped on entry
-                  rather than validated after — 140% is not worth an error. */}
-              <span className="goal-threshold-percent">
-                <input
-                  type="number"
-                  className="sf-input"
-                  min={0}
-                  max={100}
-                  value={threshold.percent}
-                  aria-label={`Target ${index + 1} percentage`}
-                  onChange={(event) =>
+              <div className="goal-threshold-row">
+                <Combobox
+                  options={[
+                    { value: "floor", label: "At least" },
+                    { value: "ceiling", label: "No more than" }
+                  ]}
+                  value={threshold.kind}
+                  onChange={(kind) =>
                     setDraft({
                       ...draft,
                       thresholds: draft.thresholds.map((entry, i) =>
-                        i === index
-                          ? {
-                              ...entry,
-                              percent: Math.max(0, Math.min(100, Number(event.target.value) || 0))
-                            }
-                          : entry
+                        i === index ? { ...entry, kind: kind as GoalThreshold["kind"] } : entry
                       )
                     })
                   }
+                  className="goal-threshold-kind"
+                  ariaLabel={`Target ${index + 1} kind`}
                 />
-                <span aria-hidden>%</span>
-              </span>
+
+                {/* sf-input, the app's shared field class: without it this had no
+                    border or background and read as plain text. Clamped on entry
+                    rather than validated after — 140% is not worth an error. */}
+                <span className="goal-threshold-percent">
+                  <input
+                    type="number"
+                    className="sf-input"
+                    min={0}
+                    max={100}
+                    value={threshold.percent}
+                    aria-label={`Target ${index + 1} percentage`}
+                    onChange={(event) =>
+                      setDraft({
+                        ...draft,
+                        thresholds: draft.thresholds.map((entry, i) =>
+                          i === index
+                            ? {
+                                ...entry,
+                                percent: Math.max(0, Math.min(100, Number(event.target.value) || 0))
+                              }
+                            : entry
+                        )
+                      })
+                    }
+                  />
+                  <span aria-hidden>%</span>
+                </span>
+              </div>
+
+              <div className="goal-threshold-row">
+                <span className="goal-threshold-word">
+                  of students {threshold.kind === "floor" ? "at or above" : "at"}
+                </span>
+
+                <Combobox
+                  options={levelOptions}
+                  value={threshold.level}
+                  onChange={(level) =>
+                    setDraft({
+                      ...draft,
+                      thresholds: draft.thresholds.map((entry, i) =>
+                        i === index ? { ...entry, level } : entry
+                      )
+                    })
+                  }
+                  placeholder="Pick a level"
+                  className="goal-threshold-level"
+                  ariaLabel={`Target ${index + 1} level`}
+                />
+
+                {/* The clause that stops the percentage being a number against a
+                    bare level. It is the goal's own pillar, not a per-target
+                    one — a target naming a second pillar would be a second
+                    goal — so it is stated, not chosen. */}
+                <span className="goal-threshold-word">
+                  in {draftPillarTitle || "the goal\u2019s pillar"}
+                </span>
+              </div>
             </div>
+          ))}
 
-            <div className="goal-threshold-row">
-              <span className="goal-threshold-word">
-                of students {threshold.kind === "floor" ? "at or above" : "at"}
-              </span>
-
-              <Combobox
-                options={draftLevels.map((level) => ({ value: level, label: level }))}
-                value={threshold.level}
-                onChange={(level) =>
-                  setDraft({
-                    ...draft,
-                    thresholds: draft.thresholds.map((entry, i) =>
-                      i === index ? { ...entry, level } : entry
-                    )
-                  })
-                }
-                placeholder="Pick a level"
-                className="goal-threshold-level"
-                ariaLabel={`Target ${index + 1} level`}
-              />
-            </div>
-          </div>
-        ))}
-
-        {/* A button, not a faint text link: adding a target is the action this
-            group exists for, and it was the least visible thing in it. */}
-        <Button
-          color="secondary"
-          size="sm"
-          className="justify-self-start"
-          iconLeading={<HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2} />}
-          onClick={() =>
-            setDraft({
-              ...draft,
-              thresholds: [
-                ...draft.thresholds,
-                {
-                  id: `th-local-${Date.now()}-${draft.thresholds.length}`,
-                  kind: draft.thresholds.length === 0 ? "floor" : "ceiling",
-                  level: "",
-                  percent: draft.thresholds.length === 0 ? 70 : 10
-                }
-              ]
-            })
-          }
-        >
-          {draft.thresholds.length === 0 ? "Add a target" : "Add another target"}
-        </Button>
-      </fieldset>
+          {/* A button, not a faint text link: adding a target is the action this
+              group exists for, and it was the least visible thing in it. */}
+          <Button
+            color="secondary"
+            size="sm"
+            className="justify-self-start"
+            iconLeading={<HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2} />}
+            onClick={() =>
+              setDraft({
+                ...draft,
+                thresholds: [
+                  ...draft.thresholds,
+                  {
+                    id: `th-local-${Date.now()}-${draft.thresholds.length}`,
+                    kind: draft.thresholds.length === 0 ? "floor" : "ceiling",
+                    level: "",
+                    percent: draft.thresholds.length === 0 ? 70 : 10
+                  }
+                ]
+              })
+            }
+          >
+            {draft.thresholds.length === 0 ? "Add a target" : "Add another target"}
+          </Button>
+        </fieldset>
+      ) : null}
     </div>
   );
 
@@ -874,7 +904,10 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
                         <td>
                           {/* The type, and for an auto goal the target it is
                               measured against — that target is the goal, so it
-                              belongs on the row rather than one click in. */}
+                              belongs on the row rather than one click in. A
+                              manual goal has no such target, but it still has a
+                              pillar, and the row would otherwise be the one
+                              place a goal did not say what it is about. */}
                           <StatusBadge
                             tone={goal.measurement.type === "auto" ? "ok" : "neutral"}
                           >
@@ -882,7 +915,11 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
                           </StatusBadge>
                           {goal.measurement.type === "auto" ? (
                             <div className="list-editor-item-detail">{targetSentence(goal)}</div>
-                          ) : null}
+                          ) : (
+                            <div className="list-editor-item-detail">
+                              {goalPillarTitle(goal)}
+                            </div>
+                          )}
                         </td>
                         <td>{formatDateRange(goal.semester.from, goal.semester.to)}</td>
                         <td>
@@ -1007,7 +1044,9 @@ export function GradeGoalsEditor({ schoolId, grade }: { schoolId: string; grade:
                         </StatusBadge>
                         {goal.measurement.type === "auto" ? (
                           <div className="list-editor-item-detail">{targetSentence(goal)}</div>
-                        ) : null}
+                        ) : (
+                          <div className="list-editor-item-detail">{goalPillarTitle(goal)}</div>
+                        )}
                       </td>
                       <td>{formatDateRange(goal.semester.from, goal.semester.to)}</td>
                       <td>

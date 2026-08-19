@@ -1,35 +1,62 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useAdminScope, type AdminScope } from "@/lib/admin-scope";
+import {
+  ADMIN_PERSONAS,
+  useAdminScope,
+  type AdminPersona,
+  type AdminScope
+} from "@/lib/admin-scope";
 import { schools } from "@/lib/data/schools";
-import { SCOPED_SECTIONS, sectionHref } from "@/lib/nav";
+import { SCOPED_SECTIONS } from "@/lib/nav";
 import { Combobox } from "@/components/shared/Combobox";
 
 const DISTRICT = "district";
 
+/** The one line under the switcher that says what this persona may do. */
+const ACCESS_NOTE: Record<AdminPersona, string> = {
+  "super-admin": "Every section, full read and write.",
+  leadership:
+    "Reporting & Analytics only, read-only. No configuration, goals, alerts or settings.",
+  "portal-admin":
+    "Full read and write on the sections listed. No reporting, no user management or audit logs."
+};
+
 /**
- * Who you are administering as: the district, or one school.
+ * Who you are administering as: which job, and over which schools.
  *
- * A switcher rather than a filter, and in the sidebar footer rather than on a
- * screen, because it changes what the whole portal is — the nav links, the
- * pickers, the level the drill-downs start at — not what one table shows.
+ * Two controls rather than one list, because they are two questions. A
+ * superintendent and a principal do the same job at different scopes; so do the
+ * district's Super Admin and one school's. Crossed into a single dropdown that
+ * is a row per combination, several of which mean nothing.
  *
- * TODO: real scope comes from the signed-in user's record. This control is here
- * so both views can be demonstrated from one session, and goes when auth lands;
- * the label says as much rather than passing it off as an account menu.
+ * In the sidebar footer rather than on a screen, because between them they
+ * change what the whole portal is — which sections exist, what the pickers ask,
+ * the level the drill-downs start at — not what one table shows.
+ *
+ * TODO: real persona and scope come from the signed-in user's record. This
+ * control is here so every view can be demonstrated from one session, and goes
+ * when auth lands; the label says as much rather than passing it off as an
+ * account menu.
  */
 export function ScopeSwitcher() {
-  const { scope, schoolId, setScope } = useAdminScope();
+  const { scope, schoolId, setScope, persona, setPersona } = useAdminScope();
   const router = useRouter();
   const pathname = usePathname();
 
-  const options = [
-    { value: DISTRICT, label: "Super Admin · All schools" },
-    ...schools.map((school) => ({ value: school.id, label: `School Admin · ${school.name}` }))
+  const personaOptions = ADMIN_PERSONAS.map((entry) => ({
+    value: entry.value,
+    label: entry.label
+  }));
+
+  /* No role prefix on these any more — the control above says which job, this
+     one only says how much of the district. */
+  const scopeOptions = [
+    { value: DISTRICT, label: "All schools" },
+    ...schools.map((school) => ({ value: school.id, label: school.name }))
   ];
 
-  const change = (value: string) => {
+  const changeScope = (value: string) => {
     const next: AdminScope =
       value === DISTRICT ? { kind: "district" } : { kind: "school", schoolId: value };
     setScope(next);
@@ -50,10 +77,22 @@ export function ScopeSwitcher() {
       <label className="sf-field">
         <span>Signed in as</span>
         <Combobox
-          options={options}
+          options={personaOptions}
+          value={persona}
+          onChange={(next) => setPersona(next as AdminPersona)}
+          ariaLabel="The job you are signed in to do"
+        />
+      </label>
+
+      {/* Switching to a persona that cannot reach where you stand is handled by
+          PersonaGate, not here: the same thing has to happen on a typed URL. */}
+      <label className="sf-field">
+        <span>Administering</span>
+        <Combobox
+          options={scopeOptions}
           value={schoolId ?? DISTRICT}
-          onChange={change}
-          ariaLabel="Administer the district or one school"
+          onChange={changeScope}
+          ariaLabel="The district, or one school"
         />
       </label>
 
@@ -62,6 +101,8 @@ export function ScopeSwitcher() {
       <p className="sf-scope-switcher-note">
         Demo control &mdash; real access comes from your account.
       </p>
+
+      <p className="sf-scope-switcher-note">{ACCESS_NOTE[persona]}</p>
 
       {scope.kind === "school" ? (
         <p className="sf-scope-switcher-note">

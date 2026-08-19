@@ -1,7 +1,15 @@
 /**
- * v2: single Super Admin role, so there is no access map — every section is
- * visible to everyone with Admin access. The v1 persona gating (SECTION_ACCESS,
- * SectionGuard, RoleSwitcher) was removed rather than left inert.
+ * The sections, and which persona reaches which.
+ *
+ * v2 collapsed to a single Super Admin role and the v1 access map went with it.
+ * It is back, for a different reason: not to rank admins by trust, but because
+ * the brief describes two jobs that have no business seeing most of this portal.
+ * A superintendent does not configure grade skills; the person who does has no
+ * reason to hold the district's reporting.
+ *
+ * Sections a persona cannot reach are absent from the nav rather than disabled.
+ * A greyed-out row still tells you the section exists and invites the question
+ * of who has it — for a persona that will never have it, that is noise.
  *
  * Field-level edit permissions still exist conceptually (most of Student &
  * Faculty 360 is read-only, but Goals checkpoints/status and a student's
@@ -9,10 +17,13 @@
  * not by a section gate.
  */
 
+import type { AdminPersona } from "@/lib/admin-scope";
+
 export type SectionId =
   | "home"
   | "reporting"
   | "people-360"
+  | "portal-config"
   | "skills-development"
   | "academic-goals"
   | "alerts"
@@ -30,6 +41,9 @@ export const SECTIONS: Section[] = [
   { id: "home", label: "Home", href: "/" },
   { id: "reporting", label: "Reporting & Analytics", href: "/reporting" },
   { id: "people-360", label: "Student & Faculty 360", href: "/people" },
+  /* Directly above Skills & Development, which is where most of what it counts
+     is actually edited: it reads the configuration, that section changes it. */
+  { id: "portal-config", label: "Portal Configuration", href: "/portal-configuration" },
   { id: "skills-development", label: "Skills & Development", href: "/skills-development" },
   { id: "academic-goals", label: "Goals", href: "/academic-goals" },
   { id: "alerts", label: "Alerts & Notifications", href: "/alerts" },
@@ -43,6 +57,97 @@ export const SECTIONS: Section[] = [
 ];
 
 export const ADMIN_ROLE_LABEL = "Super Admin";
+
+/**
+ * What each persona reaches, in nav order.
+ *
+ * Super Admin is the portal as built — everything. The other two are the
+ * brief's Personas A and B, and both lists are deliberately short:
+ *
+ *  - Leadership gets Reporting & Analytics and nothing else. It is their whole
+ *    portal, and it is read-only.
+ *  - Portal Administrator gets the configuration they keep current, plus Home's
+ *    pulse strip. No Reporting (Leadership's surface), no Student & Faculty 360,
+ *    no User Management or School Master Setup (IT-owned — the persona that
+ *    holds those is not built yet).
+ *
+ * Resources & Content appears in the brief for Portal Administrator and is not
+ * here: Edison confirmed it is not going on this portal.
+ */
+export const SECTION_ACCESS: Record<AdminPersona, SectionId[]> = {
+  "super-admin": SECTIONS.map((section) => section.id),
+  leadership: ["reporting"],
+  "portal-admin": [
+    "home",
+    "portal-config",
+    /* Portal Configuration counts what this section edits, so a Portal
+       Administrator holding one without the other would have a screen whose
+       every link led somewhere they could not go. The brief's "Portal
+       Configuration" is these two together. */
+    "skills-development",
+    "academic-goals",
+    "alerts",
+    "system-settings"
+  ]
+};
+
+/**
+ * Paths inside a section a persona otherwise holds, that it still may not reach.
+ *
+ * One entry so far, and it comes straight from the brief: the Portal
+ * Administrator owns System Settings but not the audit log, which is IT's.
+ * Sub-section rather than section, because splitting System Settings in two to
+ * express it would leave both halves named after who may see them rather than
+ * after what they hold.
+ *
+ * The rest of the brief's System Settings "(subset)" is still open — which
+ * remaining fields are IT's is a question for whoever owns the brief, and
+ * belongs here when it is answered.
+ */
+export const SECTION_EXCEPTIONS: Partial<Record<AdminPersona, string[]>> = {
+  "portal-admin": ["/system-settings/audit-log"]
+};
+
+/** The sections a persona sees, in the order SECTIONS declares. */
+export function sectionsFor(persona: AdminPersona): Section[] {
+  const allowed = SECTION_ACCESS[persona];
+  return SECTIONS.filter((section) => allowed.includes(section.id));
+}
+
+/**
+ * Where a persona lands when it has no business being where it is — switching
+ * persona while deep in a section the new one cannot reach, or arriving on a
+ * typed URL. Their first section, which is the one the nav opens on.
+ */
+export function personaLandingHref(persona: AdminPersona, schoolId: string | null): string {
+  const first = sectionsFor(persona)[0];
+  return first ? sectionHref(first, schoolId) : "/";
+}
+
+/**
+ * Which section a path belongs to.
+ *
+ * Longest prefix wins, so `/reporting/faculty-performance` resolves to Reporting
+ * rather than to whichever section declared a shorter matching href.
+ *
+ * Anything matching nothing belongs to Home — today that is `/needs-attention`,
+ * which has no nav row of its own and is reached from Home's cards. Defaulting
+ * to Home rather than to "allowed" means a persona without Home cannot arrive
+ * there sideways, and a persona with Home finds the link on it works.
+ */
+export function sectionForPath(pathname: string): SectionId {
+  const match = SECTIONS.filter(
+    (section) => section.href !== "/" && pathname.startsWith(section.href)
+  ).sort((a, b) => b.href.length - a.href.length)[0];
+
+  return match?.id ?? "home";
+}
+
+/** Whether a path sits inside a section this persona holds. */
+export function canReachPath(persona: AdminPersona, pathname: string): boolean {
+  const blocked = SECTION_EXCEPTIONS[persona]?.some((path) => pathname.startsWith(path)) ?? false;
+  return !blocked && SECTION_ACCESS[persona].includes(sectionForPath(pathname));
+}
 
 /**
  * Sections whose first screen is "pick a school".

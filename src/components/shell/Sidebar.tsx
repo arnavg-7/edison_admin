@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SECTIONS, sectionHref } from "@/lib/nav";
+import { sectionsFor, sectionHref } from "@/lib/nav";
 import { useAdminScope } from "@/lib/admin-scope";
 import { ScopeSwitcher } from "./ScopeSwitcher";
 import { NavIcon } from "./NavIcon";
@@ -22,7 +22,10 @@ import {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { school, schoolId, roleLabel } = useAdminScope();
+  const { school, schoolId, roleLabel, persona } = useAdminScope();
+  /* The persona's own sections, not the whole list filtered at render: what a
+     persona cannot reach is not in the nav at all. */
+  const sections = sectionsFor(persona);
 
   return (
     <SidebarPrimitive collapsible="icon">
@@ -47,7 +50,7 @@ export function Sidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {SECTIONS.map((section) => {
+              {sections.map((section) => {
                 const isActive =
                   section.href === "/" ? pathname === "/" : pathname.startsWith(section.href);
                 /* Scoped sections point one level in, so a school admin lands on

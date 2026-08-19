@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/base/buttons/button";
 import { schools } from "@/lib/data/schools";
-import { gradeGoalsSummary, schoolGoalsSummary } from "@/lib/data/academicGoals";
+import { goalCategories, gradeGoalsSummary, schoolGoalsSummary } from "@/lib/data/academicGoals";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { SchoolPickerGate } from "@/components/shell/SchoolPickerGate";
 import {
@@ -14,6 +14,23 @@ import {
 
 /** Step one of school → grade → goals. Rows expand to their grades in place. */
 export default function GoalsSchoolPickerPage() {
+  /* The health read the Portal Administrator's brief asks for, on the screen
+     that already opens this section rather than as a dashboard of its own —
+     these are three numbers, and a screen holding three numbers is a screen
+     nobody opens twice. */
+  const activeCategories = goalCategories.filter(
+    (category) => category.status?.label === "Active"
+  ).length;
+  const districtGoals = schools.reduce(
+    (sum, school) => sum + schoolGoalsSummary(school.id).goals,
+    0
+  );
+  const configuredGrades = schools.reduce((sum, school) => {
+    const summary = schoolGoalsSummary(school.id);
+    return sum + summary.configuredGrades;
+  }, 0);
+  const totalGrades = schools.reduce((sum, school) => sum + school.grades.length, 0);
+
   const rows: SchoolTableRow[] = schools.map((school) => {
     const summary = schoolGoalsSummary(school.id);
 
@@ -90,6 +107,41 @@ export default function GoalsSchoolPickerPage() {
       <p className="sf-page-sub">
         Goals set for students, configured per grade. Pick a school, then a grade.
       </p>
+
+      <div className="sf-panel">
+        <div className="sf-panel-head">
+          <h2>Across the district</h2>
+          <span className="sf-panel-note">Goal configuration at a glance</span>
+        </div>
+
+        <dl className="sf-stat-row">
+          <div>
+            <dt>Active goals</dt>
+            <dd>{districtGoals}</dd>
+          </div>
+          <div>
+            <dt>Grades with goals set</dt>
+            <dd>
+              {configuredGrades} of {totalGrades}
+            </dd>
+          </div>
+          <div>
+            <dt>Goal categories</dt>
+            <dd>
+              {activeCategories} of {goalCategories.length}
+            </dd>
+          </div>
+        </dl>
+
+        {/* Two figures the brief asks for that this build cannot honestly
+            produce, named here rather than shown as zero. */}
+        <p className="sf-card-hint">
+          Goal templates are not counted: the template list was removed when goals became
+          per-grade, so there is nothing published to count. &ldquo;% of goals updated in the last
+          30 days&rdquo; needs a last-changed stamp per goal, which arrives with the goal_progress
+          history the Admin DB contract defines — no goal carries one yet.
+        </p>
+      </div>
 
       <div className="sf-panel">
         <div className="sf-panel-head">

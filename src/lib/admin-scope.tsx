@@ -18,24 +18,66 @@ import { useMounted } from "@/lib/use-mounted";
  * that would have asked "which school?" are gone, and the drill-downs start one
  * level in, at the grade list.
  *
- * TODO: real scope comes from the signed-in user's record, not a switcher. The
- * switcher exists so the two views can be demonstrated from one session, and is
- * the piece to delete when authentication lands.
+ * Scope answers "which schools", and it is only half of who someone is. The
+ * other half is `AdminPersona` — which job they are here to do. The two are
+ * independent on purpose: a superintendent and a principal are the same persona
+ * at two scopes, and the district's Super Admin and one school's are the same
+ * persona at two scopes as well. Crossing them in one list would have meant a
+ * row per combination, and a row that means nothing (Portal Administrator is a
+ * district job) sitting alongside the rest.
+ *
+ * TODO: real scope and persona come from the signed-in user's record, not a
+ * switcher. The switcher exists so the views can be demonstrated from one
+ * session, and is the piece to delete when authentication lands.
  */
 
 export type AdminScope =
   | { kind: "district" }
   | { kind: "school"; schoolId: string };
 
-const STORAGE_KEY = "edison-admin.scope.v1";
+/**
+ * Which job the person signed in is here to do.
+ *
+ * `super-admin` is what the portal was built as and stays the default: every
+ * section, full write. The other two are the brief's Personas A and B — a
+ * leadership read of the numbers, and the person who keeps the portal itself up
+ * to date. What each one can reach is in nav.ts, next to the sections it names.
+ *
+ * A persona is not a permission level: Portal Administrator has full write on
+ * more screens than Leadership has visibility of. It is a different job, not a
+ * smaller one.
+ */
+export type AdminPersona = "super-admin" | "leadership" | "portal-admin";
+
+export const ADMIN_PERSONAS: { value: AdminPersona; label: string; detail: string }[] = [
+  {
+    value: "super-admin",
+    label: "Super Admin",
+    detail: "Every section, full write."
+  },
+  {
+    value: "leadership",
+    label: "District & School Leadership",
+    detail: "Reporting only, read-only. Superintendent, principal, assistant principal."
+  },
+  {
+    value: "portal-admin",
+    label: "Portal / Program Administrator",
+    detail: "Keeps what students and faculty see up to date. No reporting or user management."
+  }
+];
+
+const SCOPE_KEY = "edison-admin.scope.v1";
+const PERSONA_KEY = "edison-admin.persona.v1";
 
 const DISTRICT: AdminScope = { kind: "district" };
+const DEFAULT_PERSONA: AdminPersona = "super-admin";
 
 function readStorage(): AdminScope {
   if (typeof window === "undefined") return DISTRICT;
 
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(SCOPE_KEY);
     if (!raw) return DISTRICT;
 
     const stored = JSON.parse(raw) as AdminScope;
@@ -52,8 +94,23 @@ function readStorage(): AdminScope {
   }
 }
 
+function readPersona(): AdminPersona {
+  if (typeof window === "undefined") return DEFAULT_PERSONA;
+
+  try {
+    const raw = window.localStorage.getItem(PERSONA_KEY) as AdminPersona | null;
+    // An unknown persona falls back rather than leaving the nav empty with no
+    // control on screen able to explain why.
+    return ADMIN_PERSONAS.some((entry) => entry.value === raw) ? (raw as AdminPersona) : DEFAULT_PERSONA;
+  } catch {
+    return DEFAULT_PERSONA;
+  }
+}
+
 type AdminScopeValue = {
   scope: AdminScope;
+  persona: AdminPersona;
+  setPersona: (persona: AdminPersona) => void;
   /** The school being administered, or null for the whole district. */
   school: School | null;
   /** Convenience for the common case: `null` means every school. */
@@ -66,21 +123,45 @@ type AdminScopeValue = {
 
 const AdminScopeContext = createContext<AdminScopeValue | null>(null);
 
+/**
+ * What the sidebar shows under the product name.
+ *
+ * Super Admin scoped to one school has always read "School Admin", and that is
+ * what Edison call the job, so the scoped name wins where there is one. The
+ * other two personas are the same job at either scope and keep their name.
+ */
+function personaLabel(persona: AdminPersona, scoped: boolean): string {
+  if (persona === "super-admin") return scoped ? "School Admin" : "Super Admin";
+  if (persona === "leadership") return scoped ? "School Leadership" : "District Leadership";
+  return "Portal Administrator";
+}
+
 export function AdminScopeProvider({ children }: { children: React.ReactNode }) {
   const [scope, setScopeState] = useState<AdminScope>(DISTRICT);
+  const [persona, setPersonaState] = useState<AdminPersona>(DEFAULT_PERSONA);
 
   // Storage is read after mount, never during render — see use-mounted.
   useEffect(() => {
     setScopeState(readStorage());
+    setPersonaState(readPersona());
   }, []);
 
   const setScope = useCallback((next: AdminScope) => {
     setScopeState(next);
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      window.localStorage.setItem(SCOPE_KEY, JSON.stringify(next));
     } catch {
       // A blocked or full localStorage shouldn't stop the switch taking effect
       // for this session.
+    }
+  }, []);
+
+  const setPersona = useCallback((next: AdminPersona) => {
+    setPersonaState(next);
+    try {
+      window.localStorage.setItem(PERSONA_KEY, next);
+    } catch {
+      // As above — the switch still holds for this session.
     }
   }, []);
 
@@ -92,13 +173,15 @@ export function AdminScopeProvider({ children }: { children: React.ReactNode }) 
 
     return {
       scope,
+      persona,
+      setPersona,
       school,
       schoolId: school?.id ?? null,
       isDistrict: school === null,
-      roleLabel: school ? "School Admin" : "Super Admin",
+      roleLabel: personaLabel(persona, school !== null),
       setScope
     };
-  }, [scope, setScope]);
+  }, [persona, scope, setPersona, setScope]);
 
   return <AdminScopeContext.Provider value={value}>{children}</AdminScopeContext.Provider>;
 }
@@ -120,7 +203,15 @@ export function useAdminScope(): AdminScopeValue {
   }
 
   if (!mounted) {
-    return { ...context, scope: DISTRICT, school: null, schoolId: null, isDistrict: true, roleLabel: "Super Admin" };
+    return {
+      ...context,
+      scope: DISTRICT,
+      persona: DEFAULT_PERSONA,
+      school: null,
+      schoolId: null,
+      isDistrict: true,
+      roleLabel: personaLabel(DEFAULT_PERSONA, false)
+    };
   }
 
   return context;

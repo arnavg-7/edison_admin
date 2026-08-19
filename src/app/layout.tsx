@@ -5,6 +5,7 @@ import "../styles/theme.css";
 import "../styles/pages/admin.css";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { ScrollReset } from "@/components/shell/ScrollReset";
+import { PersonaGate } from "@/components/shell/PersonaGate";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { UsersProvider } from "@/lib/users-store";
@@ -46,6 +47,7 @@ export default function RootLayout({
                       <div id="main-content">{children}</div>
                     </SidebarInset>
                     <ScrollReset />
+                    <PersonaGate />
                   </SidebarProvider>
                 </PoagProvider>
               </SchoolSetupProvider>

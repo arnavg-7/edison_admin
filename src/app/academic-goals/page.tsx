@@ -14,10 +14,10 @@ import {
 
 /** Step one of school → grade → goals. Rows expand to their grades in place. */
 export default function GoalsSchoolPickerPage() {
-  /* The health read the Portal Administrator's brief asks for, on the screen
-     that already opens this section rather than as a dashboard of its own —
-     these are three numbers, and a screen holding three numbers is a screen
-     nobody opens twice. */
+  /* How much of the district has goals set, on the screen that already opens
+     this section rather than as a dashboard of its own — these are three
+     numbers, and a screen holding three numbers is a screen nobody opens
+     twice. */
   const activeCategories = goalCategories.filter(
     (category) => category.status?.label === "Active"
   ).length;
@@ -132,15 +132,6 @@ export default function GoalsSchoolPickerPage() {
             </dd>
           </div>
         </dl>
-
-        {/* Two figures the brief asks for that this build cannot honestly
-            produce, named here rather than shown as zero. */}
-        <p className="sf-card-hint">
-          Goal templates are not counted: the template list was removed when goals became
-          per-grade, so there is nothing published to count. &ldquo;% of goals updated in the last
-          30 days&rdquo; needs a last-changed stamp per goal, which arrives with the goal_progress
-          history the Admin DB contract defines — no goal carries one yet.
-        </p>
       </div>
 
       <div className="sf-panel">

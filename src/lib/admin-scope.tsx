@@ -21,10 +21,8 @@ import { useMounted } from "@/lib/use-mounted";
  * Scope answers "which schools", and it is only half of who someone is. The
  * other half is `AdminPersona` — which job they are here to do. The two are
  * independent on purpose: a superintendent and a principal are the same persona
- * at two scopes, and the district's Super Admin and one school's are the same
- * persona at two scopes as well. Crossing them in one list would have meant a
- * row per combination, and a row that means nothing (Portal Administrator is a
- * district job) sitting alongside the rest.
+ * at two scopes, and so are the district's Super Admin and one school's.
+ * Crossing them into one list would have meant a row per combination.
  *
  * TODO: real scope and persona come from the signed-in user's record, not a
  * switcher. The switcher exists so the views can be demonstrated from one
@@ -39,15 +37,14 @@ export type AdminScope =
  * Which job the person signed in is here to do.
  *
  * `super-admin` is what the portal was built as and stays the default: every
- * section, full write. The other two are the brief's Personas A and B — a
- * leadership read of the numbers, and the person who keeps the portal itself up
- * to date. What each one can reach is in nav.ts, next to the sections it names.
+ * section, full write. Scoped to one school it is the school-level admin — the
+ * brief's Portal / Program Administrator, which is a scope of this job rather
+ * than a job of its own, so it is not a persona here.
  *
- * A persona is not a permission level: Portal Administrator has full write on
- * more screens than Leadership has visibility of. It is a different job, not a
- * smaller one.
+ * `leadership` is the brief's Persona A: a read on the numbers and nothing
+ * else. What each persona reaches is in nav.ts, next to the sections it names.
  */
-export type AdminPersona = "super-admin" | "leadership" | "portal-admin";
+export type AdminPersona = "super-admin" | "leadership";
 
 export const ADMIN_PERSONAS: { value: AdminPersona; label: string; detail: string }[] = [
   {
@@ -59,11 +56,6 @@ export const ADMIN_PERSONAS: { value: AdminPersona; label: string; detail: strin
     value: "leadership",
     label: "District & School Leadership",
     detail: "Reporting only, read-only. Superintendent, principal, assistant principal."
-  },
-  {
-    value: "portal-admin",
-    label: "Portal / Program Administrator",
-    detail: "Keeps what students and faculty see up to date. No reporting or user management."
   }
 ];
 
@@ -132,8 +124,7 @@ const AdminScopeContext = createContext<AdminScopeValue | null>(null);
  */
 function personaLabel(persona: AdminPersona, scoped: boolean): string {
   if (persona === "super-admin") return scoped ? "School Admin" : "Super Admin";
-  if (persona === "leadership") return scoped ? "School Leadership" : "District Leadership";
-  return "Portal Administrator";
+  return scoped ? "School Leadership" : "District Leadership";
 }
 
 export function AdminScopeProvider({ children }: { children: React.ReactNode }) {

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { sectionsFor, sectionHref, sectionLabel } from "@/lib/nav";
 import { useAdminScope } from "@/lib/admin-scope";
-import { SessionSwitcher } from "./SessionSwitcher";
+import { ScopeSwitcher } from "./ScopeSwitcher";
 import { NavIcon } from "./NavIcon";
 import { Button } from "@/components/base/buttons/button";
 import {
@@ -22,10 +22,10 @@ import {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { school, schoolId, roleLabel, sections: held } = useAdminScope();
-  /* The account's own sections, not the whole list filtered at render: what the
-     roles it holds do not cover is not in the nav at all. */
-  const sections = sectionsFor(held);
+  const { school, schoolId, roleLabel, persona } = useAdminScope();
+  /* The persona's own sections, not the whole list filtered at render: what a
+     persona cannot reach is not in the nav at all. */
+  const sections = sectionsFor(persona);
 
   return (
     <SidebarPrimitive collapsible="icon">
@@ -84,7 +84,7 @@ export function Sidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <SessionSwitcher />
+        <ScopeSwitcher />
         <Button color="tertiary" size="sm" className="w-full justify-start">
           <span className="group-data-[collapsible=icon]:hidden">Log out</span>
         </Button>

@@ -2,13 +2,12 @@
  * The sections, and which persona reaches which.
  *
  * v2 collapsed to a single Super Admin role and the v1 access map went with it.
- * It is back, but it is no longer here: which sections a role holds is
- * configured in User Management (Roles & Access) and lives in role-access-store,
- * so this module only declares what the sections *are*. The signed-in account's
- * roles resolve to a list of ids, and everything below takes that list.
+ * It is back for one persona only, and not to rank admins by trust: leadership
+ * is a different job, and a superintendent has no business in the screens that
+ * configure grade skills or set a grade's goals.
  *
- * The school-level admin is not a separate thing — it is the Super Admin role
- * scoped to one school. Same sections, same write access, one school's data.
+ * The school-level admin is not a persona — it is Super Admin scoped to one
+ * school. Same sections, same write access, one school's worth of data.
  *
  * Sections a persona cannot reach are absent from the nav rather than disabled.
  * A greyed-out row still tells you the section exists and invites the question
@@ -19,6 +18,8 @@
  * Alert status are editable) but that is enforced per-field on that screen,
  * not by a section gate.
  */
+
+import type { AdminPersona } from "@/lib/admin-scope";
 
 export type SectionId =
   | "home"
@@ -55,26 +56,33 @@ export const SECTIONS: Section[] = [
 
 export const ADMIN_ROLE_LABEL = "Super Admin";
 
-/** The sections an account holds, in the order SECTIONS declares. */
-export function sectionsFor(held: SectionId[]): Section[] {
-  return SECTIONS.filter((section) => held.includes(section.id));
+/**
+ * What each persona reaches, in nav order.
+ *
+ * Super Admin is the portal as built — everything, at whichever scope they are
+ * administering. Leadership gets Reporting & Analytics and nothing else: it is
+ * their whole portal, and it is read-only.
+ */
+export const SECTION_ACCESS: Record<AdminPersona, SectionId[]> = {
+  "super-admin": SECTIONS.map((section) => section.id),
+  leadership: ["reporting"]
+};
+
+/** The sections a persona sees, in the order SECTIONS declares. */
+export function sectionsFor(persona: AdminPersona): Section[] {
+  const allowed = SECTION_ACCESS[persona];
+  return SECTIONS.filter((section) => allowed.includes(section.id));
 }
 
 /**
- * Where an account lands when it has no business being where it is — signing in
- * as somebody who cannot reach the screen you were on, or arriving on a typed
- * URL. Their first section, which is the one the nav opens on.
- *
- * An account with no sections at all has nowhere to land, so it is sent to the
- * screen that says so rather than to a page it would bounce straight out of.
+ * Where a persona lands when it has no business being where it is — switching
+ * persona while deep in a section the new one cannot reach, or arriving on a
+ * typed URL. Their first section, which is the one the nav opens on.
  */
-export function landingHref(held: SectionId[], schoolId: string | null): string {
-  const first = sectionsFor(held)[0];
-  return first ? sectionHref(first, schoolId) : NO_ACCESS_HREF;
+export function personaLandingHref(persona: AdminPersona, schoolId: string | null): string {
+  const first = sectionsFor(persona)[0];
+  return first ? sectionHref(first, schoolId) : "/";
 }
-
-/** Shown to an account whose roles hold nothing. */
-export const NO_ACCESS_HREF = "/no-access";
 
 /**
  * Which section a path belongs to.
@@ -95,17 +103,9 @@ export function sectionForPath(pathname: string): SectionId {
   return match?.id ?? "home";
 }
 
-/**
- * Paths outside the section model entirely, reachable whoever you are: the
- * invite acceptance screen, which is opened from an email by somebody who has
- * no session yet, and the dead end an account with no sections lands on.
- */
-const UNGATED_PREFIXES = ["/invite", NO_ACCESS_HREF];
-
-/** Whether a path sits inside a section this account holds. */
-export function canReachPath(held: SectionId[], pathname: string): boolean {
-  if (UNGATED_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return true;
-  return held.includes(sectionForPath(pathname));
+/** Whether a path sits inside a section this persona holds. */
+export function canReachPath(persona: AdminPersona, pathname: string): boolean {
+  return SECTION_ACCESS[persona].includes(sectionForPath(pathname));
 }
 
 /**

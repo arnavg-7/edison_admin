@@ -9,8 +9,8 @@ import {
   isInstitutionalEmail,
   fullAccess,
   newAdminUserId,
-  presetAccess,
   type AdminRole,
+  type SectionAccessMap,
   type AdminUser
 } from "@/lib/data/adminUsers";
 import { ADMIN_ROLE_LABEL } from "@/lib/nav";
@@ -18,6 +18,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { MailAdd01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/base/buttons/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { configuredAccess, useRoleConfig } from "@/lib/role-config-store";
 import { InstitutionalEmailDialog } from "./InstitutionalEmailDialog";
 
 /* The roles a sheet may name, including what they were called before: a file
@@ -85,7 +86,11 @@ function parseCsvRows(text: string): Record<string, string>[] {
   });
 }
 
-function toAdminUser(row: Record<string, string>, line: number): ParsedRow {
+function toAdminUser(
+  row: Record<string, string>,
+  line: number,
+  config: Record<AdminRole, SectionAccessMap>
+): ParsedRow {
   const name = row.name?.trim();
   const email = row.email?.trim();
   const rolesRaw = row.roles?.trim();
@@ -131,9 +136,9 @@ function toAdminUser(row: Record<string, string>, line: number): ParsedRow {
       roles: roles as AdminRole[],
       /* The roles' own grid, exactly. A bulk upload is the same grant the role
          defines; narrowing one person is done on that person. */
-      access: fullAccess(presetAccess(roles as AdminRole[])),
+      access: fullAccess(configuredAccess(config, roles as AdminRole[])),
       scope,
-      status: "Pending Invite",
+      status: "Invited",
       lastLogin: null,
       dateAdded: new Date().toISOString(),
       invitedBy: ADMIN_ROLE_LABEL
@@ -166,10 +171,13 @@ export function CsvInviteImport({
   const [rows, setRows] = useState<ParsedRow[] | null>(null);
   const [fileName, setFileName] = useState("");
   const [rejectedEmails, setRejectedEmails] = useState<string[]>([]);
+  /* The live role configuration, so a bulk upload grants what Roles &
+     Permissions says today. */
+  const { config } = useRoleConfig();
 
   const handleFile = async (file: File) => {
     const text = await file.text();
-    const parsed = parseCsvRows(text).map((row, index) => toAdminUser(row, index + 2));
+    const parsed = parseCsvRows(text).map((row, index) => toAdminUser(row, index + 2, config));
     setRows(parsed);
     setFileName(file.name);
     /* Surfaced up front rather than left to be spotted in the per-row list: an

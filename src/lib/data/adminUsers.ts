@@ -319,27 +319,50 @@ export function scopeLabel(scope: AdminScope): string {
   return schools.find((school) => school.id === scope.schoolId)?.name ?? "Unknown school";
 }
 
-export type AdminUserStatus = "Active" | "Pending Invite" | "Inactive" | "Revoked";
-
 /**
- * Display vocabulary for statuses. The stored value stays "Active" — accounts
- * already in localStorage carry it — but the UI calls that state Approved,
- * matching the Approved Users tab: access was granted and taken up, as opposed
- * to still pending, handed back (Revoked) or dormant (Inactive).
+ * Three states, and only three: an account has been asked, is in use, or is
+ * not.
+ *
+ * Revoked used to be a fourth. It said the same thing as Inactive — this person
+ * cannot sign in — while implying a different one, that the two could be told
+ * apart later, which nothing on the screen ever did. Handing access back and
+ * letting it lapse both end in an account nobody can use, and a status list is
+ * a worse place to record why than the audit log is.
  */
+export type AdminUserStatus = "Invited" | "Active" | "Inactive";
+
 export const ADMIN_STATUS_LABELS: Record<AdminUserStatus, string> = {
-  Active: "Approved",
-  "Pending Invite": "Pending Invite",
-  Revoked: "Revoked",
+  Invited: "Invited",
+  Active: "Active",
   Inactive: "Inactive"
 };
 
 export const ADMIN_STATUS_TONE: Record<AdminUserStatus, StatusTone> = {
+  Invited: "warn",
   Active: "ok",
-  "Pending Invite": "warn",
-  Revoked: "error",
   Inactive: "neutral"
 };
+
+export const ADMIN_STATUS_ORDER: AdminUserStatus[] = ["Invited", "Active", "Inactive"];
+
+/**
+ * Statuses that were stored before there were three of them.
+ *
+ * A revoked account becomes Inactive: both mean the person cannot sign in, and
+ * the account is still there to be reactivated. An invitation nobody accepted
+ * stays an invitation.
+ */
+const LEGACY_STATUS_NAMES: Record<string, AdminUserStatus> = {
+  Invited: "Invited",
+  "Pending Invite": "Invited",
+  Active: "Active",
+  Inactive: "Inactive",
+  Revoked: "Inactive"
+};
+
+export function normalizeStatus(status: unknown): AdminUserStatus {
+  return LEGACY_STATUS_NAMES[String(status)] ?? "Inactive";
+}
 
 export type AdminUser = {
   id: string;
@@ -358,12 +381,6 @@ export type AdminUser = {
   /** Role-independent: scope applies across every role the account holds. */
   scope: AdminScope;
   status: AdminUserStatus;
-  /**
-   * Status the account held before it was revoked, so Restore can put it back
-   * where it was: a revoked invite returns to Pending Invite rather than
-   * becoming a live Active account nobody ever accepted.
-   */
-  revokedFrom?: AdminUserStatus;
   lastLogin: string | null;
   dateAdded: string;
   invitedBy: string;
@@ -486,7 +503,7 @@ const seededAccounts: AdminUserSeed[] = [
     email: "agomez@edison.example.org",
     roles: ["it_admin"],
     scope: { type: "district" },
-    status: "Pending Invite",
+    status: "Invited",
     lastLogin: null,
     dateAdded: "2026-07-15T10:20:00-04:00",
     invitedBy: "Priya Nair"
@@ -497,7 +514,7 @@ const seededAccounts: AdminUserSeed[] = [
     email: "tbradley@edison.example.org",
     roles: ["school_admin"],
     scope: { type: "school", schoolId: "james-madison-intermediate" },
-    status: "Pending Invite",
+    status: "Invited",
     lastLogin: null,
     dateAdded: "2026-07-16T14:03:00-04:00",
     invitedBy: "Dana Whitfield"
@@ -508,8 +525,7 @@ const seededAccounts: AdminUserSeed[] = [
     email: "ecastellano@edison.example.org",
     roles: ["school_admin"],
     scope: { type: "school", schoolId: "edison-ms" },
-    status: "Revoked",
-    revokedFrom: "Active",
+    status: "Inactive",
     lastLogin: "2026-05-29T08:47:00-04:00",
     dateAdded: "2025-08-22T11:15:00-04:00",
     invitedBy: "Priya Nair"

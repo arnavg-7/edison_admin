@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { fullAccess, presetAccess, type AdminRole } from "@/lib/data/adminUsers";
+import { fullAccess, type AdminRole } from "@/lib/data/adminUsers";
+import { configuredAccess, useRoleConfig } from "@/lib/role-config-store";
 import { useAdminUsers } from "@/lib/admin-users-store";
 import { Modal } from "@/components/shared/Modal";
 import { Button } from "@/components/base/buttons/button";
@@ -23,13 +24,14 @@ export function BulkRoleReassignModal({
 }) {
   const { updateUsers } = useAdminUsers();
   const [roles, setRoles] = useState<AdminRole[]>([]);
+  const { config } = useRoleConfig();
 
   const apply = () => {
     if (roles.length === 0) return;
     /* The roles' grid, applied to everyone selected. A bulk change cannot
          honour a per-person adjustment — there is no one person — so it says
          so plainly above rather than quietly keeping stale levels. */
-    updateUsers(ids, { roles, access: fullAccess(presetAccess(roles)) });
+    updateUsers(ids, { roles, access: fullAccess(configuredAccess(config, roles)) });
     onClose();
   };
 

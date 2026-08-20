@@ -8,9 +8,7 @@ import {
   fullAccess,
   isEmailShaped,
   isInstitutionalEmail,
-  matchesPreset,
   newAdminUserId,
-  presetAccess,
   type AdminRole,
   type AdminScope,
   type AdminUser,
@@ -20,6 +18,7 @@ import { ADMIN_ROLE_LABEL } from "@/lib/nav";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MailAdd01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/base/buttons/button";
+import { configuredAccess, useRoleConfig } from "@/lib/role-config-store";
 import { AccessGrid } from "./AccessGrid";
 import { RoleCheckboxes } from "./RoleCheckboxes";
 import { ScopeSelect } from "./ScopeSelect";
@@ -47,13 +46,16 @@ export function ManualInviteForm({
   const [access, setAccess] = useState<SectionAccessMap>({});
   const [scope, setScope] = useState<AdminScope>({ type: "district" });
   const [rejectedEmail, setRejectedEmail] = useState<string | null>(null);
+  /* The live role configuration, so an invitation grants what Roles &
+     Permissions says today rather than what it said when this shipped. */
+  const { config } = useRoleConfig();
 
   /* Changing the roles refills the grid. Anything already adjusted goes with
      it, which is the honest behaviour: the levels on screen belonged to the
      roles that were ticked, and those are no longer the roles. */
   const setRolesAndReset = (next: AdminRole[]) => {
     setRoles(next);
-    setAccess(fullAccess(presetAccess(next)));
+    setAccess(fullAccess(configuredAccess(config, next)));
   };
 
   const hasRoles = roles.length > 0;
@@ -79,7 +81,7 @@ export function ManualInviteForm({
       roles,
       access: fullAccess(access),
       scope,
-      status: "Pending Invite",
+      status: "Invited",
       lastLogin: null,
       dateAdded: new Date().toISOString(),
       invitedBy: ADMIN_ROLE_LABEL
@@ -133,7 +135,7 @@ export function ManualInviteForm({
         <AccessGrid value={access} onChange={setAccess} disabled={!hasRoles} />
         <span className="sf-field-hint">
           {hasRoles
-            ? matchesPreset(roles, access)
+            ? JSON.stringify(fullAccess(access)) === JSON.stringify(fullAccess(configuredAccess(config, roles)))
               ? "As the role grants it. Change any row to give this person something different."
               : "Adjusted for this person — no longer exactly what the role grants."
             : "Pick a role above to fill this in."}

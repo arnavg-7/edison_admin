@@ -40,9 +40,9 @@ const SORT_OPTIONS: ComboboxOption[] = [
   { value: "oldest", label: "Invited: oldest first" }
 ];
 
-/** Invites sent but not yet accepted — a filtered slice of the same admin
+/** Invitations sent and not yet accepted — a filtered slice of the same admin
     user list, the same way Alert History is a filtered slice of alerts. */
-export default function PendingInvitationsPage() {
+export default function InvitedUsersPage() {
   const { adminUsers: storedAdminUsers, updateUser } = useAdminUsers();
   const mounted = useMounted();
 
@@ -64,7 +64,7 @@ export default function PendingInvitationsPage() {
   };
 
   const allPending = useMemo(
-    () => adminUsers.filter((user) => user.status === "Pending Invite"),
+    () => adminUsers.filter((user) => user.status === "Invited"),
     [adminUsers]
   );
 
@@ -92,11 +92,11 @@ export default function PendingInvitationsPage() {
     updateUser(id, { dateAdded: new Date().toISOString() });
   };
 
-  /* Moves the invite to Revoked Users rather than deleting it, so a revoked
-     invite can be restored — it goes back to Pending Invite, not straight to
-     approved, since nobody has accepted it. */
-  const revoke = (id: string) => {
-    updateUser(id, { status: "Revoked", revokedFrom: "Pending Invite" });
+  /* Withdrawing an invitation makes the account Inactive rather than deleting
+     it: the link stops working, the record stays, and reactivating it puts them
+     back where they were — invited, still to accept. */
+  const withdraw = (id: string) => {
+    updateUser(id, { status: "Inactive" });
   };
 
   return (
@@ -148,7 +148,7 @@ export default function PendingInvitationsPage() {
             title={allPending.length === 0 ? "No pending invites" : "No matching invites"}
             message={
               allPending.length === 0
-                ? "Every invited admin account has been accepted, or nothing has been invited yet."
+                ? "Every invitation has been accepted, or nothing has been sent yet."
                 : "Try a different search term, or widen the role and scope filters."
             }
           />
@@ -185,9 +185,9 @@ export default function PendingInvitationsPage() {
                         <Button
                           color="secondary-destructive"
                           size="xs"
-                          onClick={() => revoke(user.id)}
+                          onClick={() => withdraw(user.id)}
                         >
-                          Revoke
+                          Withdraw
                         </Button>
                       </div>
                     </td>

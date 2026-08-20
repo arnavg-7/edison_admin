@@ -7,8 +7,6 @@ import {
   SECTION_LABELS,
   accessSummary,
   fullAccess,
-  matchesPreset,
-  presetAccess,
   type AdminRole,
   type AdminScope,
   type AdminUser,
@@ -18,6 +16,7 @@ import { useAdminUsers } from "@/lib/admin-users-store";
 import { Modal } from "@/components/shared/Modal";
 import { Button } from "@/components/base/buttons/button";
 import { Switch } from "@/components/ui/switch";
+import { configuredAccess, useRoleConfig } from "@/lib/role-config-store";
 import { AccessGrid } from "./AccessGrid";
 import { RoleCheckboxes } from "./RoleCheckboxes";
 import { ScopeSelect } from "./ScopeSelect";
@@ -45,12 +44,13 @@ export function EditAdminUserModal({
   const [access, setAccess] = useState<SectionAccessMap>(fullAccess(user.access));
   const [scope, setScope] = useState<AdminScope>(user.scope);
   const [resetRequested, setResetRequested] = useState(false);
+  const { config } = useRoleConfig();
 
   /* Changing the roles refills the grid — the levels on screen belonged to the
      roles that were ticked, and those are no longer the roles. */
   const setRolesAndReset = (next: AdminRole[]) => {
     setRoles(next);
-    setAccess(fullAccess(presetAccess(next)));
+    setAccess(fullAccess(configuredAccess(config, next)));
   };
 
   /* Nothing here applies until Save. Role, scope and the grid are one change to
@@ -62,13 +62,12 @@ export function EditAdminUserModal({
     JSON.stringify(fullAccess(access)) !== JSON.stringify(fullAccess(user.access));
 
   const isInactive = user.status === "Inactive";
-  const isPending = user.status === "Pending Invite";
-  const isRevoked = user.status === "Revoked";
+  const isInvited = user.status === "Invited";
   /* Whether this is a real sign-in-capable account. Active/Inactive is a
-     two-state switch, so offering it for a pending or revoked account would
-     silently overwrite that status with one end of a toggle it was never part
-     of — and there's no password to reset on an account nobody can use. */
-  const isLiveAccount = !isPending && !isRevoked;
+     two-state switch, so offering it for an account nobody has accepted yet
+     would silently overwrite that status with one end of a toggle it was never
+     part of — and there's no password to reset on an account nobody can use. */
+  const isLiveAccount = !isInvited;
 
   const hasRoles = roles.length > 0;
 
@@ -110,7 +109,7 @@ export function EditAdminUserModal({
         <span className="sf-field-hint">
           {!hasRoles
             ? "Pick a role above to fill this in."
-            : matchesPreset(roles, access)
+            : JSON.stringify(fullAccess(access)) === JSON.stringify(fullAccess(configuredAccess(config, roles)))
               ? "As the role grants it."
               : "Adjusted for this person — no longer exactly what the role grants."}
         </span>
@@ -122,15 +121,10 @@ export function EditAdminUserModal({
         </p>
       ) : null}
 
-      {isRevoked ? (
+      {isInvited ? (
         <p className="sf-card-hint">
-          This account&rsquo;s access has been revoked. Restore it from Revoked Users before
-          changing whether they can sign in.
-        </p>
-      ) : isPending ? (
-        <p className="sf-card-hint">
-          This invite hasn&rsquo;t been accepted yet. Activate/deactivate applies once they sign
-          in. Use Pending Invitations to resend or revoke it instead.
+          This invitation hasn&rsquo;t been accepted yet, so there is nothing to switch on or off.
+          Resend or withdraw it on the Invited tab.
         </p>
       ) : (
         <label className="sf-switch-field">

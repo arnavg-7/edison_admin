@@ -6,27 +6,37 @@ import {
   ADMIN_ROLE_ORDER,
   ROLE_PRESETS,
   SECTION_LEVEL_LABELS,
+  SECTION_LEVEL_ORDER,
   adminUsers as seededAdminUsers,
-  fullAccess,
   roleAssignmentsInclude,
   type AdminRole
 } from "@/lib/data/adminUsers";
+import { useRoleConfig } from "@/lib/role-config-store";
 import { useAdminUsers } from "@/lib/admin-users-store";
 import { useMounted } from "@/lib/use-mounted";
+import { Button } from "@/components/base/buttons/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 /**
- * The three roles this portal grants, and the access each one starts with.
+ * What each role grants — set here, not in the code.
  *
- * Reference, not a form. A role is a preset here: granting it fills an
- * account's grid with these levels, and whoever grants it can then change any
- * row for that person before saving. So this screen answers "what am I about to
- * hand over", and the account itself answers "what did they end up with".
+ * A role is the starting grid an invitation copies onto an account. Changing it
+ * changes what the next person granted that role receives; it does not reach
+ * back into accounts already granted it, because their grid was saved when
+ * access was given and rewriting it would change what people can do without
+ * anyone deciding to. Each role says how many accounts that is.
  *
- * A matrix rather than cards: the useful reading is across, because the
- * decision being made is which of three columns a section should sit in.
+ * Reporting has no Edit. The section is read-only by construction — every
+ * figure on it is a Salesforce report — so the level would be one no screen can
+ * honour.
+ *
+ * A matrix, because the useful reading is across: the decision being made is
+ * which column a section belongs in.
  */
+const READ_ONLY_SECTIONS = new Set(["reporting"]);
+
 export default function RolesAndPermissionsPage() {
+  const { config, setLevel, resetRole, isEdited } = useRoleConfig();
   const { adminUsers: storedAdminUsers } = useAdminUsers();
   const mounted = useMounted();
 
@@ -35,21 +45,21 @@ export default function RolesAndPermissionsPage() {
 
   const holders = (role: AdminRole) =>
     adminUsers.filter(
-      (user) => user.status === "Active" && roleAssignmentsInclude(user.roles, role)
+      (user) => user.status !== "Inactive" && roleAssignmentsInclude(user.roles, role)
     ).length;
 
   return (
     <>
       <p className="sf-card-hint">
-        Roles are a starting point. Every account keeps its own grid, so one person can hold
-        School Admin and still be view-only somewhere the role would have granted edit &mdash;
-        the account is where that is set, and where it is read back.
+        These are the four roles this portal grants. Setting a level here decides what the{" "}
+        <em>next</em> account granted that role starts with — accounts that already hold it keep
+        the access they were given, which is on the account itself.
       </p>
 
       <div className="sf-panel">
         <div className="sf-panel-head">
           <h2>What each role grants</h2>
-          <span className="sf-panel-note">Applied when the role is granted, then adjustable</span>
+          <span className="sf-panel-note">Saved as you change it</span>
         </div>
 
         <div className="sf-table-wrap">
@@ -69,16 +79,36 @@ export default function RolesAndPermissionsPage() {
                 <tr key={section.id}>
                   <td>{section.label}</td>
                   {ADMIN_ROLE_ORDER.map((role) => {
-                    const level = fullAccess(ROLE_PRESETS[role].access)[section.id];
+                    const current = config[role]?.[section.id] ?? "none";
+                    const levels = READ_ONLY_SECTIONS.has(section.id)
+                      ? SECTION_LEVEL_ORDER.filter((level) => level !== "edit")
+                      : SECTION_LEVEL_ORDER;
+
                     return (
                       <td key={role}>
-                        {level === "none" ? (
-                          <span className="list-editor-item-detail">&mdash;</span>
-                        ) : (
-                          <StatusBadge tone={level === "edit" ? "ok" : "neutral"}>
-                            {SECTION_LEVEL_LABELS[level]}
-                          </StatusBadge>
-                        )}
+                        <div
+                          className="sf-access-levels"
+                          role="radiogroup"
+                          aria-label={`${ADMIN_ROLE_LABELS[role]} access to ${section.label}`}
+                        >
+                          {levels.map((level) => (
+                            <button
+                              key={level}
+                              type="button"
+                              role="radio"
+                              aria-checked={current === level}
+                              className={
+                                current === level
+                                  ? "sf-access-choice is-active"
+                                  : "sf-access-choice"
+                              }
+                              data-level={level}
+                              onClick={() => setLevel(role, section.id, level)}
+                            >
+                              {SECTION_LEVEL_LABELS[level]}
+                            </button>
+                          ))}
+                        </div>
                       </td>
                     );
                   })}
@@ -97,32 +127,35 @@ export default function RolesAndPermissionsPage() {
           <div className="sf-panel" key={role}>
             <div className="sf-panel-head">
               <h2>{ADMIN_ROLE_LABELS[role]}</h2>
-              <span className="sf-panel-note">
-                {count} {count === 1 ? "account" : "accounts"}
-              </span>
+              <div className="sf-panel-head-end">
+                <span className="sf-panel-note">
+                  {count} {count === 1 ? "account" : "accounts"}
+                </span>
+                {isEdited(role) ? (
+                  <Button color="secondary" size="xs" onClick={() => resetRole(role)}>
+                    Reset<span className="sf-sr-only"> {ADMIN_ROLE_LABELS[role]}</span>
+                  </Button>
+                ) : (
+                  <StatusBadge tone="neutral">As shipped</StatusBadge>
+                )}
+              </div>
             </div>
 
             <p className="sf-card-hint">
               {preset.purpose} <span className="sf-role-who">{preset.who}</span>
             </p>
 
-            {preset.grants ? (
-              <p className="sf-card-hint">
-                <strong>Can grant:</strong>{" "}
-                {preset.grants.map((entry) => ADMIN_ROLE_LABELS[entry]).join(", ")}.
-              </p>
-            ) : (
-              <p className="sf-card-hint">
-                <strong>Can grant:</strong> nothing &mdash; this role does not open User Management.
-              </p>
-            )}
+            <p className="sf-card-hint">
+              <strong>Can grant:</strong>{" "}
+              {preset.grants
+                ? preset.grants.map((entry) => ADMIN_ROLE_LABELS[entry]).join(", ")
+                : "nothing — this role does not open User Management."}
+            </p>
 
-            {preset.excluded.length > 0 ? (
-              <ul className="sf-role-chips is-excluded">
-                {preset.excluded.map((entry) => (
-                  <li key={entry}>{entry}</li>
-                ))}
-              </ul>
+            {preset.notBuilt?.length ? (
+              <p className="sf-card-hint">
+                <strong>Not built yet:</strong> {preset.notBuilt.join("; ")}.
+              </p>
             ) : null}
           </div>
         );

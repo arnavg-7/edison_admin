@@ -12,6 +12,7 @@ import {
   ADMIN_ROLE_LABELS,
   ADMIN_ROLE_ORDER,
   ADMIN_STATUS_LABELS,
+  ADMIN_STATUS_ORDER,
   ADMIN_STATUS_TONE,
   SCHOOL_ADMIN_GRANTABLE,
   adminUsers as seededAdminUsers,
@@ -55,7 +56,7 @@ const ROLE_OPTIONS: ComboboxOption[] = [
 
 const STATUS_OPTIONS: ComboboxOption[] = [
   { value: "all", label: "All statuses" },
-  ...(["Active", "Pending Invite", "Revoked", "Inactive"] as AdminUserStatus[]).map((status) => ({
+  ...ADMIN_STATUS_ORDER.map((status) => ({
     value: status,
     label: ADMIN_STATUS_LABELS[status]
   }))
@@ -78,16 +79,15 @@ function bulkStatusAction(slice: AdminUserStatus | undefined): {
   status: AdminUserStatus;
   color: "secondary" | "secondary-destructive";
 } {
-  if (slice === "Revoked") return { label: "Restore access", status: "Active", color: "secondary" };
   if (slice === "Inactive") return { label: "Reactivate", status: "Active", color: "secondary" };
   return { label: "Bulk deactivate", status: "Inactive", color: "secondary-destructive" };
 }
 
 export type AdminUserListProps = {
   /**
-   * Fixed status slice for the Approved/Revoked/Inactive tabs. Omitted on All
-   * Users, which offers Status as a filter instead — a filter over one status
-   * would only ever be a no-op or empty the table.
+   * Fixed status slice for the Active tab. Omitted on All Users, which offers
+   * Status as a filter instead — a filter over one status would only ever be a
+   * no-op or empty the table.
    */
   status?: AdminUserStatus;
   /** Panel heading. */
@@ -210,25 +210,18 @@ export function AdminUserList({ status: slice, heading, noun, emptyTitle, emptyM
     setSelected([]);
   };
 
-  /**
-   * Revoke is offered from All Users only. On the Approved and Inactive tabs it
-   * is the one row action whose effect is to empty the row out of the tab you
-   * are standing on, which reads as the row vanishing rather than as access
-   * being handed back. Those tabs keep Edit, plus the bulk deactivate/reactivate
-   * that belongs to each; revoking stays one level up, next to the Revoked
-   * Users tab the account moves to.
-   */
-  const canRevoke = slice !== "Active" && slice !== "Inactive";
-
-  /* Revoking keeps the record and moves it to the Revoked Users tab, so access
-     can be handed back; Remove (offered on a revoked row) is the permanent one. */
-  const revoke = (user: AdminUser) => {
-    updateUser(user.id, { status: "Revoked", revokedFrom: user.status });
+  /* Turning access off keeps the record: Inactive is an account that exists and
+     cannot sign in, which is the state to come back from. Remove is the
+     permanent one, and is offered on an inactive row only — deleting somebody
+     who still has access should take the deliberate step of switching it off
+     first. */
+  const deactivate = (user: AdminUser) => {
+    updateUser(user.id, { status: "Inactive" });
     setSelected((current) => current.filter((id) => id !== user.id));
   };
 
-  const restore = (user: AdminUser) => {
-    updateUser(user.id, { status: user.revokedFrom ?? "Active", revokedFrom: undefined });
+  const reactivate = (user: AdminUser) => {
+    updateUser(user.id, { status: "Active" });
   };
 
   return (
@@ -355,15 +348,15 @@ export function AdminUserList({ status: slice, heading, noun, emptyTitle, emptyM
                     <td>{user.lastLogin ? formatDateTime(user.lastLogin) : "—"}</td>
                     <td>
                       <div className="sf-row-actions">
-                        {user.status === "Revoked" ? (
+                        {user.status === "Inactive" ? (
                           <>
                             <Button
                               color="secondary"
                               size="xs"
-                              onClick={() => restore(user)}
+                              onClick={() => reactivate(user)}
                               iconLeading={<HugeiconsIcon icon={UserCheck01Icon} size={16} strokeWidth={2} />}
                             >
-                              Restore
+                              Reactivate
                             </Button>
 
                             <AlertDialog>
@@ -391,8 +384,8 @@ export function AdminUserList({ status: slice, heading, noun, emptyTitle, emptyM
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Remove {user.name}?</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    This deletes the account for good — they&rsquo;ll no longer appear on
-                                    any tab, and access can&rsquo;t be restored. This can&rsquo;t be
+                                    This deletes the account for good — they&rsquo;ll no longer appear
+                                    on any tab, and it can&rsquo;t be reactivated. This can&rsquo;t be
                                     undone from here.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
@@ -424,39 +417,43 @@ export function AdminUserList({ status: slice, heading, noun, emptyTitle, emptyM
                               Edit
                             </Button>
 
-                            {canRevoke ? (
-                              <AlertDialog>
-                                <AlertDialogTrigger
-                                  className={cx(
-                                    buttonStyles.common.root,
-                                    buttonStyles.sizes.xs.root,
-                                    buttonStyles.colors["secondary-destructive"].root
-                                  )}
-                                >
-                                  <HugeiconsIcon icon={UserBlock01Icon} size={16} strokeWidth={2} />
-                                  Revoke
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Revoke {user.name}&rsquo;s access?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      They lose admin access immediately. The account moves to Revoked
-                                      Users, where you can restore it or remove it for good.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    {/* Close, not Action: revoking re-badges the row
-                                        instead of removing it, so on All Users the
-                                        dialog's own subtree survives the click and
-                                        would sit there open. */}
-                                    <AlertDialogClose variant="destructive" onClick={() => revoke(user)}>
-                                      Revoke
-                                    </AlertDialogClose>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            ) : null}
+                            <AlertDialog>
+                              <AlertDialogTrigger
+                                className={cx(
+                                  buttonStyles.common.root,
+                                  buttonStyles.sizes.xs.root,
+                                  buttonStyles.colors["secondary-destructive"].root
+                                )}
+                              >
+                                <HugeiconsIcon icon={UserBlock01Icon} size={16} strokeWidth={2} />
+                                Deactivate
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Deactivate {user.name}&rsquo;s access?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    {user.status === "Invited"
+                                      ? "The invitation stops working and the account becomes Inactive. Reactivating it puts them back where they were, still waiting to accept."
+                                      : "They lose admin access immediately. The account becomes Inactive, where you can reactivate it or remove it for good."}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  {/* Close, not Action: this re-badges the row instead
+                                      of removing it, so on All Users the dialog's own
+                                      subtree survives the click and would sit there
+                                      open. */}
+                                  <AlertDialogClose
+                                    variant="destructive"
+                                    onClick={() => deactivate(user)}
+                                  >
+                                    Deactivate
+                                  </AlertDialogClose>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </>
                         )}
                       </div>

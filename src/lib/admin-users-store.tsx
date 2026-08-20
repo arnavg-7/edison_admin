@@ -6,6 +6,7 @@ import {
   fullAccess,
   normalizeAccess,
   normalizeRoles,
+  normalizeStatus,
   presetAccess,
   type AdminUser
 } from "@/lib/data/adminUsers";
@@ -50,6 +51,7 @@ function readStorage(): PersistedState {
         const stored = normalizeAccess((user as { access?: unknown }).access);
         return {
           ...user,
+          status: normalizeStatus(user.status),
           roles,
           access: Object.keys(stored).length > 0 ? fullAccess(stored) : fullAccess(presetAccess(roles))
         };

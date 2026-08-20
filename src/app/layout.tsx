@@ -13,6 +13,7 @@ import { AdminUsersProvider } from "@/lib/admin-users-store";
 import { SchoolSetupProvider } from "@/lib/school-setup-store";
 import { PoagProvider } from "@/lib/poag-store";
 import { AdminScopeProvider } from "@/lib/admin-scope";
+import { RoleConfigProvider } from "@/lib/role-config-store";
 import { cn } from "@/lib/utils";
 
 /** The app's only typeface. `--font-inter` feeds Tailwind's font-sans/font-mono
@@ -36,21 +37,23 @@ export default function RootLayout({
           <AdminScopeProvider>
           <UsersProvider>
             <AdminUsersProvider>
-              <SchoolSetupProvider>
-                <PoagProvider>
-                  <a className="sf-skip-link" href="#main-content">
-                    Skip to main content
-                  </a>
-                  <SidebarProvider>
-                    <Sidebar />
-                    <SidebarInset className="sf-main-region">
-                      <div id="main-content">{children}</div>
-                    </SidebarInset>
-                    <ScrollReset />
-                    <PersonaGate />
-                  </SidebarProvider>
-                </PoagProvider>
-              </SchoolSetupProvider>
+              <RoleConfigProvider>
+                <SchoolSetupProvider>
+                  <PoagProvider>
+                    <a className="sf-skip-link" href="#main-content">
+                      Skip to main content
+                    </a>
+                    <SidebarProvider>
+                      <Sidebar />
+                      <SidebarInset className="sf-main-region">
+                        <div id="main-content">{children}</div>
+                      </SidebarInset>
+                      <ScrollReset />
+                      <PersonaGate />
+                    </SidebarProvider>
+                  </PoagProvider>
+                </SchoolSetupProvider>
+              </RoleConfigProvider>
             </AdminUsersProvider>
           </UsersProvider>
           </AdminScopeProvider>

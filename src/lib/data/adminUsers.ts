@@ -9,22 +9,22 @@ import { schools } from "./schools";
 import type { StatusTone } from "./types";
 
 /**
- * The three roles this portal grants.
+ * The four roles this portal grants.
  *
  * Super Admin and School Admin are the same job at two reaches — the district's
  * or one school's — which is why they are two roles and not one role plus a
  * setting: what a School Admin may hand out is narrower than what they hold,
  * and that is a property of the role rather than of the data they see.
  *
- * IT is not here. It is the team who runs this screen, not something assigned
- * on it; an IT person holds Super Admin like anyone else who administers the
- * district. The consequence is stated where it bites: no role grants the audit
- * log on its own — see the note on the IT persona in nav.ts.
+ * IT Administrator is narrow but not junior. It holds few sections and is one
+ * of only two roles that can grant any of them, because keeping data flowing
+ * and deciding who may sign in are the same job at Edison.
  */
-export type AdminRole = "super_admin" | "school_admin" | "leadership";
+export type AdminRole = "super_admin" | "it_admin" | "school_admin" | "leadership";
 
 export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
   super_admin: "Super Admin",
+  it_admin: "IT / Systems Administrator",
   school_admin: "School Admin",
   leadership: "District & School Leadership"
 };
@@ -32,6 +32,7 @@ export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
 /** For badges and table cells, where the full name does not fit. */
 export const ADMIN_ROLE_SHORT_LABELS: Record<AdminRole, string> = {
   super_admin: "Super Admin",
+  it_admin: "IT",
   school_admin: "School Admin",
   leadership: "Leadership"
 };
@@ -42,13 +43,25 @@ export const ADMIN_ROLE_SHORT_LABELS: Record<AdminRole, string> = {
  * quietly becoming an account with none.
  */
 const LEGACY_ROLE_NAMES: Record<string, AdminRole> = {
-  it_administrator: "super_admin",
+  super_admin: "super_admin",
+  it_admin: "it_admin",
+  it_administrator: "it_admin",
+  school_admin: "school_admin",
   portal_administrator: "school_admin",
   leadership: "leadership"
 };
 
-/** Widest reach first, which is also the order they are granted in. */
-export const ADMIN_ROLE_ORDER: AdminRole[] = ["super_admin", "school_admin", "leadership"];
+/**
+ * Widest authority first, which is also the order they are granted in — not
+ * widest reach: IT opens three sections and School Admin opens nine, but IT is
+ * the role that can hand School Admin out.
+ */
+export const ADMIN_ROLE_ORDER: AdminRole[] = [
+  "super_admin",
+  "it_admin",
+  "school_admin",
+  "leadership"
+];
 
 /** Roles a School Admin may hand out: their own, and nothing above it. */
 export const SCHOOL_ADMIN_GRANTABLE: AdminRole[] = ["school_admin"];
@@ -237,6 +250,18 @@ export const ROLE_PRESETS: Record<AdminRole, RolePreset> = {
     excluded: ["Granting Super Admin", "Granting Leadership", "Other schools' accounts"],
     grants: ["school_admin"]
   },
+  it_admin: {
+    purpose: "Keeps data flowing correctly, and controls who has access.",
+    who: "District IT, or Ken42 technical ops.",
+    /* Few sections, and only one of them at edit. What IT owns in System
+       Settings is the audit log — a record, which is read — and the academic
+       configuration sharing that section is not theirs; the route gate holds
+       the same line for the IT persona, see SECTION_LIMITS in nav.ts. */
+    access: { home: "view", "user-management": "edit", "system-settings": "view" },
+    excluded: ["Portal configuration", "Goals", "Alerts", "Other schools' data"],
+    grants: ADMIN_ROLE_ORDER,
+    notBuilt: ["Integrations — Genesis/SIS ingest and Classroom sync have no section yet"]
+  },
   leadership: {
     purpose: "A fast read on how the platform and their students and faculty are doing.",
     who: "Superintendent, principal, assistant principal.",
@@ -397,16 +422,30 @@ type AdminUserSeed = Omit<AdminUser, "access">;
  * it is supposed to be an example of.
  */
 const seededAccounts: AdminUserSeed[] = [
+  /* The account the district is run from, and the one every other account here
+     was invited by. Without it the seed has no Super Admin, and the role that
+     grants the rest reads as one nobody holds. */
+  {
+    id: "ken-oyelaran-admin",
+    name: "Ken Oyelaran",
+    email: "koyelaran@edison.example.org",
+    roles: ["super_admin"],
+    scope: { type: "district" },
+    status: "Active",
+    lastLogin: "2026-07-17T13:40:00-04:00",
+    dateAdded: "2025-08-01T08:00:00-04:00",
+    invitedBy: "System"
+  },
   {
     id: "priya-nair-admin",
     name: "Priya Nair",
     email: "pnair@edison.example.org",
-    roles: ["super_admin"],
+    roles: ["it_admin"],
     scope: { type: "district" },
     status: "Active",
     lastLogin: "2026-07-17T12:05:00-04:00",
     dateAdded: "2025-08-14T09:00:00-04:00",
-    invitedBy: "System"
+    invitedBy: "Ken Oyelaran"
   },
   {
     id: "dana-whitfield-admin",
@@ -445,7 +484,7 @@ const seededAccounts: AdminUserSeed[] = [
     id: "alicia-gomez-admin",
     name: "Alicia Gomez",
     email: "agomez@edison.example.org",
-    roles: ["super_admin"],
+    roles: ["it_admin"],
     scope: { type: "district" },
     status: "Pending Invite",
     lastLogin: null,

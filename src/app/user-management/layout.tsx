@@ -61,7 +61,7 @@ export default function UserManagementLayout({ children }: { children: React.Rea
           <p className="sf-page-sub">
             {school
               ? `Admin access for ${school.name} — the other people who administer this school, and what each of them can open. Faculty accounts sync in from Genesis and hold no admin role.`
-              : "Admin access to this portal: Super Admin, School Admin and Leadership roles, each granting a set of sections that can be adjusted per person. Faculty accounts sync in from Genesis and hold no admin role."}
+              : "Admin access to this portal: Super Admin, IT, School Admin and Leadership roles, each granting a set of sections that can be adjusted per person. Faculty accounts sync in from Genesis and hold no admin role."}
           </p>
         </div>
 

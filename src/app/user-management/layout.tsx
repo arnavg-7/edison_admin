@@ -13,7 +13,11 @@ const TABS = [
   { label: "Approved Users", href: "/user-management/approved" },
   { label: "Revoked Users", href: "/user-management/revoked" },
   { label: "Inactive Users", href: "/user-management/inactive" },
-  { label: "Pending Invitations", href: "/user-management/pending" }
+  { label: "Pending Invitations", href: "/user-management/pending" },
+  /* Last, and about roles rather than people: the four tabs before it are
+     slices of the same account list, this is the thing those accounts point
+     at. */
+  { label: "Roles & Access", href: "/user-management/roles" }
 ];
 
 /**

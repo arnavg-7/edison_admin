@@ -7,16 +7,39 @@
 import { schools } from "./schools";
 import type { StatusTone } from "./types";
 
-export type AdminRole = "leadership" | "portal_administrator" | "it_administrator";
+export type AdminRole =
+  | "super_admin"
+  | "leadership"
+  | "portal_administrator"
+  | "it_administrator";
 
 export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
+  super_admin: "Super Admin",
   it_administrator: "IT Administrator",
   portal_administrator: "Portal Administrator",
   leadership: "Leadership"
 };
 
-/** IT Administrator first — the role that owns this screen. */
-export const ADMIN_ROLE_ORDER: AdminRole[] = ["it_administrator", "portal_administrator", "leadership"];
+/**
+ * Super Admin first — it holds every section and is what the other three are
+ * configured from — then IT Administrator, who owns this screen.
+ */
+export const ADMIN_ROLE_ORDER: AdminRole[] = [
+  "super_admin",
+  "it_administrator",
+  "portal_administrator",
+  "leadership"
+];
+
+/**
+ * The role that cannot be narrowed.
+ *
+ * Every other role's sections are set on Roles & Access. Super Admin's are not
+ * editable there: it is the role that configures the rest, and a portal where
+ * someone can untick User Management from the only role that holds it is one
+ * nobody can get back into.
+ */
+export const LOCKED_ROLE: AdminRole = "super_admin";
 
 /**
  * Permission level, held per role rather than per account: someone can be a
@@ -36,7 +59,9 @@ export const ADMIN_PERMISSION_LABELS: Record<AdminPermission, string> = {
  * editing one, so it has no "Can edit" to pick.
  */
 export const FIXED_ROLE_PERMISSION: Partial<Record<AdminRole, AdminPermission>> = {
-  leadership: "view"
+  leadership: "view",
+  // The portal's own owner. View-only Super Admin is a contradiction.
+  super_admin: "edit"
 };
 
 export type AdminRoleAssignment = { role: AdminRole; permission: AdminPermission };
@@ -212,6 +237,32 @@ export function newAdminUserId(name: string): string {
 }
 
 export const adminUsers: AdminUser[] = [
+  /* The account the portal opens as, and the only seeded Super Admin at
+     district scope — every other account here was invited by it. */
+  {
+    id: "ken-oyelaran-admin",
+    name: "Ken Oyelaran",
+    email: "koyelaran@edison.example.org",
+    roles: [{ role: "super_admin", permission: "edit" }],
+    scope: { type: "district" },
+    status: "Active",
+    lastLogin: "2026-07-17T13:40:00-04:00",
+    dateAdded: "2025-08-01T08:00:00-04:00",
+    invitedBy: "System"
+  },
+  /* Same role, one school: this is the school-level admin — every section, full
+     write, one school's worth of data. Scope does the narrowing, not the role. */
+  {
+    id: "rachel-imani-admin",
+    name: "Rachel Imani",
+    email: "rimani@edison.example.org",
+    roles: [{ role: "super_admin", permission: "edit" }],
+    scope: { type: "school", schoolId: "edison-hs" },
+    status: "Active",
+    lastLogin: "2026-07-17T08:12:00-04:00",
+    dateAdded: "2025-08-14T08:30:00-04:00",
+    invitedBy: "Ken Oyelaran"
+  },
   {
     id: "priya-nair-admin",
     name: "Priya Nair",
@@ -221,7 +272,7 @@ export const adminUsers: AdminUser[] = [
     status: "Active",
     lastLogin: "2026-07-17T12:05:00-04:00",
     dateAdded: "2025-08-14T09:00:00-04:00",
-    invitedBy: "System"
+    invitedBy: "Ken Oyelaran"
   },
   {
     id: "dana-whitfield-admin",

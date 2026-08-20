@@ -12,6 +12,7 @@ import {
 } from "@/lib/data/adminUsers";
 import { schools } from "@/lib/data/schools";
 import { useAdminUsers } from "@/lib/admin-users-store";
+import { inviteHref, inviteUrl } from "@/lib/data/adminInvites";
 import { useMounted } from "@/lib/use-mounted";
 import { formatDateTime } from "@/lib/format";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -90,6 +91,25 @@ export default function PendingInvitationsPage() {
     // TODO: no email backend yet — this only bumps the sent date so the
     // admin can see the resend registered.
     updateUser(id, { dateAdded: new Date().toISOString() });
+  };
+
+  /* The address in the email, put on the clipboard. Confirmed on the button
+     itself rather than in a toast: the app has no toast layer, and the answer
+     to "did that work" belongs on the control that was pressed. */
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const copyLink = async (user: AdminUser) => {
+    const url = inviteUrl(user, window.location.origin);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(user.id);
+      window.setTimeout(() => setCopiedId((current) => (current === user.id ? null : current)), 2000);
+    } catch {
+      /* Clipboard access is refused in some browsers and over plain http.
+         Opening the invite is the next best thing — it is the link itself, and
+         the address bar then holds what could not be copied. */
+      window.open(inviteHref(user), "_blank", "noopener");
+    }
   };
 
   /* Moves the invite to Revoked Users rather than deleting it, so a revoked
@@ -179,6 +199,12 @@ export default function PendingInvitationsPage() {
                     <td>{formatDateTime(user.dateAdded)}</td>
                     <td>
                       <div className="sf-row-actions">
+                        {/* The link the email carries. Copyable here because
+                            this build sends no mail — and because it is how an
+                            invite gets reviewed before it goes out. */}
+                        <Button color="secondary" size="xs" onClick={() => copyLink(user)}>
+                          {copiedId === user.id ? "Link copied" : "Copy invite link"}
+                        </Button>
                         <Button color="secondary" size="xs" onClick={() => resend(user.id)}>
                           Resend
                         </Button>

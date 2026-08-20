@@ -3,16 +3,14 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import "../styles/theme.css";
 import "../styles/pages/admin.css";
-import { Sidebar } from "@/components/shell/Sidebar";
-import { ScrollReset } from "@/components/shell/ScrollReset";
-import { PersonaGate } from "@/components/shell/PersonaGate";
+import { AppShell } from "@/components/shell/AppShell";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { UsersProvider } from "@/lib/users-store";
 import { AdminUsersProvider } from "@/lib/admin-users-store";
 import { SchoolSetupProvider } from "@/lib/school-setup-store";
 import { PoagProvider } from "@/lib/poag-store";
 import { AdminScopeProvider } from "@/lib/admin-scope";
+import { RoleAccessProvider } from "@/lib/role-access-store";
 import { cn } from "@/lib/utils";
 
 /** The app's only typeface. `--font-inter` feeds Tailwind's font-sans/font-mono
@@ -33,27 +31,22 @@ export default function RootLayout({
     <html lang="en" className={cn("font-sans", inter.variable)}>
       <body className={inter.className}>
         <TooltipProvider>
-          <AdminScopeProvider>
           <UsersProvider>
             <AdminUsersProvider>
-              <SchoolSetupProvider>
-                <PoagProvider>
-                  <a className="sf-skip-link" href="#main-content">
-                    Skip to main content
-                  </a>
-                  <SidebarProvider>
-                    <Sidebar />
-                    <SidebarInset className="sf-main-region">
-                      <div id="main-content">{children}</div>
-                    </SidebarInset>
-                    <ScrollReset />
-                    <PersonaGate />
-                  </SidebarProvider>
-                </PoagProvider>
-              </SchoolSetupProvider>
+              <RoleAccessProvider>
+                <AdminScopeProvider>
+                  <SchoolSetupProvider>
+                    <PoagProvider>
+                      <a className="sf-skip-link" href="#main-content">
+                        Skip to main content
+                      </a>
+                      <AppShell>{children}</AppShell>
+                    </PoagProvider>
+                  </SchoolSetupProvider>
+                </AdminScopeProvider>
+              </RoleAccessProvider>
             </AdminUsersProvider>
           </UsersProvider>
-          </AdminScopeProvider>
         </TooltipProvider>
       </body>
     </html>

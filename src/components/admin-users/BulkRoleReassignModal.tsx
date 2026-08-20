@@ -33,8 +33,8 @@ export function BulkRoleReassignModal({
   return (
     <Modal title={`Reassign role${count === 1 ? "" : "s"} for ${count} user${count === 1 ? "" : "s"}`} onClose={onClose}>
       <p className="sf-panel-note">
-        This replaces every selected account&rsquo;s current role(s) &mdash; and their permission
-        levels &mdash; with what you pick below.
+        This replaces every selected account&rsquo;s current role(s) with what you pick below.
+        Each role brings its own access level.
       </p>
 
       <RoleCheckboxes

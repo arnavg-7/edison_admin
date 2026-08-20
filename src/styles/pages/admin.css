@@ -1851,3 +1851,53 @@
 .goal-detail .goal-students {
   padding: 0;
 }
+
+/* Roles & Permissions ---------------------------------------------------- */
+
+.sf-role-who {
+  color: var(--sf-text-dim);
+}
+
+/* Can open / No access to, side by side: the pair is the point, and stacked
+   they read as two lists rather than as two halves of one statement. */
+.sf-role-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px 28px;
+  margin: 4px 0 0;
+}
+
+.sf-role-grid dt {
+  font-size: 12px;
+  color: var(--sf-text-muted);
+  margin-bottom: 7px;
+}
+
+.sf-role-grid dd {
+  margin: 0;
+}
+
+.sf-role-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-role-chips li {
+  font-size: 12px;
+  padding: 3px 9px;
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-neutral-bg);
+  color: var(--sf-text);
+}
+
+/* Struck through rather than tinted red: these are not errors, they are the
+   parts of the portal this job has no business in. */
+.sf-role-chips.is-excluded li {
+  color: var(--sf-text-dim);
+  text-decoration: line-through;
+  text-decoration-color: var(--sf-card-border);
+}

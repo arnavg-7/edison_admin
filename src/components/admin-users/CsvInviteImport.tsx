@@ -4,7 +4,6 @@ import { useState } from "react";
 import { schools } from "@/lib/data/schools";
 import {
   ADMIN_ROLE_LABELS,
-  FIXED_ROLE_PERMISSION,
   INSTITUTIONAL_DOMAINS_LABEL,
   defaultRolePermission,
   isEmailShaped,
@@ -31,26 +30,24 @@ const ROLE_KEYS: Record<string, AdminRole> = {
 
 const SAMPLE_CSV =
   "name,email,roles,scope\n" +
-  'Dana Whitfield,dwhitfield@edison.example.org,"leadership;portal_administrator:edit",Edison High School\n' +
-  "Sam Rivera,srivera@edison.example.org,it_administrator:view,district\n";
+  'Dana Whitfield,dwhitfield@edison.example.org,"leadership;portal_administrator",Edison High School\n' +
+  "Sam Rivera,srivera@edison.example.org,it_administrator,district\n";
 
 /**
- * `it_administrator:view` — the optional `:view`/`:edit` suffix sets that
- * role's permission level. Omitted, it falls back to the same default the
- * manual form uses, so pre-permission CSVs still import.
+ * A role name, and nothing else.
+ *
+ * `it_administrator:view` used to be accepted, back when an account could hold
+ * a role at a level of its own. The level now belongs to the role — see
+ * FIXED_ROLE_PERMISSION — so a suffix is still read and still ignored rather
+ * than failing the row: a sheet written last term should import, and it would
+ * be worse to accept it and quietly grant something it did not ask for.
  */
 function parseRoleEntry(raw: string): AdminRoleAssignment | null {
-  const [roleRaw, levelRaw] = raw.split(":").map((part) => part.trim());
+  const [roleRaw] = raw.split(":").map((part) => part.trim());
   const role = ROLE_KEYS[roleRaw];
   if (!role) return null;
 
-  const fixed = FIXED_ROLE_PERMISSION[role];
-  if (fixed) return { role, permission: fixed };
-
-  if (!levelRaw) return { role, permission: defaultRolePermission(role) };
-  if (levelRaw === "view" || levelRaw === "view only") return { role, permission: "view" };
-  if (levelRaw === "edit" || levelRaw === "can edit") return { role, permission: "edit" };
-  return null;
+  return { role, permission: defaultRolePermission(role) };
 }
 
 type ParsedRow = {
@@ -183,10 +180,10 @@ export function CsvInviteImport({
       <p className="sf-panel-note">
         Columns: <code>name, email, roles, scope</code>. Roles are one or more of{" "}
         <code>leadership</code>, <code>portal_administrator</code>, <code>it_administrator</code>,
-        separated by <code>;</code>. Add <code>:view</code> or <code>:edit</code> to a role to set
-        its permission level (defaults to edit; Leadership is always view only). Scope is{" "}
-        <code>district</code> or an exact school name, and applies to every role on the account.
-        Every email must be a district institutional address ({INSTITUTIONAL_DOMAINS_LABEL}).
+        separated by <code>;</code>. Each role carries its own access level — see Roles &amp;
+        Permissions — so there is nothing to set per row. Scope is <code>district</code> or an
+        exact school name, and applies to every role on the account. Every email must be a
+        district institutional address ({INSTITUTIONAL_DOMAINS_LABEL}).
       </p>
 
       <button type="button" className="sf-inline-btn" onClick={downloadSample}>

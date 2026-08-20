@@ -648,6 +648,14 @@ input[type="checkbox"]:disabled {
   gap: 6px;
 }
 
+/* What a role opens, under its checkbox — a line of prose rather than chips,
+   because it is read once while deciding and never scanned. */
+.sf-role-grant {
+  margin: 0 0 0 26px;
+  font-size: 11.5px;
+  color: var(--sf-text-dim);
+}
+
 .sf-role-fixed-note {
   font-size: 11px;
   font-weight: 600;
@@ -655,48 +663,6 @@ input[type="checkbox"]:disabled {
   background: var(--sf-neutral-bg);
   border-radius: var(--sf-radius-pill);
   padding: 2px 8px;
-}
-
-/* Per-role View only / Can edit segmented control, indented under its role so
-   it reads as belonging to that checkbox rather than to the group. */
-.sf-permission-toggle {
-  display: inline-flex;
-  align-self: flex-start;
-  margin-left: 24px;
-  background: var(--sf-raised);
-  border: 1px solid var(--sf-card-border);
-  border-radius: var(--sf-radius-control);
-  padding: 2px;
-  gap: 2px;
-}
-
-.sf-permission-choice {
-  appearance: none;
-  border: none;
-  background: transparent;
-  border-radius: 4px;
-  padding: 3px 10px;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--sf-text-muted);
-  cursor: pointer;
-}
-
-.sf-permission-choice:hover {
-  color: var(--sf-text);
-}
-
-.sf-permission-choice.is-active {
-  background: var(--sf-card);
-  color: var(--sf-text);
-  font-weight: 600;
-  box-shadow: 0 1px 2px rgb(19 26 43 / 12%);
-}
-
-.sf-permission-choice:focus-visible {
-  outline: 2px solid var(--sf-focus);
-  outline-offset: 1px;
 }
 
 .sf-field-error {

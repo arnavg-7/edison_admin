@@ -10,8 +10,15 @@ import type { StatusTone } from "./types";
 export type AdminRole = "leadership" | "portal_administrator" | "it_administrator";
 
 export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
-  it_administrator: "IT Administrator",
-  portal_administrator: "Portal Administrator",
+  it_administrator: "IT / Systems Administrator",
+  portal_administrator: "Portal / Program Administrator",
+  leadership: "District & School Leadership"
+};
+
+/** For badges and table cells, where the full name does not fit. */
+export const ADMIN_ROLE_SHORT_LABELS: Record<AdminRole, string> = {
+  it_administrator: "IT",
+  portal_administrator: "Portal Admin",
   leadership: "Leadership"
 };
 
@@ -31,12 +38,22 @@ export const ADMIN_PERMISSION_LABELS: Record<AdminPermission, string> = {
 };
 
 /**
- * Roles whose level is fixed by design and so isn't offered as a choice —
- * Leadership is a read-only audience (dashboards and reports), never an
- * editing one, so it has no "Can edit" to pick.
+ * Every role's level, fixed by the role rather than chosen per account.
+ *
+ * The personas brief settles all three: Leadership is a read-only audience,
+ * and the other two have full read and write on what they own. Offering a
+ * per-account level would let an admin create a view-only Portal Administrator,
+ * which is not one of the three jobs — it is a fourth, with nobody accountable
+ * for what it cannot do.
+ *
+ * Kept as a map rather than folded into the assignment shape so accounts
+ * already stored with a level still normalise, and so the source stays one
+ * table: ROLE_PERMISSIONS in rolePermissions.ts, which this mirrors.
  */
 export const FIXED_ROLE_PERMISSION: Partial<Record<AdminRole, AdminPermission>> = {
-  leadership: "view"
+  leadership: "view",
+  portal_administrator: "edit",
+  it_administrator: "edit"
 };
 
 export type AdminRoleAssignment = { role: AdminRole; permission: AdminPermission };

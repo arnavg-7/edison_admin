@@ -13,7 +13,10 @@ const TABS = [
   { label: "Approved Users", href: "/user-management/approved" },
   { label: "Revoked Users", href: "/user-management/revoked" },
   { label: "Inactive Users", href: "/user-management/inactive" },
-  { label: "Pending Invitations", href: "/user-management/pending" }
+  { label: "Pending Invitations", href: "/user-management/pending" },
+  /* Last, and the only tab that is not a slice of the account list: it is what
+     those accounts point at, and the thing to read before sending an invite. */
+  { label: "Roles & Permissions", href: "/user-management/roles" }
 ];
 
 /**

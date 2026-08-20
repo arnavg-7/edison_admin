@@ -42,9 +42,11 @@ export type AdminScope =
  * than a job of its own, so it is not a persona here.
  *
  * `leadership` is the brief's Persona A: a read on the numbers and nothing
- * else. What each persona reaches is in nav.ts, next to the sections it names.
+ * else. `it-admin` is Persona C: who has access, and whether the data is
+ * arriving. What each persona reaches is in nav.ts, next to the sections it
+ * names.
  */
-export type AdminPersona = "super-admin" | "leadership";
+export type AdminPersona = "super-admin" | "leadership" | "it-admin";
 
 export const ADMIN_PERSONAS: { value: AdminPersona; label: string; detail: string }[] = [
   {
@@ -56,6 +58,11 @@ export const ADMIN_PERSONAS: { value: AdminPersona; label: string; detail: strin
     value: "leadership",
     label: "District & School Leadership",
     detail: "Reporting only, read-only. Superintendent, principal, assistant principal."
+  },
+  {
+    value: "it-admin",
+    label: "IT / Systems Administrator",
+    detail: "Who has access, and whether the data is arriving. District IT or Ken42 technical ops."
   }
 ];
 
@@ -124,6 +131,9 @@ const AdminScopeContext = createContext<AdminScopeValue | null>(null);
  */
 function personaLabel(persona: AdminPersona, scoped: boolean): string {
   if (persona === "super-admin") return scoped ? "School Admin" : "Super Admin";
+  /* IT keeps one name at either scope: the job is the district's systems, and a
+     school-scoped IT admin is the same person looking at one school's rows. */
+  if (persona === "it-admin") return "IT Administrator";
   return scoped ? "School Leadership" : "District Leadership";
 }
 

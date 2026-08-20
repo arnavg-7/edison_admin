@@ -17,7 +17,9 @@ const DISTRICT = "district";
 const ACCESS_NOTE: Record<AdminPersona, string> = {
   "super-admin": "Every section, full read and write.",
   leadership:
-    "Reporting & Analytics only, read-only. No configuration, goals, alerts or settings."
+    "Reporting & Analytics only, read-only. No configuration, goals, alerts or settings.",
+  "it-admin":
+    "Accounts and the audit log, full read and write. No goals, grade configuration or alerts."
 };
 
 /**

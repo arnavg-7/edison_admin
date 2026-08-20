@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { sectionsFor, sectionHref, sectionLabel } from "@/lib/nav";
+import { sectionsFor, navHref, sectionLabel } from "@/lib/nav";
 import { useAdminScope } from "@/lib/admin-scope";
 import { ScopeSwitcher } from "./ScopeSwitcher";
 import { NavIcon } from "./NavIcon";
@@ -55,7 +55,7 @@ export function Sidebar() {
                   section.href === "/" ? pathname === "/" : pathname.startsWith(section.href);
                 /* Scoped sections point one level in, so a school admin lands on
                    their grade list rather than a picker holding one school. */
-                const href = sectionHref(section, schoolId);
+                const href = navHref(persona, section, schoolId);
                 const label = sectionLabel(section, schoolId);
 
                 return (

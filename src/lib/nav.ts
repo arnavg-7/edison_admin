@@ -61,17 +61,50 @@ export const ADMIN_ROLE_LABEL = "Super Admin";
  *
  * Super Admin is the portal as built — everything, at whichever scope they are
  * administering. Leadership gets Reporting & Analytics and nothing else: it is
- * their whole portal, and it is read-only.
+ * their whole portal, and it is read-only. IT gets who has access and whether
+ * the data is arriving, which is a narrow slice of two sections rather than two
+ * whole sections — see SECTION_LIMITS.
  */
 export const SECTION_ACCESS: Record<AdminPersona, SectionId[]> = {
   "super-admin": SECTIONS.map((section) => section.id),
-  leadership: ["reporting"]
+  leadership: ["reporting"],
+  "it-admin": ["home", "user-management", "system-settings"]
 };
+
+/**
+ * Where a persona's reach inside a section stops.
+ *
+ * An allow-list, not a block-list: a settings tab added next year should not
+ * quietly become IT's because nobody remembered to exclude it. Anything new in
+ * a limited section belongs to whoever holds the section whole.
+ *
+ * One entry so far. The brief gives IT the audit log and the accounts, not the
+ * academic configuration that shares System Settings with them — grade levels,
+ * subjects, the calendar and announcements are the portal's content, and IT
+ * does not own content.
+ */
+export const SECTION_LIMITS: Partial<Record<AdminPersona, Partial<Record<SectionId, string[]>>>> =
+  {
+    "it-admin": {
+      "system-settings": ["/system-settings/audit-log"]
+    }
+  };
 
 /** The sections a persona sees, in the order SECTIONS declares. */
 export function sectionsFor(persona: AdminPersona): Section[] {
   const allowed = SECTION_ACCESS[persona];
   return SECTIONS.filter((section) => allowed.includes(section.id));
+}
+
+/**
+ * Where this persona's nav row into a section actually goes.
+ *
+ * A section they only hold part of has to open at the part they hold: IT's
+ * System Settings row points at the audit log, because the section root is a
+ * screen the gate would turn them straight back out of.
+ */
+export function navHref(persona: AdminPersona, section: Section, schoolId: string | null): string {
+  return SECTION_LIMITS[persona]?.[section.id]?.[0] ?? sectionHref(section, schoolId);
 }
 
 /**
@@ -81,7 +114,7 @@ export function sectionsFor(persona: AdminPersona): Section[] {
  */
 export function personaLandingHref(persona: AdminPersona, schoolId: string | null): string {
   const first = sectionsFor(persona)[0];
-  return first ? sectionHref(first, schoolId) : "/";
+  return first ? navHref(persona, first, schoolId) : "/";
 }
 
 /**
@@ -103,9 +136,13 @@ export function sectionForPath(pathname: string): SectionId {
   return match?.id ?? "home";
 }
 
-/** Whether a path sits inside a section this persona holds. */
+/** Whether a path sits inside a section — and a part of it — this persona holds. */
 export function canReachPath(persona: AdminPersona, pathname: string): boolean {
-  return SECTION_ACCESS[persona].includes(sectionForPath(pathname));
+  const section = sectionForPath(pathname);
+  if (!SECTION_ACCESS[persona].includes(section)) return false;
+
+  const limits = SECTION_LIMITS[persona]?.[section];
+  return !limits || limits.some((prefix) => pathname.startsWith(prefix));
 }
 
 /**

@@ -172,7 +172,7 @@ export default function PendingInvitationsPage() {
                     <td>{user.name}</td>
                     <td>{user.email}</td>
                     <td>
-                      <AdminRoleBadges roles={user.roles} />
+                      <AdminRoleBadges roles={user.roles} access={user.access} />
                     </td>
                     <td>{scopeLabel(user.scope)}</td>
                     <td>{user.invitedBy}</td>

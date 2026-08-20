@@ -5,12 +5,12 @@ import { schools } from "@/lib/data/schools";
 import {
   ADMIN_ROLE_LABELS,
   INSTITUTIONAL_DOMAINS_LABEL,
-  defaultRolePermission,
   isEmailShaped,
   isInstitutionalEmail,
+  fullAccess,
   newAdminUserId,
+  presetAccess,
   type AdminRole,
-  type AdminRoleAssignment,
   type AdminUser
 } from "@/lib/data/adminUsers";
 import { ADMIN_ROLE_LABEL } from "@/lib/nav";
@@ -20,12 +20,19 @@ import { Button } from "@/components/base/buttons/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { InstitutionalEmailDialog } from "./InstitutionalEmailDialog";
 
+/* The roles a sheet may name, including what they were called before: a file
+   written against the old role names still loads, and lands on the role that
+   replaced it rather than being skipped as unrecognised. */
 const ROLE_KEYS: Record<string, AdminRole> = {
+  super_admin: "super_admin",
+  "super admin": "super_admin",
+  school_admin: "school_admin",
+  "school admin": "school_admin",
   leadership: "leadership",
-  portal_administrator: "portal_administrator",
-  "portal administrator": "portal_administrator",
-  it_administrator: "it_administrator",
-  "it administrator": "it_administrator"
+  portal_administrator: "school_admin",
+  "portal administrator": "school_admin",
+  it_administrator: "super_admin",
+  "it administrator": "super_admin"
 };
 
 const SAMPLE_CSV =
@@ -36,18 +43,15 @@ const SAMPLE_CSV =
 /**
  * A role name, and nothing else.
  *
- * `it_administrator:view` used to be accepted, back when an account could hold
- * a role at a level of its own. The level now belongs to the role — see
- * FIXED_ROLE_PERMISSION — so a suffix is still read and still ignored rather
- * than failing the row: a sheet written last term should import, and it would
- * be worse to accept it and quietly grant something it did not ask for.
+ * `it_administrator:view` used to be accepted, back when a role carried a level.
+ * Access is now a grid on the account, seeded from the roles named here — so a
+ * suffix is read and ignored rather than failing the row. A bulk upload grants
+ * exactly what the roles grant; anything narrower is a per-person decision, and
+ * a spreadsheet is not where those get made.
  */
-function parseRoleEntry(raw: string): AdminRoleAssignment | null {
+function parseRoleEntry(raw: string): AdminRole | null {
   const [roleRaw] = raw.split(":").map((part) => part.trim());
-  const role = ROLE_KEYS[roleRaw];
-  if (!role) return null;
-
-  return { role, permission: defaultRolePermission(role) };
+  return ROLE_KEYS[roleRaw] ?? null;
 }
 
 type ParsedRow = {
@@ -107,7 +111,7 @@ function toAdminUser(row: Record<string, string>, line: number): ParsedRow {
   if (roles.length === 0 || roles.some((role) => !role)) {
     return {
       line,
-      error: `roles must be one or more of ${Object.values(ADMIN_ROLE_LABELS).join(", ")}, separated by ";", each optionally suffixed ":view" or ":edit"`
+      error: `roles must be one or more of ${Object.values(ADMIN_ROLE_LABELS).join(", ")}, separated by ";"`
     };
   }
 
@@ -124,7 +128,10 @@ function toAdminUser(row: Record<string, string>, line: number): ParsedRow {
       id: `${newAdminUserId(name)}-${line}`,
       name,
       email,
-      roles: roles as AdminRoleAssignment[],
+      roles: roles as AdminRole[],
+      /* The roles' own grid, exactly. A bulk upload is the same grant the role
+         defines; narrowing one person is done on that person. */
+      access: fullAccess(presetAccess(roles as AdminRole[])),
       scope,
       status: "Pending Invite",
       lastLogin: null,

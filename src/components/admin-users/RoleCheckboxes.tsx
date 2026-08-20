@@ -3,79 +3,62 @@
 import {
   ADMIN_ROLE_LABELS,
   ADMIN_ROLE_ORDER,
-  defaultRolePermission,
-  findRoleAssignment,
-  type AdminRole,
-  type AdminRoleAssignment
+  ROLE_PRESETS,
+  type AdminRole
 } from "@/lib/data/adminUsers";
-import { ROLE_LEVEL_LABELS, ROLE_PERMISSIONS } from "@/lib/data/rolePermissions";
-import { SECTIONS } from "@/lib/nav";
-
-/** "Home, Goals and 3 more" — what the role opens, without a wall of chips. */
-function sectionSummary(role: AdminRole): string {
-  const labels = SECTIONS.filter((section) =>
-    ROLE_PERMISSIONS[role].sections.includes(section.id)
-  ).map((section) => section.label);
-
-  if (labels.length === 0) return "No sections";
-  if (labels.length <= 3) return labels.join(", ");
-  return `${labels.slice(0, 2).join(", ")} and ${labels.length - 2} more`;
-}
 
 /**
- * Roles are a checkbox group, not a dropdown — an admin account can hold more
- * than one at once (a principal who is mostly Leadership but also keeps the
- * portal's goals current), and a single-select combobox cannot express that.
+ * Which roles an account holds.
  *
- * Each role states what it grants, because that is the decision being made:
- * ticking a box here is what someone can open on Monday, and an admin should
- * not have to hold three role definitions in their head to send an invitation.
+ * A checkbox group, not a dropdown: an account can hold more than one at once —
+ * a principal who reads the district's reporting and administers their own
+ * school — and a single-select cannot express that.
  *
- * There is no permission control any more. The level belongs to the role, not
- * to the account holding it — see FIXED_ROLE_PERMISSION — so it is stated
- * beside the name rather than offered as a choice that has one answer.
+ * Ticking one fills the access grid below with that role's levels. It is a
+ * starting point and says so, because the grid beneath is what actually gets
+ * saved and can differ from any role in the list.
+ *
+ * `grantable` is what the person doing the granting is allowed to hand out. A
+ * School Admin cannot create a Super Admin, so that row is not offered — absent
+ * rather than disabled, since it is not a thing they can ask for.
  */
 export function RoleCheckboxes({
   value,
   onChange,
+  grantable = ADMIN_ROLE_ORDER,
   legend = "Roles",
   error
 }: {
-  value: AdminRoleAssignment[];
-  onChange: (roles: AdminRoleAssignment[]) => void;
+  value: AdminRole[];
+  onChange: (roles: AdminRole[]) => void;
+  grantable?: AdminRole[];
   legend?: string;
   error?: string;
 }) {
-  const toggle = (role: AdminRole) => {
+  const toggle = (role: AdminRole) =>
     onChange(
-      findRoleAssignment(value, role)
-        ? value.filter((entry) => entry.role !== role)
-        : [...value, { role, permission: defaultRolePermission(role) }]
+      value.includes(role)
+        ? value.filter((entry) => entry !== role)
+        : ADMIN_ROLE_ORDER.filter((entry) => entry === role || value.includes(entry))
     );
-  };
 
   return (
     <fieldset className="sf-checkbox-group" aria-describedby={error ? "role-group-error" : undefined}>
       <legend>{legend}</legend>
 
-      {ADMIN_ROLE_ORDER.map((role) => {
-        const assignment = findRoleAssignment(value, role);
-        const permission = ROLE_PERMISSIONS[role];
-
-        return (
-          <div className="sf-role-option" key={role}>
-            <label className="sf-checkbox-option">
-              <input type="checkbox" checked={Boolean(assignment)} onChange={() => toggle(role)} />
-              <span>{ADMIN_ROLE_LABELS[role]}</span>
-              <span className="sf-role-fixed-note">{ROLE_LEVEL_LABELS[permission.level]}</span>
-            </label>
-
-            {/* What the tick actually hands over. Stated for every role, not
-                only the checked one: choosing between them is the point. */}
-            <p className="sf-role-grant">{sectionSummary(role)}</p>
-          </div>
-        );
-      })}
+      {ADMIN_ROLE_ORDER.filter((role) => grantable.includes(role)).map((role) => (
+        <div className="sf-role-option" key={role}>
+          <label className="sf-checkbox-option">
+            <input
+              type="checkbox"
+              checked={value.includes(role)}
+              onChange={() => toggle(role)}
+            />
+            <span>{ADMIN_ROLE_LABELS[role]}</span>
+          </label>
+          <p className="sf-role-grant">{ROLE_PRESETS[role].purpose}</p>
+        </div>
+      ))}
 
       {error ? (
         <p className="sf-field-error" id="role-group-error">

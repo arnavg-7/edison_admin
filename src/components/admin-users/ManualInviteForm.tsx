@@ -3,18 +3,24 @@
 import { useState } from "react";
 import {
   INSTITUTIONAL_DOMAINS_LABEL,
+  SECTION_LABELS,
   accessSummary,
+  fullAccess,
   isEmailShaped,
   isInstitutionalEmail,
+  matchesPreset,
   newAdminUserId,
-  type AdminRoleAssignment,
+  presetAccess,
+  type AdminRole,
   type AdminScope,
-  type AdminUser
+  type AdminUser,
+  type SectionAccessMap
 } from "@/lib/data/adminUsers";
 import { ADMIN_ROLE_LABEL } from "@/lib/nav";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MailAdd01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/base/buttons/button";
+import { AccessGrid } from "./AccessGrid";
 import { RoleCheckboxes } from "./RoleCheckboxes";
 import { ScopeSelect } from "./ScopeSelect";
 import { InstitutionalEmailDialog } from "./InstitutionalEmailDialog";
@@ -27,16 +33,28 @@ import { InstitutionalEmailDialog } from "./InstitutionalEmailDialog";
  */
 export function ManualInviteForm({
   onBack,
-  onInvite
+  onInvite,
+  grantable
 }: {
   onBack: () => void;
   onInvite: (user: AdminUser) => void;
+  /** What the person sending this invite is allowed to hand out. */
+  grantable?: AdminRole[];
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [roles, setRoles] = useState<AdminRoleAssignment[]>([]);
+  const [roles, setRoles] = useState<AdminRole[]>([]);
+  const [access, setAccess] = useState<SectionAccessMap>({});
   const [scope, setScope] = useState<AdminScope>({ type: "district" });
   const [rejectedEmail, setRejectedEmail] = useState<string | null>(null);
+
+  /* Changing the roles refills the grid. Anything already adjusted goes with
+     it, which is the honest behaviour: the levels on screen belonged to the
+     roles that were ticked, and those are no longer the roles. */
+  const setRolesAndReset = (next: AdminRole[]) => {
+    setRoles(next);
+    setAccess(fullAccess(presetAccess(next)));
+  };
 
   const hasRoles = roles.length > 0;
   /* The institutional-domain rule is deliberately not folded in here: a
@@ -44,7 +62,7 @@ export function ManualInviteForm({
      exactly the case that needs explaining, so Send stays live and the popup
      does the explaining. */
   const canSave = name.trim() !== "" && isEmailShaped(email) && hasRoles;
-  const summary = accessSummary(name, roles);
+  const summary = accessSummary(name, access, SECTION_LABELS);
 
   const send = () => {
     if (!canSave) return;
@@ -59,6 +77,7 @@ export function ManualInviteForm({
       name: name.trim(),
       email: email.trim(),
       roles,
+      access: fullAccess(access),
       scope,
       status: "Pending Invite",
       lastLogin: null,
@@ -97,7 +116,8 @@ export function ManualInviteForm({
 
       <RoleCheckboxes
         value={roles}
-        onChange={setRoles}
+        onChange={setRolesAndReset}
+        grantable={grantable}
         error={hasRoles ? undefined : "Select at least one role"}
       />
 
@@ -107,6 +127,18 @@ export function ManualInviteForm({
         <span>Scope</span>
         <ScopeSelect value={scope} onChange={setScope} />
       </label>
+
+      <div className="sf-field">
+        <span>Access</span>
+        <AccessGrid value={access} onChange={setAccess} disabled={!hasRoles} />
+        <span className="sf-field-hint">
+          {hasRoles
+            ? matchesPreset(roles, access)
+              ? "As the role grants it. Change any row to give this person something different."
+              : "Adjusted for this person — no longer exactly what the role grants."
+            : "Pick a role above to fill this in."}
+        </span>
+      </div>
 
       <p className="sf-panel-note" aria-live="polite">
         {hasRoles ? `${summary} ` : ""}

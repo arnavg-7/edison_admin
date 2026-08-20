@@ -3,7 +3,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
   adminUsers as seededAdminUsers,
-  normalizeRoleAssignments,
+  fullAccess,
+  normalizeAccess,
+  normalizeRoles,
+  presetAccess,
   type AdminUser
 } from "@/lib/data/adminUsers";
 
@@ -39,7 +42,18 @@ function readStorage(): PersistedState {
     // Accounts stored before roles carried a permission level are upgraded on
     // read rather than dropped, so an existing session keeps its users.
     return {
-      adminUsers: users.map((user) => ({ ...user, roles: normalizeRoleAssignments(user.roles) })),
+      /* Roles and the grid are both normalised on the way in: an account stored
+         under the old role names keeps its access, and one stored before grids
+         existed gets the one its roles imply. */
+      adminUsers: users.map((user) => {
+        const roles = normalizeRoles(user.roles);
+        const stored = normalizeAccess((user as { access?: unknown }).access);
+        return {
+          ...user,
+          roles,
+          access: Object.keys(stored).length > 0 ? fullAccess(stored) : fullAccess(presetAccess(roles))
+        };
+      }),
       require2fa
     };
   } catch {

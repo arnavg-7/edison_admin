@@ -4,103 +4,137 @@
 // the portal. Regular student/faculty accounts stay on Student & Faculty 360
 // and never appear here unless someone deliberately adds them as an admin too.
 
+import { SECTIONS, type SectionId } from "@/lib/nav";
 import { schools } from "./schools";
 import type { StatusTone } from "./types";
 
-export type AdminRole = "leadership" | "portal_administrator" | "it_administrator";
+/**
+ * The three roles this portal grants.
+ *
+ * Super Admin and School Admin are the same job at two reaches — the district's
+ * or one school's — which is why they are two roles and not one role plus a
+ * setting: what a School Admin may hand out is narrower than what they hold,
+ * and that is a property of the role rather than of the data they see.
+ *
+ * IT is not here. It is the team who runs this screen, not something assigned
+ * on it; an IT person holds Super Admin like anyone else who administers the
+ * district. The consequence is stated where it bites: no role grants the audit
+ * log on its own — see the note on the IT persona in nav.ts.
+ */
+export type AdminRole = "super_admin" | "school_admin" | "leadership";
 
 export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
-  it_administrator: "IT / Systems Administrator",
-  portal_administrator: "Portal / Program Administrator",
+  super_admin: "Super Admin",
+  school_admin: "School Admin",
   leadership: "District & School Leadership"
 };
 
 /** For badges and table cells, where the full name does not fit. */
 export const ADMIN_ROLE_SHORT_LABELS: Record<AdminRole, string> = {
-  it_administrator: "IT",
-  portal_administrator: "Portal Admin",
+  super_admin: "Super Admin",
+  school_admin: "School Admin",
   leadership: "Leadership"
 };
 
-/** IT Administrator first — the role that owns this screen. */
-export const ADMIN_ROLE_ORDER: AdminRole[] = ["it_administrator", "portal_administrator", "leadership"];
-
 /**
- * Permission level, held per role rather than per account: someone can be a
- * view-only IT Administrator and an editing Portal Administrator at the same
- * time, so a single boolean on the user can't express what they're allowed to do.
+ * Roles renamed on the way to the three above, so an account already in
+ * localStorage keeps the access it was granted rather than losing its role and
+ * quietly becoming an account with none.
  */
-export type AdminPermission = "view" | "edit";
-
-export const ADMIN_PERMISSION_LABELS: Record<AdminPermission, string> = {
-  view: "View only",
-  edit: "Can edit"
+const LEGACY_ROLE_NAMES: Record<string, AdminRole> = {
+  it_administrator: "super_admin",
+  portal_administrator: "school_admin",
+  leadership: "leadership"
 };
 
+/** Widest reach first, which is also the order they are granted in. */
+export const ADMIN_ROLE_ORDER: AdminRole[] = ["super_admin", "school_admin", "leadership"];
+
+/** Roles a School Admin may hand out: their own, and nothing above it. */
+export const SCHOOL_ADMIN_GRANTABLE: AdminRole[] = ["school_admin"];
+
 /**
- * Every role's level, fixed by the role rather than chosen per account.
+ * What an account may do with one section.
  *
- * The personas brief settles all three: Leadership is a read-only audience,
- * and the other two have full read and write on what they own. Offering a
- * per-account level would let an admin create a view-only Portal Administrator,
- * which is not one of the three jobs — it is a fourth, with nobody accountable
- * for what it cannot do.
- *
- * Kept as a map rather than folded into the assignment shape so accounts
- * already stored with a level still normalise, and so the source stays one
- * table: ROLE_PERMISSIONS in rolePermissions.ts, which this mirrors.
+ * The level is per section and per account, not per role: the role picks a
+ * sensible starting grid and the person granting access adjusts it for the one
+ * person in front of them. A principal who reads the district's reporting but
+ * edits only their own school's goals is one account, not two roles.
  */
-export const FIXED_ROLE_PERMISSION: Partial<Record<AdminRole, AdminPermission>> = {
-  leadership: "view",
-  portal_administrator: "edit",
-  it_administrator: "edit"
+export type SectionLevel = "none" | "view" | "edit";
+
+export const SECTION_LEVEL_LABELS: Record<SectionLevel, string> = {
+  none: "No access",
+  view: "View",
+  edit: "Edit"
 };
 
-export type AdminRoleAssignment = { role: AdminRole; permission: AdminPermission };
+export const SECTION_LEVEL_ORDER: SectionLevel[] = ["none", "view", "edit"];
 
-/** New assignments default to "Can edit" except where the role is pinned to view. */
-export function defaultRolePermission(role: AdminRole): AdminPermission {
-  return FIXED_ROLE_PERMISSION[role] ?? "edit";
-}
+/** Section id → level. Sections absent from the map are "none". */
+export type SectionAccessMap = Record<string, SectionLevel>;
 
-export function findRoleAssignment(
-  assignments: AdminRoleAssignment[],
-  role: AdminRole
-): AdminRoleAssignment | undefined {
-  return assignments.find((entry) => entry.role === role);
-}
-
-export function roleAssignmentsInclude(assignments: AdminRoleAssignment[], role: AdminRole): boolean {
-  return assignments.some((entry) => entry.role === role);
+export function roleAssignmentsInclude(roles: AdminRole[], role: AdminRole): boolean {
+  return roles.includes(role);
 }
 
 /**
- * Accepts either the current `{ role, permission }` shape or the bare
- * `AdminRole[]` this used to be — accounts already persisted in localStorage
- * (and CSV rows that omit a level) predate per-role permissions.
+ * Accepts the bare `AdminRole[]` this holds now, the `{ role, permission }[]`
+ * it held while levels were per role, and the older names for the roles
+ * themselves. An account already in storage keeps the access it was granted.
  */
-export function normalizeRoleAssignments(roles: unknown): AdminRoleAssignment[] {
+export function normalizeRoles(roles: unknown): AdminRole[] {
   if (!Array.isArray(roles)) return [];
 
-  return roles.flatMap((entry) => {
-    if (typeof entry === "string") {
-      const role = entry as AdminRole;
-      return ADMIN_ROLE_ORDER.includes(role) ? [{ role, permission: defaultRolePermission(role) }] : [];
-    }
-
-    const candidate = entry as Partial<AdminRoleAssignment>;
-    if (!candidate?.role || !ADMIN_ROLE_ORDER.includes(candidate.role)) return [];
-
-    return [
-      {
-        role: candidate.role,
-        // A fixed role ignores whatever was stored — Leadership can't be edit.
-        permission:
-          FIXED_ROLE_PERMISSION[candidate.role] ??
-          (candidate.permission === "view" ? "view" : "edit")
-      }
-    ];
+  const named = roles.flatMap((entry) => {
+    const raw =
+      typeof entry === "string"
+        ? entry
+        : ((entry as { role?: string })?.role ?? "");
+    const role = LEGACY_ROLE_NAMES[raw];
+    return role ? [role] : [];
   });
+
+  // Two legacy roles can map to the same one, and holding it twice is not a
+  // different amount of access.
+  return ADMIN_ROLE_ORDER.filter((role) => named.includes(role));
+}
+
+/**
+ * The grid as stored, with anything unreadable dropped rather than guessed.
+ *
+ * Both halves are checked: a level this build does not recognise, and a section
+ * that no longer exists. A stale section id would otherwise sit in the grid
+ * forever — never rendered, never removed, and counted by anything that asks
+ * how much access an account has.
+ */
+export function normalizeAccess(access: unknown): SectionAccessMap {
+  if (!access || typeof access !== "object") return {};
+
+  const known = new Set<string>(SECTIONS.map((section) => section.id));
+
+  return Object.entries(access as Record<string, unknown>).reduce<SectionAccessMap>(
+    (map, [section, level]) => {
+      if (!known.has(section)) return map;
+      if (level === "none" || level === "view" || level === "edit") map[section] = level;
+      return map;
+    },
+    {}
+  );
+}
+
+/** The sections an account can open at all, in whatever order the map has. */
+export function grantedSections(access: SectionAccessMap): string[] {
+  return Object.entries(access)
+    .filter(([, level]) => level !== "none")
+    .map(([section]) => section);
+}
+
+/** "Edit" where the account can change anything at all, else "View". */
+export function highestLevel(access: SectionAccessMap): SectionLevel {
+  const levels = Object.values(access);
+  if (levels.includes("edit")) return "edit";
+  return levels.includes("view") ? "view" : "none";
 }
 
 function formatList(items: string[]): string {
@@ -110,29 +144,148 @@ function formatList(items: string[]): string {
 }
 
 /**
- * Plain-language summary of what an account can actually do, e.g. "Dana will
- * have edit access to Portal Administrator and view-only access to Leadership."
- * Returns "" when nothing is assigned, so callers can fall back to a prompt.
+ * Plain-language summary of what an account can actually do, read off the grid
+ * rather than off the roles: the grid is what was saved, and after any
+ * adjustment it is the only thing that still describes them accurately.
+ *
+ * Takes the section labels rather than importing them, so this module stays
+ * free of the nav it would otherwise depend on.
+ *
+ * Returns "" when nothing is granted, so callers can fall back to a prompt.
  */
-export function accessSummary(name: string, assignments: AdminRoleAssignment[]): string {
-  if (assignments.length === 0) return "";
+export function accessSummary(
+  name: string,
+  access: SectionAccessMap,
+  sectionLabels: Record<string, string>
+): string {
+  const label = (section: string) => sectionLabels[section] ?? section;
+  const at = (level: SectionLevel) =>
+    Object.entries(access)
+      .filter(([, value]) => value === level)
+      .map(([section]) => label(section));
 
-  const ordered = ADMIN_ROLE_ORDER.flatMap((role) => {
-    const assignment = findRoleAssignment(assignments, role);
-    return assignment ? [assignment] : [];
-  });
+  const clauses = [
+    ["edit", at("edit")] as const,
+    ["view", at("view")] as const
+  ].flatMap(([level, sections]) =>
+    sections.length === 0
+      ? []
+      : [`${level === "edit" ? "edit" : "view-only"} access to ${formatList(sections)}`]
+  );
 
-  const clauses = (["edit", "view"] as AdminPermission[]).flatMap((permission) => {
-    const roles = ordered
-      .filter((entry) => entry.permission === permission)
-      .map((entry) => ADMIN_ROLE_LABELS[entry.role]);
-    if (roles.length === 0) return [];
-    return [`${permission === "edit" ? "edit" : "view-only"} access to ${formatList(roles)}`];
-  });
+  if (clauses.length === 0) return "";
 
   const who = name.trim() || "This person";
   return `${who} will have ${formatList(clauses)}.`;
 }
+
+/**
+ * What each role is for, and the access it starts an account with.
+ *
+ * A role here is a preset, not a cage. Granting one fills the account's grid
+ * with these levels; whoever is granting it can then change any row before
+ * saving, and the grid is what the account actually holds. That is the
+ * difference between a role list and an access control, and it is why the two
+ * can legitimately disagree for one person.
+ *
+ * Reporting is `view` even for a Super Admin: the section is read-only by
+ * construction — every figure on it comes from a Salesforce report — so `edit`
+ * would be a level the screen has no way to honour.
+ *
+ * TODO: replace with the real Admin DB role contract. The shape is what that
+ * table needs: a row per role, a level per section.
+ */
+
+export type RolePreset = {
+  /** The job, in one line. */
+  purpose: string;
+  /** Who does it, day to day. */
+  who: string;
+  /** Level per section. Anything absent is "none". */
+  access: SectionAccessMap;
+  /** Stated as out of reach, whether or not this portal has a screen for it. */
+  excluded: string[];
+  /** What this role can hand out, for a role that grants access itself. */
+  grants?: AdminRole[];
+  /** Asked for by the brief, with no section here to point at. */
+  notBuilt?: string[];
+};
+
+/** Every section at one level — the shorthand the two admin roles are built on. */
+function everySection(level: SectionLevel, overrides: SectionAccessMap = {}): SectionAccessMap {
+  return SECTIONS.reduce<SectionAccessMap>((map, section) => {
+    map[section.id] = overrides[section.id] ?? level;
+    return map;
+  }, {});
+}
+
+export const ROLE_PRESETS: Record<AdminRole, RolePreset> = {
+  super_admin: {
+    purpose: "Runs the portal for the whole district, and decides who else can.",
+    who: "District administration, or Ken42 technical ops.",
+    access: everySection("edit", { reporting: "view" }),
+    excluded: [],
+    grants: ADMIN_ROLE_ORDER
+  },
+  school_admin: {
+    purpose: "The same job at one school: its configuration, its goals, its people.",
+    who: "A principal's office, or whoever administers that school day to day.",
+    /* Every section, like a Super Admin — the narrowing is the account's scope,
+       not its sections. What is genuinely narrower is what they may hand out:
+       another School Admin for their own school, and nothing above it. */
+    access: everySection("edit", { reporting: "view" }),
+    excluded: ["Granting Super Admin", "Granting Leadership", "Other schools' accounts"],
+    grants: ["school_admin"]
+  },
+  leadership: {
+    purpose: "A fast read on how the platform and their students and faculty are doing.",
+    who: "Superintendent, principal, assistant principal.",
+    access: { reporting: "view" },
+    excluded: [
+      "Portal configuration",
+      "Goals configuration",
+      "Alerts configuration",
+      "System Settings",
+      "User Management"
+    ]
+  }
+};
+
+/** The grid a set of roles starts an account with — the widest level wins. */
+export function presetAccess(roles: AdminRole[]): SectionAccessMap {
+  const rank: Record<SectionLevel, number> = { none: 0, view: 1, edit: 2 };
+
+  return roles.reduce<SectionAccessMap>((map, role) => {
+    for (const [section, level] of Object.entries(ROLE_PRESETS[role].access)) {
+      if (rank[level] > rank[map[section] ?? "none"]) map[section] = level;
+    }
+    return map;
+  }, {});
+}
+
+/** Filled out for every section, so a grid never has a row with no answer. */
+export function fullAccess(access: SectionAccessMap): SectionAccessMap {
+  return SECTIONS.reduce<SectionAccessMap>((map, section) => {
+    map[section.id] = access[section.id] ?? "none";
+    return map;
+  }, {});
+}
+
+/** Whether the grid still matches what its roles would have given it. */
+export function matchesPreset(roles: AdminRole[], access: SectionAccessMap): boolean {
+  const preset = fullAccess(presetAccess(roles));
+  const current = fullAccess(access);
+  return SECTIONS.every((section) => preset[section.id] === current[section.id]);
+}
+
+/** Section id → label, for the screens that summarise a grid in words. */
+export const SECTION_LABELS: Record<SectionId, string> = SECTIONS.reduce(
+  (map, section) => {
+    map[section.id] = section.label;
+    return map;
+  },
+  {} as Record<SectionId, string>
+);
 
 export type AdminScope = { type: "district" } | { type: "school"; schoolId: string };
 
@@ -167,8 +320,16 @@ export type AdminUser = {
   id: string;
   name: string;
   email: string;
-  /** One entry per role held, each with its own permission level. */
-  roles: AdminRoleAssignment[];
+  /** The roles granted, which seed the grid below and label the account. */
+  roles: AdminRole[];
+  /**
+   * What this account may actually do, section by section.
+   *
+   * Seeded from the roles when access is granted, then adjustable for this one
+   * person — so it can differ from what the roles imply, and it, not the roles,
+   * is what the portal should read.
+   */
+  access: SectionAccessMap;
   /** Role-independent: scope applies across every role the account holds. */
   scope: AdminScope;
   status: AdminUserStatus;
@@ -228,12 +389,19 @@ export function newAdminUserId(name: string): string {
   return `${slug || "admin"}-${Date.now()}`;
 }
 
-export const adminUsers: AdminUser[] = [
+type AdminUserSeed = Omit<AdminUser, "access">;
+
+/**
+ * Seeded accounts carry roles only. Their grid is what those roles grant —
+ * built here rather than written out, so a seed cannot drift from the preset
+ * it is supposed to be an example of.
+ */
+const seededAccounts: AdminUserSeed[] = [
   {
     id: "priya-nair-admin",
     name: "Priya Nair",
     email: "pnair@edison.example.org",
-    roles: [{ role: "it_administrator", permission: "edit" }],
+    roles: ["super_admin"],
     scope: { type: "district" },
     status: "Active",
     lastLogin: "2026-07-17T12:05:00-04:00",
@@ -244,10 +412,7 @@ export const adminUsers: AdminUser[] = [
     id: "dana-whitfield-admin",
     name: "Dana Whitfield",
     email: "dwhitfield@edison.example.org",
-    roles: [
-      { role: "leadership", permission: "view" },
-      { role: "portal_administrator", permission: "edit" }
-    ],
+    roles: ["leadership", "school_admin"],
     scope: { type: "school", schoolId: "edison-hs" },
     status: "Active",
     lastLogin: "2026-07-17T09:14:00-04:00",
@@ -258,7 +423,7 @@ export const adminUsers: AdminUser[] = [
     id: "marcus-reyes-admin",
     name: "Marcus Reyes",
     email: "mreyes@edison.example.org",
-    roles: [{ role: "leadership", permission: "view" }],
+    roles: ["leadership"],
     scope: { type: "school", schoolId: "edison-ms" },
     status: "Active",
     lastLogin: "2026-07-16T16:42:00-04:00",
@@ -269,8 +434,8 @@ export const adminUsers: AdminUser[] = [
     id: "sam-okonkwo-admin",
     name: "Sam Okonkwo",
     email: "sokonkwo@edison.example.org",
-    roles: [{ role: "portal_administrator", permission: "view" }],
-    scope: { type: "district" },
+    roles: ["school_admin"],
+    scope: { type: "school", schoolId: "lincoln-es" },
     status: "Inactive",
     lastLogin: "2026-04-02T11:20:00-04:00",
     dateAdded: "2025-08-20T14:00:00-04:00",
@@ -280,7 +445,7 @@ export const adminUsers: AdminUser[] = [
     id: "alicia-gomez-admin",
     name: "Alicia Gomez",
     email: "agomez@edison.example.org",
-    roles: [{ role: "it_administrator", permission: "edit" }],
+    roles: ["super_admin"],
     scope: { type: "district" },
     status: "Pending Invite",
     lastLogin: null,
@@ -291,7 +456,7 @@ export const adminUsers: AdminUser[] = [
     id: "tom-bradley-admin",
     name: "Tom Bradley",
     email: "tbradley@edison.example.org",
-    roles: [{ role: "portal_administrator", permission: "edit" }],
+    roles: ["school_admin"],
     scope: { type: "school", schoolId: "james-madison-intermediate" },
     status: "Pending Invite",
     lastLogin: null,
@@ -302,7 +467,7 @@ export const adminUsers: AdminUser[] = [
     id: "erin-castellano-admin",
     name: "Erin Castellano",
     email: "ecastellano@edison.example.org",
-    roles: [{ role: "portal_administrator", permission: "edit" }],
+    roles: ["school_admin"],
     scope: { type: "school", schoolId: "edison-ms" },
     status: "Revoked",
     revokedFrom: "Active",
@@ -311,3 +476,8 @@ export const adminUsers: AdminUser[] = [
     invitedBy: "Priya Nair"
   }
 ];
+
+export const adminUsers: AdminUser[] = seededAccounts.map((seed) => ({
+  ...seed,
+  access: fullAccess(presetAccess(seed.roles))
+}));

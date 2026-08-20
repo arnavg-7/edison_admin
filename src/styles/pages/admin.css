@@ -1901,3 +1901,90 @@
   text-decoration: line-through;
   text-decoration-color: var(--sf-card-border);
 }
+
+/* Access grid ------------------------------------------------------------ */
+
+/* A row per section, its three levels on the right. Not a table: there is one
+   column of choices, and a table's header would have to name it twice. */
+.sf-access-grid {
+  display: grid;
+  gap: 2px;
+  border: 1px solid var(--sf-card-border);
+  border-radius: 14px;
+  padding: 6px;
+  background: var(--sf-plot);
+}
+
+.sf-access-grid[data-disabled] {
+  opacity: 0.55;
+}
+
+.sf-access-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 8px;
+  border-radius: 10px;
+  min-width: 0;
+}
+
+.sf-access-row:hover {
+  background: var(--sf-card);
+}
+
+.sf-access-section {
+  font-size: 13px;
+  color: var(--sf-text);
+  overflow-wrap: anywhere;
+}
+
+.sf-access-levels {
+  display: inline-flex;
+  flex: 0 0 auto;
+  background: var(--sf-card);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius-control);
+  padding: 2px;
+  gap: 2px;
+}
+
+.sf-access-choice {
+  appearance: none;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  padding: 3px 9px;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--sf-text-muted);
+  cursor: pointer;
+}
+
+.sf-access-choice:hover:not(:disabled) {
+  color: var(--sf-text);
+}
+
+.sf-access-choice:disabled {
+  cursor: not-allowed;
+}
+
+/* The active level carries its meaning in weight and ground, not in hue alone:
+   No access, View and Edit are three words before they are three shades. */
+.sf-access-choice.is-active {
+  background: var(--sf-neutral-bg);
+  color: var(--sf-text);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgb(19 26 43 / 12%);
+}
+
+.sf-access-choice.is-active[data-level="edit"] {
+  background: var(--sf-ok-bg);
+  color: var(--sf-ok-text);
+}
+
+.sf-access-choice:focus-visible {
+  outline: 2px solid var(--sf-focus);
+  outline-offset: 1px;
+}

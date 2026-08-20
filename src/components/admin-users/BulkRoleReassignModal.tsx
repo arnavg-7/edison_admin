@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { AdminRoleAssignment } from "@/lib/data/adminUsers";
+import { fullAccess, presetAccess, type AdminRole } from "@/lib/data/adminUsers";
 import { useAdminUsers } from "@/lib/admin-users-store";
 import { Modal } from "@/components/shared/Modal";
 import { Button } from "@/components/base/buttons/button";
@@ -22,19 +22,23 @@ export function BulkRoleReassignModal({
   onClose: () => void;
 }) {
   const { updateUsers } = useAdminUsers();
-  const [roles, setRoles] = useState<AdminRoleAssignment[]>([]);
+  const [roles, setRoles] = useState<AdminRole[]>([]);
 
   const apply = () => {
     if (roles.length === 0) return;
-    updateUsers(ids, { roles });
+    /* The roles' grid, applied to everyone selected. A bulk change cannot
+         honour a per-person adjustment — there is no one person — so it says
+         so plainly above rather than quietly keeping stale levels. */
+    updateUsers(ids, { roles, access: fullAccess(presetAccess(roles)) });
     onClose();
   };
 
   return (
     <Modal title={`Reassign role${count === 1 ? "" : "s"} for ${count} user${count === 1 ? "" : "s"}`} onClose={onClose}>
       <p className="sf-panel-note">
-        This replaces every selected account&rsquo;s current role(s) with what you pick below.
-        Each role brings its own access level.
+        This replaces every selected account&rsquo;s current role(s) with what you pick below,
+        and resets their access to what those roles grant &mdash; including anyone whose access
+        was adjusted by hand.
       </p>
 
       <RoleCheckboxes

@@ -4,27 +4,27 @@ import { SECTIONS } from "@/lib/nav";
 import {
   ADMIN_ROLE_LABELS,
   ADMIN_ROLE_ORDER,
-  roleAssignmentsInclude,
+  ROLE_PRESETS,
+  SECTION_LEVEL_LABELS,
   adminUsers as seededAdminUsers,
+  fullAccess,
+  roleAssignmentsInclude,
   type AdminRole
 } from "@/lib/data/adminUsers";
-import { ROLE_LEVEL_LABELS, ROLE_PERMISSIONS } from "@/lib/data/rolePermissions";
 import { useAdminUsers } from "@/lib/admin-users-store";
 import { useMounted } from "@/lib/use-mounted";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 /**
- * The three jobs this portal grants, and what each one gets.
+ * The three roles this portal grants, and the access each one starts with.
  *
- * Reference rather than a form: the roles come from the personas brief and are
- * not something an admin invents on a Tuesday. What this screen is for is the
- * question asked immediately before every invitation — "if I tick Portal
- * Administrator, what have I just given them?" — which was previously answered
- * only by knowing.
+ * Reference, not a form. A role is a preset here: granting it fills an
+ * account's grid with these levels, and whoever grants it can then change any
+ * row for that person before saving. So this screen answers "what am I about to
+ * hand over", and the account itself answers "what did they end up with".
  *
- * One card per role rather than a matrix. A matrix reads across, and the useful
- * reading here is downward: a role is a job, and the sections, the level and
- * the exclusions are three facts about that one job.
+ * A matrix rather than cards: the useful reading is across, because the
+ * decision being made is which of three columns a section should sit in.
  */
 export default function RolesAndPermissionsPage() {
   const { adminUsers: storedAdminUsers } = useAdminUsers();
@@ -33,7 +33,6 @@ export default function RolesAndPermissionsPage() {
   // Seed until this page hydrates — see useMounted.
   const adminUsers = mounted ? storedAdminUsers : seededAdminUsers;
 
-  /** Live accounts holding this role, which is what a change to it would reach. */
   const holders = (role: AdminRole) =>
     adminUsers.filter(
       (user) => user.status === "Active" && roleAssignmentsInclude(user.roles, role)
@@ -42,75 +41,88 @@ export default function RolesAndPermissionsPage() {
   return (
     <>
       <p className="sf-card-hint">
-        An account can hold more than one role, and gets everything its roles grant between them.
-        Scope is separate and set per account: the same role covers the district for one person and
-        a single school for another.
+        Roles are a starting point. Every account keeps its own grid, so one person can hold
+        School Admin and still be view-only somewhere the role would have granted edit &mdash;
+        the account is where that is set, and where it is read back.
       </p>
 
+      <div className="sf-panel">
+        <div className="sf-panel-head">
+          <h2>What each role grants</h2>
+          <span className="sf-panel-note">Applied when the role is granted, then adjustable</span>
+        </div>
+
+        <div className="sf-table-wrap">
+          <table className="sf-table">
+            <thead>
+              <tr>
+                <th scope="col">Section</th>
+                {ADMIN_ROLE_ORDER.map((role) => (
+                  <th key={role} scope="col">
+                    {ADMIN_ROLE_LABELS[role]}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {SECTIONS.map((section) => (
+                <tr key={section.id}>
+                  <td>{section.label}</td>
+                  {ADMIN_ROLE_ORDER.map((role) => {
+                    const level = fullAccess(ROLE_PRESETS[role].access)[section.id];
+                    return (
+                      <td key={role}>
+                        {level === "none" ? (
+                          <span className="list-editor-item-detail">&mdash;</span>
+                        ) : (
+                          <StatusBadge tone={level === "edit" ? "ok" : "neutral"}>
+                            {SECTION_LEVEL_LABELS[level]}
+                          </StatusBadge>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {ADMIN_ROLE_ORDER.map((role) => {
-        const permission = ROLE_PERMISSIONS[role];
-        const granted = SECTIONS.filter((section) => permission.sections.includes(section.id));
+        const preset = ROLE_PRESETS[role];
         const count = holders(role);
 
         return (
           <div className="sf-panel" key={role}>
             <div className="sf-panel-head">
               <h2>{ADMIN_ROLE_LABELS[role]}</h2>
-              <div className="sf-panel-head-end">
-                <StatusBadge tone={permission.level === "read-write" ? "ok" : "neutral"}>
-                  {ROLE_LEVEL_LABELS[permission.level]}
-                </StatusBadge>
-                <span className="sf-panel-note">
-                  {count} {count === 1 ? "account" : "accounts"}
-                </span>
-              </div>
+              <span className="sf-panel-note">
+                {count} {count === 1 ? "account" : "accounts"}
+              </span>
             </div>
 
             <p className="sf-card-hint">
-              {permission.purpose} <span className="sf-role-who">{permission.who}</span>
+              {preset.purpose} <span className="sf-role-who">{preset.who}</span>
             </p>
 
-            <dl className="sf-role-grid">
-              <div>
-                <dt>Can open</dt>
-                <dd>
-                  <ul className="sf-role-chips">
-                    {granted.map((section) => (
-                      <li key={section.id}>{section.label}</li>
-                    ))}
-                  </ul>
-                </dd>
-              </div>
-
-              <div>
-                <dt>No access to</dt>
-                <dd>
-                  <ul className="sf-role-chips is-excluded">
-                    {permission.excluded.map((entry) => (
-                      <li key={entry}>{entry}</li>
-                    ))}
-                  </ul>
-                </dd>
-              </div>
-            </dl>
-
-            {/* Where the brief grants something this portal has no screen for.
-                On the role that was promised it, so the gap is read by whoever
-                is about to hand that role out. */}
-            {permission.notBuilt?.length ? (
+            {preset.grants ? (
               <p className="sf-card-hint">
-                <strong>Not built yet:</strong> {permission.notBuilt.join("; ")}.
+                <strong>Can grant:</strong>{" "}
+                {preset.grants.map((entry) => ADMIN_ROLE_LABELS[entry]).join(", ")}.
               </p>
-            ) : null}
-
-            {/* System Settings is one section holding two jobs' work, and only
-                IT's half is IT's. Said here because the chip above says the
-                section's name, not which half. */}
-            {role === "it_administrator" ? (
+            ) : (
               <p className="sf-card-hint">
-                Within System Settings this role holds the audit log only — grade levels,
-                subjects, the calendar and announcements belong to the Portal Administrator.
+                <strong>Can grant:</strong> nothing &mdash; this role does not open User Management.
               </p>
+            )}
+
+            {preset.excluded.length > 0 ? (
+              <ul className="sf-role-chips is-excluded">
+                {preset.excluded.map((entry) => (
+                  <li key={entry}>{entry}</li>
+                ))}
+              </ul>
             ) : null}
           </div>
         );

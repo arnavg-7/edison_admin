@@ -7,6 +7,8 @@ import { MailAdd01Icon } from "@hugeicons/core-free-icons";
 import { SectionTabs } from "@/components/shared/SectionTabs";
 import { Button } from "@/components/base/buttons/button";
 import { InviteAdminUserModal } from "@/components/admin-users/InviteAdminUserModal";
+import { useAdminScope } from "@/lib/admin-scope";
+import { SCHOOL_ADMIN_GRANTABLE } from "@/lib/data/adminUsers";
 
 const TABS = [
   { label: "All Users", href: "/user-management" },
@@ -14,26 +16,41 @@ const TABS = [
   { label: "Revoked Users", href: "/user-management/revoked" },
   { label: "Inactive Users", href: "/user-management/inactive" },
   { label: "Pending Invitations", href: "/user-management/pending" },
-  /* Last, and the only tab that is not a slice of the account list: it is what
-     those accounts point at, and the thing to read before sending an invite. */
+  /* Faculty hold no admin role, so this is a count rather than a slice of the
+     account list — but it is the other half of "who is on the platform", and
+     an admin looking for that will look here first. */
+  { label: "Faculty Accounts", href: "/user-management/faculty" },
+  /* Last, and about roles rather than people: it is what those accounts point
+     at, and the thing to read before sending an invite. */
   { label: "Roles & Permissions", href: "/user-management/roles" }
 ];
 
 /**
- * Pending Invitations is the one tab that runs its own actions (resend/revoke
- * an invite) rather than the account table, so inviting from there would land
- * the new row on a different tab than the one you're looking at.
+ * Tabs that are not the account table: Pending runs its own actions on invites,
+ * and the last two are a count and a reference. Inviting from any of them would
+ * land the new row on a tab you are not looking at.
  */
-const PENDING_HREF = "/user-management/pending";
+const NO_INVITE_HREFS = [
+  "/user-management/pending",
+  "/user-management/faculty",
+  "/user-management/roles"
+];
 
 /**
- * Owned by the IT Administrator: the small set of people with admin-level
- * access to this portal (Leadership, Portal Administrator, IT Administrator).
- * Separate from Student & Faculty 360, which is the Genesis-synced roster —
- * nothing here syncs in automatically, every account is added on this screen.
+ * Who can sign in to this portal, and what they can do once they have.
+ *
+ * Access control rather than a directory: an account here is a role, a scope
+ * and a per-section grid, and all three are granted on this screen. Separate
+ * from Student & Faculty 360, which is the Genesis-synced roster — nothing here
+ * syncs in, every admin account is created by an invitation.
+ *
+ * A school admin sees their own school's admins and nobody above them; the
+ * district's Super Admins see everyone. That narrowing happens in the list
+ * itself rather than here, so every tab inherits it.
  */
 export default function UserManagementLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { school } = useAdminScope();
   const [isInviting, setIsInviting] = useState(false);
 
   return (
@@ -42,12 +59,13 @@ export default function UserManagementLayout({ children }: { children: React.Rea
         <div>
           <h1 className="sf-page-title">User Management</h1>
           <p className="sf-page-sub">
-            Admin-level portal access: Leadership, Portal Administrator and IT Administrator
-            roles. Student and faculty accounts sync in from Genesis and don&rsquo;t appear here.
+            {school
+              ? `Admin access for ${school.name} — the other people who administer this school, and what each of them can open. Faculty accounts sync in from Genesis and hold no admin role.`
+              : "Admin access to this portal: Super Admin, School Admin and Leadership roles, each granting a set of sections that can be adjusted per person. Faculty accounts sync in from Genesis and hold no admin role."}
           </p>
         </div>
 
-        {pathname !== PENDING_HREF ? (
+        {NO_INVITE_HREFS.includes(pathname) ? null : (
           <Button
             size="sm"
             onClick={() => setIsInviting(true)}
@@ -55,7 +73,7 @@ export default function UserManagementLayout({ children }: { children: React.Rea
           >
             Invite User
           </Button>
-        ) : null}
+        )}
       </div>
 
       <Suspense fallback={null}>
@@ -63,7 +81,12 @@ export default function UserManagementLayout({ children }: { children: React.Rea
         {children}
       </Suspense>
 
-      {isInviting ? <InviteAdminUserModal onClose={() => setIsInviting(false)} /> : null}
+      {isInviting ? (
+        <InviteAdminUserModal
+          grantable={school ? SCHOOL_ADMIN_GRANTABLE : undefined}
+          onClose={() => setIsInviting(false)}
+        />
+      ) : null}
     </section>
   );
 }

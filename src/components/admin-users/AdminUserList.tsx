@@ -13,6 +13,7 @@ import {
   ADMIN_ROLE_ORDER,
   ADMIN_STATUS_LABELS,
   ADMIN_STATUS_TONE,
+  SCHOOL_ADMIN_GRANTABLE,
   adminUsers as seededAdminUsers,
   roleAssignmentsInclude,
   scopeLabel,
@@ -23,6 +24,7 @@ import {
 import { schools } from "@/lib/data/schools";
 import { useAdminUsers } from "@/lib/admin-users-store";
 import { useMounted } from "@/lib/use-mounted";
+import { useAdminScope } from "@/lib/admin-scope";
 import { formatDateTime } from "@/lib/format";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -113,7 +115,32 @@ export function AdminUserList({ status: slice, heading, noun, emptyTitle, emptyM
    * seed until this component has hydrated keeps the first client render
    * identical to the server HTML; the stored accounts appear one render later.
    */
-  const allAdminUsers = mounted ? storedAdminUsers : seededAdminUsers;
+  const stored = mounted ? storedAdminUsers : seededAdminUsers;
+
+  /**
+   * A school admin administers their school, and that includes who else does.
+   *
+   * So the list is their school's accounts, and the roles they can hand out
+   * stop at their own — no Super Admin, no Leadership, and nobody at another
+   * school. It is the same rule the rest of the portal follows for scope, with
+   * one addition: an account that outranks them is not theirs to edit either,
+   * so it is not in the list at all rather than in it and refused.
+   */
+  const { schoolId: scopedSchoolId } = useAdminScope();
+  const grantable = scopedSchoolId ? SCHOOL_ADMIN_GRANTABLE : ADMIN_ROLE_ORDER;
+
+  const allAdminUsers = useMemo(
+    () =>
+      scopedSchoolId
+        ? stored.filter(
+            (user) =>
+              user.scope.type === "school" &&
+              user.scope.schoolId === scopedSchoolId &&
+              user.roles.every((role) => SCHOOL_ADMIN_GRANTABLE.includes(role))
+          )
+        : stored,
+    [scopedSchoolId, stored]
+  );
 
   const [query, setQuery] = useState("");
   const [role, setRole] = useState("all");
@@ -315,7 +342,7 @@ export function AdminUserList({ status: slice, heading, noun, emptyTitle, emptyM
                     <td>{user.name}</td>
                     <td>{user.email}</td>
                     <td>
-                      <AdminRoleBadges roles={user.roles} />
+                      <AdminRoleBadges roles={user.roles} access={user.access} />
                     </td>
                     <td>{scopeLabel(user.scope)}</td>
                     {slice ? null : (
@@ -443,7 +470,11 @@ export function AdminUserList({ status: slice, heading, noun, emptyTitle, emptyM
       </div>
 
       {editingUser ? (
-        <EditAdminUserModal user={editingUser} onClose={() => setEditingUserId(null)} />
+        <EditAdminUserModal
+          user={editingUser}
+          grantable={grantable}
+          onClose={() => setEditingUserId(null)}
+        />
       ) : null}
 
       {isReassigning ? (

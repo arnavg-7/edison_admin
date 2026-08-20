@@ -5,6 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { File01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { useAdminUsers } from "@/lib/admin-users-store";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import type { AdminRole } from "@/lib/data/adminUsers";
 import { ManualInviteForm } from "./ManualInviteForm";
 import { CsvInviteImport } from "./CsvInviteImport";
 
@@ -27,7 +28,14 @@ const DESCRIPTIONS: Record<Step, string> = {
  * Goals' "Set a goal" drawer, so the admin user list stays visible and in
  * place behind it instead of being hidden behind an overlay.
  */
-export function InviteAdminUserModal({ onClose }: { onClose: () => void }) {
+export function InviteAdminUserModal({
+  onClose,
+  grantable
+}: {
+  onClose: () => void;
+  /** Roles the person sending this invite may hand out. */
+  grantable?: AdminRole[];
+}) {
   const { addUser, addUsers } = useAdminUsers();
   const [step, setStep] = useState<Step>("choice");
 
@@ -72,6 +80,7 @@ export function InviteAdminUserModal({ onClose }: { onClose: () => void }) {
             </div>
           ) : step === "manual" ? (
             <ManualInviteForm
+              grantable={grantable}
               onBack={() => setStep("choice")}
               onInvite={(user) => {
                 addUser(user);

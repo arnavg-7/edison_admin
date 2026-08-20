@@ -4,15 +4,21 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   ADMIN_STATUS_LABELS,
+  SECTION_LABELS,
   accessSummary,
-  type AdminRoleAssignment,
+  fullAccess,
+  matchesPreset,
+  presetAccess,
+  type AdminRole,
   type AdminScope,
-  type AdminUser
+  type AdminUser,
+  type SectionAccessMap
 } from "@/lib/data/adminUsers";
 import { useAdminUsers } from "@/lib/admin-users-store";
 import { Modal } from "@/components/shared/Modal";
 import { Button } from "@/components/base/buttons/button";
 import { Switch } from "@/components/ui/switch";
+import { AccessGrid } from "./AccessGrid";
 import { RoleCheckboxes } from "./RoleCheckboxes";
 import { ScopeSelect } from "./ScopeSelect";
 
@@ -24,11 +30,36 @@ import { ScopeSelect } from "./ScopeSelect";
  * this screen a second, divergent copy of history that already lives on
  * Data Privacy & Audit Log.
  */
-export function EditAdminUserModal({ user, onClose }: { user: AdminUser; onClose: () => void }) {
+export function EditAdminUserModal({
+  user,
+  onClose,
+  grantable
+}: {
+  user: AdminUser;
+  onClose: () => void;
+  /** What the person editing is allowed to hand out. */
+  grantable?: AdminRole[];
+}) {
   const { updateUser } = useAdminUsers();
-  const [roles, setRoles] = useState<AdminRoleAssignment[]>(user.roles);
+  const [roles, setRoles] = useState<AdminRole[]>(user.roles);
+  const [access, setAccess] = useState<SectionAccessMap>(fullAccess(user.access));
   const [scope, setScope] = useState<AdminScope>(user.scope);
   const [resetRequested, setResetRequested] = useState(false);
+
+  /* Changing the roles refills the grid — the levels on screen belonged to the
+     roles that were ticked, and those are no longer the roles. */
+  const setRolesAndReset = (next: AdminRole[]) => {
+    setRoles(next);
+    setAccess(fullAccess(presetAccess(next)));
+  };
+
+  /* Nothing here applies until Save. Role, scope and the grid are one change to
+     what somebody can do on Monday, and a control that took effect on click
+     would apply half of it. */
+  const dirty =
+    JSON.stringify(roles) !== JSON.stringify(user.roles) ||
+    JSON.stringify(scope) !== JSON.stringify(user.scope) ||
+    JSON.stringify(fullAccess(access)) !== JSON.stringify(fullAccess(user.access));
 
   const isInactive = user.status === "Inactive";
   const isPending = user.status === "Pending Invite";
@@ -43,7 +74,7 @@ export function EditAdminUserModal({ user, onClose }: { user: AdminUser; onClose
 
   const save = () => {
     if (!hasRoles) return;
-    updateUser(user.id, { roles, scope });
+    updateUser(user.id, { roles, scope, access: fullAccess(access) });
     onClose();
   };
 
@@ -63,7 +94,8 @@ export function EditAdminUserModal({ user, onClose }: { user: AdminUser; onClose
 
       <RoleCheckboxes
         value={roles}
-        onChange={setRoles}
+        onChange={setRolesAndReset}
+        grantable={grantable}
         error={hasRoles ? undefined : "Select at least one role"}
       />
 
@@ -72,9 +104,21 @@ export function EditAdminUserModal({ user, onClose }: { user: AdminUser; onClose
         <ScopeSelect value={scope} onChange={setScope} />
       </label>
 
+      <div className="sf-field">
+        <span>Access</span>
+        <AccessGrid value={access} onChange={setAccess} disabled={!hasRoles} />
+        <span className="sf-field-hint">
+          {!hasRoles
+            ? "Pick a role above to fill this in."
+            : matchesPreset(roles, access)
+              ? "As the role grants it."
+              : "Adjusted for this person — no longer exactly what the role grants."}
+        </span>
+      </div>
+
       {hasRoles ? (
         <p className="sf-panel-note" aria-live="polite">
-          {accessSummary(user.name, roles)}
+          {accessSummary(user.name, access, SECTION_LABELS)}
         </p>
       ) : null}
 
@@ -114,8 +158,10 @@ export function EditAdminUserModal({ user, onClose }: { user: AdminUser; onClose
       </Link>
 
       <div className="list-editor-form-actions">
-        <Button size="sm" onClick={save} isDisabled={!hasRoles}>
-          Save Changes
+        {/* Disabled until something has actually changed, so the button is a
+            statement about this form rather than a permanent offer. */}
+        <Button size="sm" onClick={save} isDisabled={!hasRoles || !dirty}>
+          {dirty ? "Save Changes" : "Saved"}
         </Button>
         <Button color="tertiary" size="sm" onClick={onClose}>
           Cancel

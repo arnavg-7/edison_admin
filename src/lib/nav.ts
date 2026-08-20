@@ -20,7 +20,6 @@
  */
 
 import type { AdminPersona } from "@/lib/admin-scope";
-import { ROLE_PERMISSIONS } from "@/lib/data/rolePermissions";
 
 export type SectionId =
   | "home"
@@ -60,19 +59,22 @@ export const ADMIN_ROLE_LABEL = "Super Admin";
 /**
  * What each persona reaches, in nav order.
  *
- * Super Admin is the portal as built — everything, at whichever scope they are
- * administering. The other two read their grants from ROLE_PERMISSIONS, which
- * is the same table User Management shows on Roles & Permissions: what an admin
- * is told a role gives is what the gate then enforces, because it is one
- * sentence written once.
+ * These are personas — which portal you are looking at — and not the roles User
+ * Management grants. The two overlap but are not the same list: IT is a persona
+ * and not an assignable role, and an account's real access is the per-section
+ * grid on the account, which is what this becomes when auth lands.
+ *
+ * Declared here rather than read from the role presets so this module imports
+ * nothing: adminUsers reads SECTIONS from here, and a cycle between the two
+ * would resolve differently depending on which screen was opened first.
  *
  * IT's System Settings is a narrow slice of a section rather than the whole of
  * it — see SECTION_LIMITS.
  */
 export const SECTION_ACCESS: Record<AdminPersona, SectionId[]> = {
   "super-admin": SECTIONS.map((section) => section.id),
-  leadership: ROLE_PERMISSIONS.leadership.sections,
-  "it-admin": ROLE_PERMISSIONS.it_administrator.sections
+  leadership: ["reporting"],
+  "it-admin": ["home", "user-management", "system-settings"]
 };
 
 /**

@@ -20,7 +20,7 @@ import { MailAdd01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/base/buttons/button";
 import { configuredAccess, useRoleConfig } from "@/lib/role-config-store";
 import { AccessGrid } from "./AccessGrid";
-import { RoleCheckboxes } from "./RoleCheckboxes";
+import { RoleSelect } from "./RoleSelect";
 import { ScopeSelect } from "./ScopeSelect";
 import { InstitutionalEmailDialog } from "./InstitutionalEmailDialog";
 
@@ -116,10 +116,11 @@ export function ManualInviteForm({
         </span>
       </label>
 
-      <RoleCheckboxes
+      <RoleSelect
         value={roles}
         onChange={setRolesAndReset}
         grantable={grantable}
+        multiple={false}
         error={hasRoles ? undefined : "Select at least one role"}
       />
 

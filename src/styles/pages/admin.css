@@ -1285,6 +1285,174 @@
   gap: 16px;
 }
 
+/* Pulls the shadcn/base-ui AlertDialog surface back onto the app's own card
+   language — same radius, border and elevation as .sf-modal — since its
+   default (a 26px pill-ish radius, a bare foreground ring) belongs to a
+   different, ungrounded system and reads as a foreign surface dropped onto a
+   Lightning-anatomy product. Layout, animation and positioning stay on the
+   base classes; only the surface treatment is overridden here. */
+.sf-welcome-card {
+  border-radius: var(--sf-radius-card);
+  border: 1px solid var(--sf-card-border);
+  box-shadow: 0 20px 60px rgba(19, 26, 43, 0.25);
+  background: var(--sf-card);
+  color: var(--sf-text);
+}
+
+/* Bleeds the accent gradient to the card's own top corners, past the
+   AlertDialogContent's p-6 padding, the same trick a full-bleed card image
+   always needs against a padded container. */
+.sf-welcome-hero {
+  margin: -24px -24px 0;
+  padding: 30px 24px 38px;
+  background: linear-gradient(165deg, var(--sf-accent) 0%, var(--sf-accent-soft) 62%, var(--sf-card) 100%);
+  border-radius: var(--sf-radius-card) var(--sf-radius-card) 0 0;
+  overflow: hidden;
+}
+
+.sf-welcome-collage {
+  position: relative;
+  height: 104px;
+}
+
+/* Three miniatures of the app's own screens — the real chart series colors,
+   status tints and role-badge shape from Home, Needs Attention and User
+   Management — rather than an icon or a blank card standing in for content.
+   The current step's miniature comes forward; the other two recede.
+   Positions are px, not %, and sized for the dialog's own mobile width
+   (base-ui's max-w-xs before its own sm: breakpoint) — a %-based layout
+   scales the overlap with the container and buries a neighbor's label
+   under the next card well before the text itself would clip. */
+.sf-welcome-chip {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100px;
+  padding: 9px 11px;
+  background: var(--sf-card);
+  border-radius: var(--sf-radius-card);
+  box-shadow: 0 10px 24px rgba(19, 26, 43, 0.18);
+  opacity: 0.75;
+  transform: rotate(var(--sf-welcome-tilt, 0deg)) scale(0.92);
+  /* transform/opacity/box-shadow only: left, top and width also change (the
+     is-active pop, the sm: breakpoint), but only on step change or a resize,
+     neither of which wants an animated layout thrash. */
+  transition: transform 220ms ease, opacity 220ms ease, box-shadow 220ms ease;
+}
+
+.sf-welcome-chip.is-active {
+  opacity: 1;
+  z-index: 10;
+  transform: rotate(var(--sf-welcome-tilt, 0deg)) scale(1.08);
+  box-shadow: 0 16px 32px rgba(19, 26, 43, 0.28);
+}
+
+/* A fixed resting stack (each slot's own z-index), so a non-active chip's
+   paint order never depends on DOM position — without it, whichever chip
+   comes last in markup always covers its neighbor's label, active or not. */
+.sf-welcome-chip--home {
+  --sf-welcome-tilt: -7deg;
+  left: 0;
+  top: 8px;
+  z-index: 1;
+}
+
+.sf-welcome-chip--attention {
+  --sf-welcome-tilt: 2deg;
+  left: 82px;
+  top: 26px;
+  z-index: 2;
+}
+
+.sf-welcome-chip--roles {
+  --sf-welcome-tilt: 8deg;
+  left: 164px;
+  top: 0;
+  z-index: 3;
+}
+
+/* The dialog itself widens past base-ui's sm: breakpoint (max-w-xs to
+   max-w-md), so the collage gets the same extra room to spread out. */
+@media (min-width: 640px) {
+  .sf-welcome-chip {
+    width: 128px;
+    padding: 10px 12px;
+  }
+
+  .sf-welcome-chip--home {
+    left: 8px;
+  }
+
+  .sf-welcome-chip--attention {
+    left: 128px;
+  }
+
+  .sf-welcome-chip--roles {
+    left: 248px;
+  }
+}
+
+.sf-welcome-chip-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sf-text-muted);
+}
+
+.sf-welcome-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 32px;
+}
+
+.sf-welcome-bar {
+  width: 9px;
+  border-radius: 3px 3px 0 0;
+}
+
+.sf-welcome-attention-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sf-welcome-attention-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: var(--sf-text-muted);
+  white-space: nowrap;
+}
+
+.sf-welcome-dot-status {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.sf-welcome-dot-status--error { background: var(--sf-error-text); }
+.sf-welcome-dot-status--warn { background: var(--sf-warn-text); }
+.sf-welcome-dot-status--ok { background: var(--sf-ok-text); }
+
+.sf-welcome-role-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sf-welcome-role-pill {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--sf-accent);
+  background: var(--sf-accent-soft);
+  border-radius: 999px;
+  padding: 3px 8px;
+  text-align: center;
+}
+
 .alert-avatar {
   width: 56px;
   height: 56px;

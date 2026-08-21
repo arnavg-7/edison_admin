@@ -67,6 +67,13 @@ export const ADMIN_ROLE_ORDER: AdminRole[] = [
 export const SCHOOL_ADMIN_GRANTABLE: AdminRole[] = ["school_admin"];
 
 /**
+ * Roles offered on the Invite User drawer: everything but Super Admin. That
+ * role isn't handed out through a self-serve invite — it's granted directly
+ * on an existing account instead.
+ */
+export const INVITE_GRANTABLE: AdminRole[] = ADMIN_ROLE_ORDER.filter((role) => role !== "super_admin");
+
+/**
  * What an account may do with one section.
  *
  * The level is per section and per account, not per role: the role picks a

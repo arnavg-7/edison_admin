@@ -18,7 +18,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Switch } from "@/components/ui/switch";
 import { configuredAccess, useRoleConfig } from "@/lib/role-config-store";
 import { AccessGrid } from "./AccessGrid";
-import { RoleCheckboxes } from "./RoleCheckboxes";
+import { RoleSelect } from "./RoleSelect";
 import { ScopeSelect } from "./ScopeSelect";
 
 /**
@@ -91,7 +91,7 @@ export function EditAdminUserModal({
     <Modal title={`Edit ${user.name}`} onClose={onClose}>
       <p className="sf-panel-note">{user.email}</p>
 
-      <RoleCheckboxes
+      <RoleSelect
         value={roles}
         onChange={setRolesAndReset}
         grantable={grantable}

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { NeedsAttentionBanner } from "@/components/home/NeedsAttentionBanner";
 import { GlobalFilterBar } from "@/components/shared/GlobalFilterBar";
 import { HomeMetrics } from "@/components/home/HomeMetrics";
+import { WelcomeDialog } from "@/components/home/WelcomeDialog";
 
 /**
  * Super Admin landing dashboard. Enrollment, staffing and academic figures
@@ -18,6 +19,8 @@ import { HomeMetrics } from "@/components/home/HomeMetrics";
 export default function HomePage() {
   return (
     <section className="sf-main">
+      <WelcomeDialog />
+
       <div className="sf-page-head">
         <div>
           <h1 className="sf-page-title">Home</h1>

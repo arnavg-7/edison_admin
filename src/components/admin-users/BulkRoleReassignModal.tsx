@@ -6,7 +6,7 @@ import { configuredAccess, useRoleConfig } from "@/lib/role-config-store";
 import { useAdminUsers } from "@/lib/admin-users-store";
 import { Modal } from "@/components/shared/Modal";
 import { Button } from "@/components/base/buttons/button";
-import { RoleCheckboxes } from "./RoleCheckboxes";
+import { RoleSelect } from "./RoleSelect";
 
 /**
  * Replaces (not adds to) the selected accounts' roles — the school-year
@@ -43,7 +43,7 @@ export function BulkRoleReassignModal({
         was adjusted by hand.
       </p>
 
-      <RoleCheckboxes
+      <RoleSelect
         value={roles}
         onChange={setRoles}
         legend="New role(s)"

@@ -8,7 +8,7 @@ import { SectionTabs } from "@/components/shared/SectionTabs";
 import { Button } from "@/components/base/buttons/button";
 import { InviteAdminUserModal } from "@/components/admin-users/InviteAdminUserModal";
 import { useAdminScope } from "@/lib/admin-scope";
-import { SCHOOL_ADMIN_GRANTABLE } from "@/lib/data/adminUsers";
+import { INVITE_GRANTABLE, SCHOOL_ADMIN_GRANTABLE } from "@/lib/data/adminUsers";
 
 /**
  * Four tabs: everyone, the two states worth standing in, and the roles behind
@@ -81,7 +81,7 @@ export default function UserManagementLayout({ children }: { children: React.Rea
 
       {isInviting ? (
         <InviteAdminUserModal
-          grantable={school ? SCHOOL_ADMIN_GRANTABLE : undefined}
+          grantable={school ? SCHOOL_ADMIN_GRANTABLE : INVITE_GRANTABLE}
           onClose={() => setIsInviting(false)}
         />
       ) : null}

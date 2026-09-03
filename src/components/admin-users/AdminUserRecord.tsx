@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowLeft01Icon, MailAdd01Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import { ArrowLeft01Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import {
   ACTIVITY_KIND_LABELS,
   activityFor,
@@ -44,7 +44,7 @@ const FIRST_PAGE = 10;
  * working across five schools, the section alone says almost nothing.
  */
 export function AdminUserRecord({ id }: { id: string }) {
-  const { adminUsers, sendInvite, isLoaded } = useAdminUsers();
+  const { adminUsers, isLoaded } = useAdminUsers();
   const { roleLabel } = useAdminScope();
   const mounted = useMounted();
 
@@ -98,16 +98,6 @@ export function AdminUserRecord({ id }: { id: string }) {
           {user.name}
         </h1>
         <div className="sf-row-actions">
-          {user.status === "Invited" ? (
-            <Button
-              color="secondary"
-              size="sm"
-              onClick={() => sendInvite(user.id)}
-              iconLeading={<HugeiconsIcon icon={MailAdd01Icon} size={16} strokeWidth={2} />}
-            >
-              Resend invitation
-            </Button>
-          ) : null}
           <Button
             size="sm"
             onClick={() => setEditing(true)}

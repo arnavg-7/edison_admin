@@ -53,7 +53,7 @@ export function AdminUserList({
   status?: AdminUserStatus;
   heading?: string;
 }) {
-  const { adminUsers, sendInvite, isLoaded } = useAdminUsers();
+  const { adminUsers, isLoaded } = useAdminUsers();
   const { roleLabel } = useAdminScope();
   const mounted = useMounted();
 
@@ -241,24 +241,14 @@ export function AdminUserList({
                       )}
                     </td>
                     <td>
+                      {/* Edit is the only row action. Everything a row could do
+                          to an account — its role, its school, whether they may
+                          sign in — is one form, applied once, in their record. */}
                       <div className="sf-row-actions">
                         <Button color="secondary" size="xs" onClick={() => setEditing(user)}>
                           Edit<span className="sf-sr-only"> {user.name}</span>
                         </Button>
 
-                        {/* Resend is the only row action beyond Edit. Disabling
-                            an account is a decision about a person, so it lives
-                            in their record next to the role it changes — not as
-                            a button one mis-click away in a list of eight. */}
-                        {user.status === "Invited" ? (
-                          <Button
-                            color="secondary"
-                            size="xs"
-                            onClick={() => sendInvite(user.id)}
-                          >
-                            Resend<span className="sf-sr-only"> invitation to {user.name}</span>
-                          </Button>
-                        ) : null}
                       </div>
                     </td>
                   </tr>

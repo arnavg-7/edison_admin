@@ -51,8 +51,7 @@ export function InviteUserDrawer({
   invitedBy: string;
   onClose: () => void;
 }) {
-  const { adminUsers, addUser, updateUser, sendInvite, disableUser, enableUser } =
-    useAdminUsers();
+  const { adminUsers, addUser, updateUser, sendInvite } = useAdminUsers();
   const editing = user !== undefined;
 
   const [email, setEmail] = useState(user?.email ?? "");
@@ -60,6 +59,12 @@ export function InviteUserDrawer({
   const [role, setRole] = useState<AdminRole>(user?.role ?? "school_admin");
   const [schoolId, setSchoolId] = useState(
     user?.scope.type === "school" ? user.scope.schoolId : ""
+  );
+  /* Whether they may sign in, drafted like every other field so it applies on
+     Save with the rest — an account's role and its access are usually changed in
+     the same breath, and two different commit rules in one form is a trap. */
+  const [access, setAccess] = useState<"enabled" | "disabled">(
+    user?.status === "Disabled" ? "disabled" : "enabled"
   );
 
   const trimmedEmail = email.trim().toLowerCase();
@@ -92,7 +97,12 @@ export function InviteUserDrawer({
       : ({ type: "district" } as const);
 
     if (editing) {
-      updateUser(user.id, { name: name.trim(), role, scope });
+      /* Enabled means whichever state they were in before it was withdrawn:
+         Active for someone who had signed in, still Invited for someone who
+         never accepted. Written in one patch so a save is one change. */
+      const status =
+        access === "disabled" ? "Disabled" : user.lastLogin ? "Active" : "Invited";
+      updateUser(user.id, { name: name.trim(), role, scope, status });
       onClose();
       return;
     }
@@ -132,7 +142,7 @@ export function InviteUserDrawer({
           <SheetTitle>{editing ? "Edit access" : "Invite an admin"}</SheetTitle>
           <SheetDescription>
             {editing
-              ? "Change the role or the school. The address stays as it is — it is the account."
+              ? "Change the role, the school, or whether they may sign in. The address stays as it is — it is the account."
               : "The mailbox is created in the district directory first. Attach a role to it here."}
           </SheetDescription>
         </SheetHeader>
@@ -194,6 +204,39 @@ export function InviteUserDrawer({
               </label>
             ) : null}
 
+            {/* Access sits with the other account properties rather than in a
+                block of its own: it is saved by the same button now, and a
+                separately-committing control in one form is a trap. */}
+            {editing ? (
+              <label className="sf-field">
+                <span>Access</span>
+                <Combobox
+                  options={[
+                    { value: "enabled", label: "Enabled" },
+                    { value: "disabled", label: "Disabled" }
+                  ]}
+                  value={access}
+                  onChange={(next) => setAccess(next as "enabled" | "disabled")}
+                />
+                {/* Describes the pending choice, not the stored one, so the
+                    consequence is readable before Save is pressed. The reason
+                    differs by whether they ever got in: there is no history to
+                    keep on an account nobody has used. */}
+                <span className="sf-field-hint">
+                  {access === "disabled"
+                    ? user.lastLogin
+                      ? "They stop being able to sign in. The record and its history are kept — an account that has been in use is part of the audit trail."
+                      : "The invitation stops working and the account cannot be used. The record is kept, so the same address is not invited twice by mistake."
+                    : user.lastLogin
+                      ? "They can sign in."
+                      : "Their invitation stands until it expires."}
+                  {user.status === "Disabled" && access === "enabled"
+                    ? ` Saving returns them to ${user.lastLogin ? "Active" : "Invited"}.`
+                    : ""}
+                </span>
+              </label>
+            ) : null}
+
             {/* Generated from the role, so what an admin reads here is what the
                 role actually grants rather than a description of it. */}
             <div className="role-grant">
@@ -215,57 +258,6 @@ export function InviteUserDrawer({
               </ul>
             </div>
 
-            {/* Withdrawing access is a decision about a person, so it sits in
-                their record beside the role it changes rather than as a button
-                in a list of eight, one mis-click from the wrong row. Its own
-                block, below everything the Save button applies to, because it
-                takes effect on its own. */}
-            {editing ? (
-              <div className="drawer-danger">
-                <p className="drawer-danger-head">Access</p>
-                {user.status === "Disabled" ? (
-                  <>
-                    <p className="drawer-danger-detail">
-                      Withdrawn{user.lastLogin ? "" : " before they ever signed in"}. Re-enabling
-                      returns them to {user.lastLogin ? "Active" : "Invited"}.
-                    </p>
-                    <Button
-                      color="secondary"
-                      size="sm"
-                      className="justify-self-start"
-                      onClick={() => {
-                        enableUser(user.id);
-                        onClose();
-                      }}
-                    >
-                      Re-enable this account
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    {/* The reason differs by whether they ever got in: there is
-                        no history to keep on an account nobody has used, and
-                        saying there is would be untrue. */}
-                    <p className="drawer-danger-detail">
-                      {user.lastLogin
-                        ? "They stop being able to sign in. The record and its history are kept — an account that has been in use is part of the audit trail."
-                        : "The invitation stops working and the account cannot be used. The record is kept, so the same address is not invited twice by mistake."}
-                    </p>
-                    <Button
-                      color="secondary-destructive"
-                      size="sm"
-                      className="justify-self-start"
-                      onClick={() => {
-                        disableUser(user.id);
-                        onClose();
-                      }}
-                    >
-                      Disable this account
-                    </Button>
-                  </>
-                )}
-              </div>
-            ) : null}
           </div>
         </div>
 

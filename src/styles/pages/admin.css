@@ -2276,33 +2276,6 @@
   margin-top: 3px;
 }
 
-/* Withdrawing access, at the foot of the edit drawer. Separated and outlined
-   because it applies on its own — it is not part of what Save does. */
-.drawer-danger {
-  display: grid;
-  gap: 8px;
-  margin-top: 4px;
-  padding: 14px 16px;
-  border: 1px solid var(--sf-card-border);
-  border-radius: 14px;
-}
-
-.drawer-danger-head {
-  margin: 0;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--sf-text-dim);
-}
-
-.drawer-danger-detail {
-  margin: 0;
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--sf-text-muted);
-}
-
 /* Admin account record --------------------------------------------------- */
 
 /* Title and its actions on one line. .sf-scope-head stacks, which is right for

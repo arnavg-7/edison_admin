@@ -2156,3 +2156,95 @@
   outline: 2px solid var(--sf-focus);
   outline-offset: 1px;
 }
+
+/* Admin roles ------------------------------------------------------------ */
+
+/* What a role grants, shown in the invite drawer immediately above the button
+   that grants it. Boxed and tinted so it reads as a consequence of the choices
+   above rather than as more form. */
+.role-grant {
+  padding: 12px 14px;
+  border: 1px solid var(--sf-card-border);
+  border-radius: 14px;
+  background: var(--sf-plot);
+}
+
+.role-grant-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.role-grant-head > span {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--sf-text-muted);
+  text-align: right;
+}
+
+/* Granted and denied in one list, told apart by their mark as well as their
+   tint — a tick and a cross carry the difference without relying on colour
+   (WCAG 1.4.1). */
+.role-grant ul,
+.role-grant-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.role-grant li,
+.role-grant-list li {
+  position: relative;
+  padding-left: 20px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--sf-text-muted);
+}
+
+.role-grant li::before,
+.role-grant-list li::before {
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+}
+
+.role-grant li.is-granted::before,
+.role-grant-list li.is-granted::before {
+  content: "✓";
+  color: var(--sf-ok-text);
+}
+
+.role-grant li.is-denied::before,
+.role-grant-list li.is-denied::before {
+  content: "✕";
+  color: var(--sf-error-text);
+}
+
+/* The Roles tab: the two roles side by side, since the whole point is comparing
+   what they reach. */
+.role-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.role-card-reach {
+  margin: -4px 0 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--sf-text-muted);
+}
+
+/* Spans the pair: it is about both roles, not a footnote to the second. */
+.role-cards-note {
+  grid-column: 1 / -1;
+  max-width: 78ch;
+}

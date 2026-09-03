@@ -2,12 +2,10 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
+  ADMIN_ROLE_ORDER,
   adminUsers as seededAdminUsers,
-  fullAccess,
-  normalizeAccess,
-  normalizeRoles,
   normalizeStatus,
-  presetAccess,
+  type AdminRole,
   type AdminUser
 } from "@/lib/data/adminUsers";
 
@@ -21,7 +19,11 @@ import {
  * TODO: swap for API calls once the Admin DB contract exists.
  */
 
-const STORAGE_KEY = "edison-admin.admin-users.v1";
+/* v2: accounts carry one role and no per-section grid. A v1 record could hold
+   two roles and its own grid, and there is no honest way to collapse that into
+   one role — so the key moves and a stored v1 list is left where it is rather
+   than half-converted. */
+const STORAGE_KEY = "edison-admin.admin-users.v2";
 const REQUIRE_2FA_KEY = "edison-admin.admin-users.require-2fa.v1";
 
 type PersistedState = {
@@ -40,22 +42,18 @@ function readStorage(): PersistedState {
     const require2fa = window.localStorage.getItem(REQUIRE_2FA_KEY) === "true";
     if (!Array.isArray(users)) return { adminUsers: seededAdminUsers, require2fa };
 
-    // Accounts stored before roles carried a permission level are upgraded on
-    // read rather than dropped, so an existing session keeps its users.
     return {
-      /* Roles and the grid are both normalised on the way in: an account stored
-         under the old role names keeps its access, and one stored before grids
-         existed gets the one its roles imply. */
-      adminUsers: users.map((user) => {
-        const roles = normalizeRoles(user.roles);
-        const stored = normalizeAccess((user as { access?: unknown }).access);
-        return {
-          ...user,
-          status: normalizeStatus(user.status),
-          roles,
-          access: Object.keys(stored).length > 0 ? fullAccess(stored) : fullAccess(presetAccess(roles))
-        };
-      }),
+      /* Normalised on the way in so a record written by an older build cannot
+         put the screen into a state no control can explain: an unknown status
+         reads as Invited, and an unknown role as School Admin, which is the
+         narrower of the two. */
+      adminUsers: users.map((user) => ({
+        ...user,
+        status: normalizeStatus(user.status),
+        role: ADMIN_ROLE_ORDER.includes(user.role) ? user.role : ("school_admin" as AdminRole),
+        inviteSentAt: user.inviteSentAt ?? null,
+        inviteSends: typeof user.inviteSends === "number" ? user.inviteSends : 1
+      })),
       require2fa
     };
   } catch {
@@ -73,6 +71,12 @@ type AdminUsersContextValue = {
   updateUser: (id: string, patch: Partial<AdminUser>) => void;
   updateUsers: (ids: string[], patch: Partial<AdminUser>) => void;
   removeUser: (id: string) => void;
+  /** Sends (or re-sends) the invitation and stamps it. */
+  sendInvite: (id: string) => void;
+  /** Withdraws access. The record and its history are kept. */
+  disableUser: (id: string) => void;
+  /** Restores access. An account that never accepted goes back to Invited. */
+  enableUser: (id: string) => void;
   /** False until localStorage has been read, so the UI can avoid a false empty state. */
   isLoaded: boolean;
 };
@@ -134,6 +138,46 @@ export function AdminUsersProvider({ children }: { children: React.ReactNode }) 
     setState((current) => ({ ...current, require2fa: value }));
   }, []);
 
+  /* Each of these is one act with one meaning, kept here rather than assembled
+     from updateUser at three call sites — where the third would be the one that
+     forgot to stamp the send. */
+  const sendInvite = useCallback(
+    (id: string) => {
+      updateUser(id, {
+        status: "Invited",
+        inviteSentAt: new Date().toISOString()
+      });
+      // Counted separately: the patch above cannot read the current value.
+      setState((current) => ({
+        ...current,
+        adminUsers: current.adminUsers.map((user) =>
+          user.id === id ? { ...user, inviteSends: user.inviteSends + 1 } : user
+        )
+      }));
+    },
+    [updateUser]
+  );
+
+  const disableUser = useCallback(
+    (id: string) => updateUser(id, { status: "Disabled" }),
+    [updateUser]
+  );
+
+  /* Back to whichever state they were in before: someone who had signed in is
+     Active again, and someone who never accepted is still waiting. */
+  const enableUser = useCallback(
+    (id: string) =>
+      setState((current) => ({
+        ...current,
+        adminUsers: current.adminUsers.map((user) =>
+          user.id === id
+            ? { ...user, status: user.lastLogin ? "Active" : "Invited" }
+            : user
+        )
+      })),
+    []
+  );
+
   const value = useMemo(
     () => ({
       adminUsers: state.adminUsers,
@@ -144,9 +188,25 @@ export function AdminUsersProvider({ children }: { children: React.ReactNode }) 
       updateUser,
       updateUsers,
       removeUser,
+      sendInvite,
+      disableUser,
+      enableUser,
       isLoaded
     }),
-    [state.adminUsers, state.require2fa, setRequire2fa, addUser, addUsers, updateUser, updateUsers, removeUser, isLoaded]
+    [
+      state.adminUsers,
+      state.require2fa,
+      setRequire2fa,
+      addUser,
+      addUsers,
+      updateUser,
+      updateUsers,
+      removeUser,
+      sendInvite,
+      disableUser,
+      enableUser,
+      isLoaded
+    ]
   );
 
   return <AdminUsersContext.Provider value={value}>{children}</AdminUsersContext.Provider>;

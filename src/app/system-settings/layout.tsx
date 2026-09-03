@@ -5,7 +5,6 @@
 import { Suspense } from "react";
 import { SectionTabs } from "@/components/shared/SectionTabs";
 import { useAdminScope } from "@/lib/admin-scope";
-import { canReachPath } from "@/lib/nav";
 
 /**
  * v2 merges what v1 split by persona (academic config vs. users/audit) into one
@@ -20,11 +19,11 @@ const TABS = [
 ];
 
 export default function SystemSettingsLayout({ children }: { children: React.ReactNode }) {
-  const { persona } = useAdminScope();
+
   /* IT holds the audit log here and none of the academic configuration, so the
      tabs they cannot open are gone rather than shown and refused. Asked of the
      same access map the route gate reads, so the two cannot disagree. */
-  const tabs = TABS.filter((tab) => canReachPath(persona, tab.href));
+  const tabs = TABS;
 
   return (
     <section className="sf-main">

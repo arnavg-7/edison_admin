@@ -1,25 +1,12 @@
 /**
- * The sections, and which persona reaches which.
+ * The sections, and where each one opens.
  *
- * v2 collapsed to a single Super Admin role and the v1 access map went with it.
- * It is back for one persona only, and not to rank admins by trust: leadership
- * is a different job, and a superintendent has no business in the screens that
- * configure grade skills or set a grade's goals.
- *
- * The school-level admin is not a persona — it is Super Admin scoped to one
- * school. Same sections, same write access, one school's worth of data.
- *
- * Sections a persona cannot reach are absent from the nav rather than disabled.
- * A greyed-out row still tells you the section exists and invites the question
- * of who has it — for a persona that will never have it, that is noise.
- *
- * Field-level edit permissions still exist conceptually (most of Student &
- * Faculty 360 is read-only, but Goals checkpoints/status and a student's
- * Alert status are editable) but that is enforced per-field on that screen,
- * not by a section gate.
+ * One audience now: a Super Admin administers every school and a School Admin
+ * does the same job over one, so every section is in the nav for both and the
+ * difference is scope rather than which rows exist. The per-persona allow-lists
+ * that used to live here went with the Leadership and IT personas.
  */
 
-import type { AdminPersona } from "@/lib/admin-scope";
 
 export type SectionId =
   | "home"
@@ -57,82 +44,13 @@ export const SECTIONS: Section[] = [
 export const ADMIN_ROLE_LABEL = "Super Admin";
 
 /**
- * What each persona reaches, in nav order.
- *
- * These are personas — which portal you are looking at — and not the roles User
- * Management grants. The two overlap but are not the same list: IT is a persona
- * and not an assignable role, and an account's real access is the per-section
- * grid on the account, which is what this becomes when auth lands.
- *
- * Declared here rather than read from the role presets so this module imports
- * nothing: adminUsers reads SECTIONS from here, and a cycle between the two
- * would resolve differently depending on which screen was opened first.
- *
- * IT's System Settings is a narrow slice of a section rather than the whole of
- * it — see SECTION_LIMITS.
- */
-export const SECTION_ACCESS: Record<AdminPersona, SectionId[]> = {
-  "super-admin": SECTIONS.map((section) => section.id),
-  leadership: ["reporting"],
-  "it-admin": ["home", "user-management", "system-settings"]
-};
-
-/**
- * Where a persona's reach inside a section stops.
- *
- * An allow-list, not a block-list: a settings tab added next year should not
- * quietly become IT's because nobody remembered to exclude it. Anything new in
- * a limited section belongs to whoever holds the section whole.
- *
- * One entry so far. The brief gives IT the audit log and the accounts, not the
- * academic configuration that shares System Settings with them — grade levels,
- * subjects, the calendar and announcements are the portal's content, and IT
- * does not own content.
- */
-export const SECTION_LIMITS: Partial<Record<AdminPersona, Partial<Record<SectionId, string[]>>>> =
-  {
-    "it-admin": {
-      "system-settings": ["/system-settings/audit-log"]
-    }
-  };
-
-/** The sections a persona sees, in the order SECTIONS declares. */
-export function sectionsFor(persona: AdminPersona): Section[] {
-  const allowed = SECTION_ACCESS[persona];
-  return SECTIONS.filter((section) => allowed.includes(section.id));
-}
-
-/**
- * Where this persona's nav row into a section actually goes.
- *
- * A section they only hold part of has to open at the part they hold: IT's
- * System Settings row points at the audit log, because the section root is a
- * screen the gate would turn them straight back out of.
- */
-export function navHref(persona: AdminPersona, section: Section, schoolId: string | null): string {
-  return SECTION_LIMITS[persona]?.[section.id]?.[0] ?? sectionHref(section, schoolId);
-}
-
-/**
- * Where a persona lands when it has no business being where it is — switching
- * persona while deep in a section the new one cannot reach, or arriving on a
- * typed URL. Their first section, which is the one the nav opens on.
- */
-export function personaLandingHref(persona: AdminPersona, schoolId: string | null): string {
-  const first = sectionsFor(persona)[0];
-  return first ? navHref(persona, first, schoolId) : "/";
-}
-
-/**
  * Which section a path belongs to.
  *
  * Longest prefix wins, so `/reporting/faculty-performance` resolves to Reporting
  * rather than to whichever section declared a shorter matching href.
  *
  * Anything matching nothing belongs to Home — today that is `/needs-attention`,
- * which has no nav row of its own and is reached from Home's cards. Defaulting
- * to Home rather than to "allowed" means a persona without Home cannot arrive
- * there sideways, and a persona with Home finds the link on it works.
+ * which has no nav row of its own and is reached from Home's cards.
  */
 export function sectionForPath(pathname: string): SectionId {
   const match = SECTIONS.filter(
@@ -140,15 +58,6 @@ export function sectionForPath(pathname: string): SectionId {
   ).sort((a, b) => b.href.length - a.href.length)[0];
 
   return match?.id ?? "home";
-}
-
-/** Whether a path sits inside a section — and a part of it — this persona holds. */
-export function canReachPath(persona: AdminPersona, pathname: string): boolean {
-  const section = sectionForPath(pathname);
-  if (!SECTION_ACCESS[persona].includes(section)) return false;
-
-  const limits = SECTION_LIMITS[persona]?.[section];
-  return !limits || limits.some((prefix) => pathname.startsWith(prefix));
 }
 
 /**

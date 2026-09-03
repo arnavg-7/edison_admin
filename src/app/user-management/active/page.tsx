@@ -2,15 +2,10 @@
 
 import { AdminUserList } from "@/components/admin-users/AdminUserList";
 
-/** Accounts in use: the invitation was accepted and nobody has turned it off. */
-export default function ActiveUsersPage() {
+export default function ActivePage() {
   return (
-    <AdminUserList
-      status="Active"
-      heading="Active users"
-      noun="active users"
-      emptyTitle="No active users yet"
-      emptyMessage="Nobody has accepted an invitation yet. Invitations sit on the Invited tab until they do."
-    />
+    <div className="sf-panel">
+      <AdminUserList status="Active" heading="Accounts that can sign in" />
+    </div>
   );
 }

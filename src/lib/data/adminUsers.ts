@@ -1,433 +1,202 @@
-// TODO: replace with the real Admin DB user-management contract. Every admin
-// account here is created manually on this screen — there is no Genesis (or
-// any other) sync for the small set of people who get admin-level access to
-// the portal. Regular student/faculty accounts stay on Student & Faculty 360
-// and never appear here unless someone deliberately adds them as an admin too.
+/**
+ * Who can sign in to this portal, and over which schools.
+ *
+ * Two roles, and they differ only in reach:
+ *
+ *   Super Admin   every section, every school in the district
+ *   School Admin  every section, one assigned school
+ *
+ * That is the whole access model. A School Admin is not a cut-down Super Admin
+ * with some screens taken away — it is the same job over one institution, which
+ * is why there is no per-section grid here. Access follows the role, so two
+ * School Admins cannot silently differ, and "School Admin · Edison High School"
+ * tells you everything about what someone can do without opening their record.
+ *
+ * An account is created against an email the district has already issued. The
+ * mailbox exists first; this screen attaches a role to it and sends the invite.
+ * A personal address cannot be deprovisioned when someone leaves, so their
+ * access would outlive their employment and the audit log would point at an
+ * address the district does not control.
+ *
+ * TODO: replace with the real Admin DB accounts contract. Invites are tracked
+ * locally until there is an identity provider to hand them to.
+ */
 
-import { SECTIONS, type SectionId } from "@/lib/nav";
 import { schools } from "./schools";
 import type { StatusTone } from "./types";
 
-/**
- * The four roles this portal grants.
- *
- * Super Admin and School Admin are the same job at two reaches — the district's
- * or one school's — which is why they are two roles and not one role plus a
- * setting: what a School Admin may hand out is narrower than what they hold,
- * and that is a property of the role rather than of the data they see.
- *
- * IT Administrator is narrow but not junior. It holds few sections and is one
- * of only two roles that can grant any of them, because keeping data flowing
- * and deciding who may sign in are the same job at Edison.
- */
-export type AdminRole = "super_admin" | "it_admin" | "school_admin" | "leadership";
+export type AdminRole = "super_admin" | "school_admin";
 
 export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
   super_admin: "Super Admin",
-  it_admin: "IT / Systems Administrator",
-  school_admin: "School Admin",
-  leadership: "District & School Leadership"
+  school_admin: "School Admin"
 };
 
-/** For badges and table cells, where the full name does not fit. */
-export const ADMIN_ROLE_SHORT_LABELS: Record<AdminRole, string> = {
-  super_admin: "Super Admin",
-  it_admin: "IT",
-  school_admin: "School Admin",
-  leadership: "Leadership"
-};
+/** Widest reach first, which is also the order the create form offers them. */
+export const ADMIN_ROLE_ORDER: AdminRole[] = ["super_admin", "school_admin"];
 
 /**
- * Roles renamed on the way to the three above, so an account already in
- * localStorage keeps the access it was granted rather than losing its role and
- * quietly becoming an account with none.
+ * What the role grants, in the words the create form and the reference tab both
+ * read. Written once so the two cannot disagree about what an admin just agreed
+ * to.
  */
-const LEGACY_ROLE_NAMES: Record<string, AdminRole> = {
-  super_admin: "super_admin",
-  it_admin: "it_admin",
-  it_administrator: "it_admin",
-  school_admin: "school_admin",
-  portal_administrator: "school_admin",
-  leadership: "leadership"
-};
-
-/**
- * Widest authority first, which is also the order they are granted in — not
- * widest reach: IT opens three sections and School Admin opens nine, but IT is
- * the role that can hand School Admin out.
- */
-export const ADMIN_ROLE_ORDER: AdminRole[] = [
-  "super_admin",
-  "it_admin",
-  "school_admin",
-  "leadership"
-];
-
-/** Roles a School Admin may hand out: their own, and nothing above it. */
-export const SCHOOL_ADMIN_GRANTABLE: AdminRole[] = ["school_admin"];
-
-/**
- * Roles offered on the Invite User drawer: everything but Super Admin. That
- * role isn't handed out through a self-serve invite — it's granted directly
- * on an existing account instead.
- */
-export const INVITE_GRANTABLE: AdminRole[] = ADMIN_ROLE_ORDER.filter((role) => role !== "super_admin");
-
-/**
- * What an account may do with one section.
- *
- * The level is per section and per account, not per role: the role picks a
- * sensible starting grid and the person granting access adjusts it for the one
- * person in front of them. A principal who reads the district's reporting but
- * edits only their own school's goals is one account, not two roles.
- */
-export type SectionLevel = "none" | "view" | "edit";
-
-export const SECTION_LEVEL_LABELS: Record<SectionLevel, string> = {
-  none: "No access",
-  view: "View",
-  edit: "Edit"
-};
-
-export const SECTION_LEVEL_ORDER: SectionLevel[] = ["none", "view", "edit"];
-
-/** Section id → level. Sections absent from the map are "none". */
-export type SectionAccessMap = Record<string, SectionLevel>;
-
-export function roleAssignmentsInclude(roles: AdminRole[], role: AdminRole): boolean {
-  return roles.includes(role);
-}
-
-/**
- * Accepts the bare `AdminRole[]` this holds now, the `{ role, permission }[]`
- * it held while levels were per role, and the older names for the roles
- * themselves. An account already in storage keeps the access it was granted.
- */
-export function normalizeRoles(roles: unknown): AdminRole[] {
-  if (!Array.isArray(roles)) return [];
-
-  const named = roles.flatMap((entry) => {
-    const raw =
-      typeof entry === "string"
-        ? entry
-        : ((entry as { role?: string })?.role ?? "");
-    const role = LEGACY_ROLE_NAMES[raw];
-    return role ? [role] : [];
-  });
-
-  // Two legacy roles can map to the same one, and holding it twice is not a
-  // different amount of access.
-  return ADMIN_ROLE_ORDER.filter((role) => named.includes(role));
-}
-
-/**
- * The grid as stored, with anything unreadable dropped rather than guessed.
- *
- * Both halves are checked: a level this build does not recognise, and a section
- * that no longer exists. A stale section id would otherwise sit in the grid
- * forever — never rendered, never removed, and counted by anything that asks
- * how much access an account has.
- */
-export function normalizeAccess(access: unknown): SectionAccessMap {
-  if (!access || typeof access !== "object") return {};
-
-  const known = new Set<string>(SECTIONS.map((section) => section.id));
-
-  return Object.entries(access as Record<string, unknown>).reduce<SectionAccessMap>(
-    (map, [section, level]) => {
-      if (!known.has(section)) return map;
-      if (level === "none" || level === "view" || level === "edit") map[section] = level;
-      return map;
-    },
-    {}
-  );
-}
-
-/** The sections an account can open at all, in whatever order the map has. */
-export function grantedSections(access: SectionAccessMap): string[] {
-  return Object.entries(access)
-    .filter(([, level]) => level !== "none")
-    .map(([section]) => section);
-}
-
-/** "Edit" where the account can change anything at all, else "View". */
-export function highestLevel(access: SectionAccessMap): SectionLevel {
-  const levels = Object.values(access);
-  if (levels.includes("edit")) return "edit";
-  return levels.includes("view") ? "view" : "none";
-}
-
-function formatList(items: string[]): string {
-  if (items.length <= 1) return items[0] ?? "";
-  if (items.length === 2) return `${items[0]} and ${items[1]}`;
-  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
-}
-
-/**
- * Plain-language summary of what an account can actually do, read off the grid
- * rather than off the roles: the grid is what was saved, and after any
- * adjustment it is the only thing that still describes them accurately.
- *
- * Takes the section labels rather than importing them, so this module stays
- * free of the nav it would otherwise depend on.
- *
- * Returns "" when nothing is granted, so callers can fall back to a prompt.
- */
-export function accessSummary(
-  name: string,
-  access: SectionAccessMap,
-  sectionLabels: Record<string, string>
-): string {
-  const label = (section: string) => sectionLabels[section] ?? section;
-  const at = (level: SectionLevel) =>
-    Object.entries(access)
-      .filter(([, value]) => value === level)
-      .map(([section]) => label(section));
-
-  const clauses = [
-    ["edit", at("edit")] as const,
-    ["view", at("view")] as const
-  ].flatMap(([level, sections]) =>
-    sections.length === 0
-      ? []
-      : [`${level === "edit" ? "edit" : "view-only"} access to ${formatList(sections)}`]
-  );
-
-  if (clauses.length === 0) return "";
-
-  const who = name.trim() || "This person";
-  return `${who} will have ${formatList(clauses)}.`;
-}
-
-/**
- * What each role is for, and the access it starts an account with.
- *
- * A role here is a preset, not a cage. Granting one fills the account's grid
- * with these levels; whoever is granting it can then change any row before
- * saving, and the grid is what the account actually holds. That is the
- * difference between a role list and an access control, and it is why the two
- * can legitimately disagree for one person.
- *
- * Reporting is `view` even for a Super Admin: the section is read-only by
- * construction — every figure on it comes from a Salesforce report — so `edit`
- * would be a level the screen has no way to honour.
- *
- * TODO: replace with the real Admin DB role contract. The shape is what that
- * table needs: a row per role, a level per section.
- */
-
-export type RolePreset = {
-  /** The job, in one line. */
-  purpose: string;
-  /** Who does it, day to day. */
-  who: string;
-  /** Level per section. Anything absent is "none". */
-  access: SectionAccessMap;
-  /** Stated as out of reach, whether or not this portal has a screen for it. */
-  excluded: string[];
-  /** What this role can hand out, for a role that grants access itself. */
-  grants?: AdminRole[];
-  /** Asked for by the brief, with no section here to point at. */
-  notBuilt?: string[];
-};
-
-/** Every section at one level — the shorthand the two admin roles are built on. */
-function everySection(level: SectionLevel, overrides: SectionAccessMap = {}): SectionAccessMap {
-  return SECTIONS.reduce<SectionAccessMap>((map, section) => {
-    map[section.id] = overrides[section.id] ?? level;
-    return map;
-  }, {});
-}
-
-export const ROLE_PRESETS: Record<AdminRole, RolePreset> = {
+export const ADMIN_ROLE_GRANTS: Record<AdminRole, { reach: string; grants: string[]; denies: string[] }> = {
   super_admin: {
-    purpose: "Runs the portal for the whole district, and decides who else can.",
-    who: "District administration, or Ken42 technical ops.",
-    access: everySection("edit", { reporting: "view" }),
-    excluded: [],
-    grants: ADMIN_ROLE_ORDER
+    reach: "Every school in the district",
+    grants: [
+      "Every section of the portal, read and write",
+      "Reporting across all schools, and per school",
+      "Creates and manages other admin accounts"
+    ],
+    denies: []
   },
   school_admin: {
-    purpose: "The same job at one school: its configuration, its goals, its people.",
-    who: "A principal's office, or whoever administers that school day to day.",
-    /* Every section, like a Super Admin — the narrowing is the account's scope,
-       not its sections. What is genuinely narrower is what they may hand out:
-       another School Admin for their own school, and nothing above it. */
-    access: everySection("edit", { reporting: "view" }),
-    excluded: ["Granting Super Admin", "Granting Leadership", "Other schools' accounts"],
-    grants: ["school_admin"]
-  },
-  it_admin: {
-    purpose: "Keeps data flowing correctly, and controls who has access.",
-    who: "District IT, or Ken42 technical ops.",
-    /* Few sections, and only one of them at edit. What IT owns in System
-       Settings is the audit log — a record, which is read — and the academic
-       configuration sharing that section is not theirs; the route gate holds
-       the same line for the IT persona, see SECTION_LIMITS in nav.ts. */
-    access: { home: "view", "user-management": "edit", "system-settings": "view" },
-    excluded: ["Portal configuration", "Goals", "Alerts", "Other schools' data"],
-    grants: ADMIN_ROLE_ORDER,
-    notBuilt: ["Integrations — Genesis/SIS ingest and Classroom sync have no section yet"]
-  },
-  leadership: {
-    purpose: "A fast read on how the platform and their students and faculty are doing.",
-    who: "Superintendent, principal, assistant principal.",
-    access: { reporting: "view" },
-    excluded: [
-      "Portal configuration",
-      "Goals configuration",
-      "Alerts configuration",
-      "System Settings",
-      "User Management"
+    reach: "One assigned school",
+    grants: [
+      "Every section of the portal, read and write",
+      "That school's grades, goals, skills, students and faculty",
+      "Reporting for that school"
+    ],
+    denies: [
+      "No other school's data, in any section or report",
+      "Cannot create or manage admin accounts"
     ]
   }
 };
 
-/** The grid a set of roles starts an account with — the widest level wins. */
-export function presetAccess(roles: AdminRole[]): SectionAccessMap {
-  const rank: Record<SectionLevel, number> = { none: 0, view: 1, edit: 2 };
-
-  return roles.reduce<SectionAccessMap>((map, role) => {
-    for (const [section, level] of Object.entries(ROLE_PRESETS[role].access)) {
-      if (rank[level] > rank[map[section] ?? "none"]) map[section] = level;
-    }
-    return map;
-  }, {});
+/** A School Admin without a school could not be scoped to anything. */
+export function roleNeedsSchool(role: AdminRole): boolean {
+  return role === "school_admin";
 }
-
-/** Filled out for every section, so a grid never has a row with no answer. */
-export function fullAccess(access: SectionAccessMap): SectionAccessMap {
-  return SECTIONS.reduce<SectionAccessMap>((map, section) => {
-    map[section.id] = access[section.id] ?? "none";
-    return map;
-  }, {});
-}
-
-/** Whether the grid still matches what its roles would have given it. */
-export function matchesPreset(roles: AdminRole[], access: SectionAccessMap): boolean {
-  const preset = fullAccess(presetAccess(roles));
-  const current = fullAccess(access);
-  return SECTIONS.every((section) => preset[section.id] === current[section.id]);
-}
-
-/** Section id → label, for the screens that summarise a grid in words. */
-export const SECTION_LABELS: Record<SectionId, string> = SECTIONS.reduce(
-  (map, section) => {
-    map[section.id] = section.label;
-    return map;
-  },
-  {} as Record<SectionId, string>
-);
 
 export type AdminScope = { type: "district" } | { type: "school"; schoolId: string };
 
+/** "All schools" or the school's name — what the row and the invite both show. */
 export function scopeLabel(scope: AdminScope): string {
-  if (scope.type === "district") return "District-wide";
+  if (scope.type === "district") return "All schools";
   return schools.find((school) => school.id === scope.schoolId)?.name ?? "Unknown school";
 }
 
-/**
- * Three states, and only three: an account has been asked, is in use, or is
- * not.
- *
- * Revoked used to be a fourth. It said the same thing as Inactive — this person
- * cannot sign in — while implying a different one, that the two could be told
- * apart later, which nothing on the screen ever did. Handing access back and
- * letting it lapse both end in an account nobody can use, and a status list is
- * a worse place to record why than the audit log is.
- */
-export type AdminUserStatus = "Invited" | "Active" | "Inactive";
+/** Role and reach in one phrase: "School Admin · Edison High School". */
+export function roleScopeLabel(user: Pick<AdminUser, "role" | "scope">): string {
+  return user.role === "super_admin"
+    ? ADMIN_ROLE_LABELS.super_admin
+    : `${ADMIN_ROLE_LABELS.school_admin} · ${scopeLabel(user.scope)}`;
+}
 
-export const ADMIN_STATUS_LABELS: Record<AdminUserStatus, string> = {
-  Invited: "Invited",
-  Active: "Active",
-  Inactive: "Inactive"
-};
+/* ── Status ───────────────────────────────────────────────────────────── */
+
+/**
+ * Three states, and each is a fact about the invitation rather than a category
+ * someone was filed under.
+ *
+ * `Disabled` rather than "Inactive": it is something an admin did, not something
+ * that drifted. The record is kept either way — an account that signed in for a
+ * year is part of the audit trail, and deleting the row would take the trail
+ * with it.
+ */
+export type AdminUserStatus = "Invited" | "Active" | "Disabled";
 
 export const ADMIN_STATUS_TONE: Record<AdminUserStatus, StatusTone> = {
   Invited: "warn",
   Active: "ok",
-  Inactive: "neutral"
+  Disabled: "neutral"
 };
 
-export const ADMIN_STATUS_ORDER: AdminUserStatus[] = ["Invited", "Active", "Inactive"];
+export const ADMIN_STATUS_ORDER: AdminUserStatus[] = ["Invited", "Active", "Disabled"];
 
-/**
- * Statuses that were stored before there were three of them.
- *
- * A revoked account becomes Inactive: both mean the person cannot sign in, and
- * the account is still there to be reactivated. An invitation nobody accepted
- * stays an invitation.
- */
-const LEGACY_STATUS_NAMES: Record<string, AdminUserStatus> = {
-  Invited: "Invited",
-  "Pending Invite": "Invited",
-  Active: "Active",
-  Inactive: "Inactive",
-  Revoked: "Inactive"
+export const ADMIN_STATUS_HINTS: Record<AdminUserStatus, string> = {
+  Invited: "Invitation sent. They have not signed in yet.",
+  Active: "Accepted the invitation and can sign in.",
+  Disabled: "Access withdrawn. The record and its history are kept."
 };
 
 export function normalizeStatus(status: unknown): AdminUserStatus {
-  return LEGACY_STATUS_NAMES[String(status)] ?? "Inactive";
+  return ADMIN_STATUS_ORDER.includes(status as AdminUserStatus)
+    ? (status as AdminUserStatus)
+    : "Invited";
 }
+
+/* ── The record ───────────────────────────────────────────────────────── */
 
 export type AdminUser = {
   id: string;
   name: string;
+  /** The district-issued address the account is attached to. */
   email: string;
-  /** The roles granted, which seed the grid below and label the account. */
-  roles: AdminRole[];
-  /**
-   * What this account may actually do, section by section.
-   *
-   * Seeded from the roles when access is granted, then adjustable for this one
-   * person — so it can differ from what the roles imply, and it, not the roles,
-   * is what the portal should read.
-   */
-  access: SectionAccessMap;
-  /** Role-independent: scope applies across every role the account holds. */
+  role: AdminRole;
+  /** District for a Super Admin; the assigned school for a School Admin. */
   scope: AdminScope;
   status: AdminUserStatus;
   lastLogin: string | null;
   dateAdded: string;
   invitedBy: string;
+  /** When the current invitation was sent — reset each time it is resent. */
+  inviteSentAt: string | null;
+  /** How many times it has been sent, first send included. */
+  inviteSends: number;
 };
 
+/** How long an invitation stands before it has to be sent again. */
+export const INVITE_VALID_DAYS = 7;
+
+export function inviteExpiresAt(sentAt: string): string {
+  const expiry = new Date(sentAt);
+  expiry.setDate(expiry.getDate() + INVITE_VALID_DAYS);
+  return expiry.toISOString();
+}
+
 /**
- * Admin access is only ever granted to a district-issued institutional
- * account. A personal mailbox can't be deprovisioned when someone leaves, so
- * their portal access would outlive their employment — and the audit log would
- * point at an address the district doesn't control.
+ * Whether the standing invitation has run out.
  *
- * TODO: read the real allow-list from the district identity config; there's no
+ * Worth showing rather than leaving to be discovered: an invite nobody accepted
+ * in a week is usually one that went to the wrong address or the wrong person,
+ * and "Invited" alone does not distinguish that from one sent this morning.
+ */
+export function isInviteExpired(user: AdminUser, now: Date = new Date()): boolean {
+  if (user.status !== "Invited" || !user.inviteSentAt) return false;
+  return new Date(inviteExpiresAt(user.inviteSentAt)) < now;
+}
+
+/* ── Email ────────────────────────────────────────────────────────────── */
+
+/**
+ * Admin access is only ever granted to a district-issued institutional account.
+ *
+ * TODO: read the real allow-list from the district identity config; there is no
  * settings contract for it yet, so the seed domain is hardcoded here.
  */
 export const INSTITUTIONAL_EMAIL_DOMAINS = ["edison.example.org"];
 
-/** "@edison.example.org", or "@a or @b" if the district ever runs more than one. */
-export const INSTITUTIONAL_DOMAINS_LABEL = INSTITUTIONAL_EMAIL_DOMAINS.map((domain) => `@${domain}`).join(
-  " or "
-);
+export const INSTITUTIONAL_DOMAINS_LABEL = INSTITUTIONAL_EMAIL_DOMAINS.map(
+  (domain) => `@${domain}`
+).join(" or ");
 
-/** Shape check only — shared so the manual and CSV invites can't drift apart. */
 export function isEmailShaped(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
+}
+
+export function isInstitutionalEmail(email: string): boolean {
+  const at = email.trim().toLowerCase().lastIndexOf("@");
+  if (at < 0) return false;
+  const domain = email.trim().toLowerCase().slice(at + 1);
+  return INSTITUTIONAL_EMAIL_DOMAINS.includes(domain);
 }
 
 /**
- * True when the address sits on an allowed institutional domain. Subdomains
- * count (`staff.edison.example.org`), since districts routinely split staff and
- * student mail that way.
+ * A display name from the address, since the mailbox is created before the
+ * account and nobody should have to retype what the directory already knows.
+ *
+ * "pnair" gives "Pnair", which is wrong often enough that the field stays
+ * editable — this only saves the common case from being blank.
  */
-export function isInstitutionalEmail(email: string): boolean {
-  const normalized = email.trim().toLowerCase();
-  const at = normalized.lastIndexOf("@");
-  if (at === -1) return false;
-
-  const domain = normalized.slice(at + 1);
-  return INSTITUTIONAL_EMAIL_DOMAINS.some(
-    (allowed) => domain === allowed || domain.endsWith(`.${allowed}`)
-  );
+export function nameFromEmail(email: string): string {
+  const local = email.trim().split("@")[0] ?? "";
+  return local
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 export function newAdminUserId(name: string): string {
@@ -438,108 +207,115 @@ export function newAdminUserId(name: string): string {
   return `${slug || "admin"}-${Date.now()}`;
 }
 
-type AdminUserSeed = Omit<AdminUser, "access">;
+/* ── Seeds ────────────────────────────────────────────────────────────── */
 
-/**
- * Seeded accounts carry roles only. Their grid is what those roles grant —
- * built here rather than written out, so a seed cannot drift from the preset
- * it is supposed to be an example of.
- */
-const seededAccounts: AdminUserSeed[] = [
-  /* The account the district is run from, and the one every other account here
-     was invited by. Without it the seed has no Super Admin, and the role that
-     grants the rest reads as one nobody holds. */
+/* One of each role in each state worth standing in, including an invitation
+   that has run out — the case an admin most needs to see and the one a list of
+   healthy rows never shows. */
+export const adminUsers: AdminUser[] = [
   {
     id: "ken-oyelaran-admin",
     name: "Ken Oyelaran",
     email: "koyelaran@edison.example.org",
-    roles: ["super_admin"],
+    role: "super_admin",
     scope: { type: "district" },
     status: "Active",
-    lastLogin: "2026-07-17T13:40:00-04:00",
+    lastLogin: "2026-09-02T13:40:00-04:00",
     dateAdded: "2025-08-01T08:00:00-04:00",
-    invitedBy: "System"
+    invitedBy: "System",
+    inviteSentAt: "2025-08-01T08:00:00-04:00",
+    inviteSends: 1
   },
   {
     id: "priya-nair-admin",
     name: "Priya Nair",
     email: "pnair@edison.example.org",
-    roles: ["it_admin"],
+    role: "super_admin",
     scope: { type: "district" },
     status: "Active",
-    lastLogin: "2026-07-17T12:05:00-04:00",
+    lastLogin: "2026-09-02T12:05:00-04:00",
     dateAdded: "2025-08-14T09:00:00-04:00",
-    invitedBy: "Ken Oyelaran"
+    invitedBy: "Ken Oyelaran",
+    inviteSentAt: "2025-08-14T09:00:00-04:00",
+    inviteSends: 1
   },
   {
     id: "dana-whitfield-admin",
     name: "Dana Whitfield",
     email: "dwhitfield@edison.example.org",
-    roles: ["leadership", "school_admin"],
+    role: "school_admin",
     scope: { type: "school", schoolId: "edison-hs" },
     status: "Active",
-    lastLogin: "2026-07-17T09:14:00-04:00",
+    lastLogin: "2026-09-01T09:14:00-04:00",
     dateAdded: "2025-08-14T09:05:00-04:00",
-    invitedBy: "Priya Nair"
+    invitedBy: "Priya Nair",
+    inviteSentAt: "2025-08-14T09:05:00-04:00",
+    inviteSends: 2
   },
   {
     id: "marcus-reyes-admin",
     name: "Marcus Reyes",
     email: "mreyes@edison.example.org",
-    roles: ["leadership"],
+    role: "school_admin",
     scope: { type: "school", schoolId: "edison-ms" },
     status: "Active",
-    lastLogin: "2026-07-16T16:42:00-04:00",
+    lastLogin: "2026-08-28T16:42:00-04:00",
     dateAdded: "2025-09-02T10:30:00-04:00",
-    invitedBy: "Priya Nair"
-  },
-  {
-    id: "sam-okonkwo-admin",
-    name: "Sam Okonkwo",
-    email: "sokonkwo@edison.example.org",
-    roles: ["school_admin"],
-    scope: { type: "school", schoolId: "lincoln-es" },
-    status: "Inactive",
-    lastLogin: "2026-04-02T11:20:00-04:00",
-    dateAdded: "2025-08-20T14:00:00-04:00",
-    invitedBy: "Priya Nair"
-  },
-  {
-    id: "alicia-gomez-admin",
-    name: "Alicia Gomez",
-    email: "agomez@edison.example.org",
-    roles: ["it_admin"],
-    scope: { type: "district" },
-    status: "Invited",
-    lastLogin: null,
-    dateAdded: "2026-07-15T10:20:00-04:00",
-    invitedBy: "Priya Nair"
+    invitedBy: "Priya Nair",
+    inviteSentAt: "2025-09-02T10:30:00-04:00",
+    inviteSends: 1
   },
   {
     id: "tom-bradley-admin",
     name: "Tom Bradley",
     email: "tbradley@edison.example.org",
-    roles: ["school_admin"],
+    role: "school_admin",
     scope: { type: "school", schoolId: "james-madison-intermediate" },
     status: "Invited",
     lastLogin: null,
-    dateAdded: "2026-07-16T14:03:00-04:00",
-    invitedBy: "Dana Whitfield"
+    dateAdded: "2026-09-01T14:03:00-04:00",
+    invitedBy: "Dana Whitfield",
+    inviteSentAt: "2026-09-01T14:03:00-04:00",
+    inviteSends: 1
+  },
+  {
+    id: "alicia-gomez-admin",
+    name: "Alicia Gomez",
+    email: "agomez@edison.example.org",
+    role: "super_admin",
+    scope: { type: "district" },
+    status: "Invited",
+    lastLogin: null,
+    // Sent in July and never accepted: the expired case.
+    dateAdded: "2026-07-15T10:20:00-04:00",
+    invitedBy: "Priya Nair",
+    inviteSentAt: "2026-07-15T10:20:00-04:00",
+    inviteSends: 2
+  },
+  {
+    id: "sam-okonkwo-admin",
+    name: "Sam Okonkwo",
+    email: "sokonkwo@edison.example.org",
+    role: "school_admin",
+    scope: { type: "school", schoolId: "lincoln-es" },
+    status: "Disabled",
+    lastLogin: "2026-04-02T11:20:00-04:00",
+    dateAdded: "2025-08-20T14:00:00-04:00",
+    invitedBy: "Priya Nair",
+    inviteSentAt: "2025-08-20T14:00:00-04:00",
+    inviteSends: 1
   },
   {
     id: "erin-castellano-admin",
     name: "Erin Castellano",
     email: "ecastellano@edison.example.org",
-    roles: ["school_admin"],
+    role: "school_admin",
     scope: { type: "school", schoolId: "edison-ms" },
-    status: "Inactive",
+    status: "Disabled",
     lastLogin: "2026-05-29T08:47:00-04:00",
     dateAdded: "2025-08-22T11:15:00-04:00",
-    invitedBy: "Priya Nair"
+    invitedBy: "Priya Nair",
+    inviteSentAt: "2025-08-22T11:15:00-04:00",
+    inviteSends: 1
   }
 ];
-
-export const adminUsers: AdminUser[] = seededAccounts.map((seed) => ({
-  ...seed,
-  access: fullAccess(presetAccess(seed.roles))
-}));

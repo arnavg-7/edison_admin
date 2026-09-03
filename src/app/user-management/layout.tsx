@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import { usePathname } from "next/navigation";
 import { SectionTabs } from "@/components/shared/SectionTabs";
 import { INSTITUTIONAL_DOMAINS_LABEL } from "@/lib/data/adminUsers";
 
@@ -35,8 +36,16 @@ const TABS = [
  * onto a tab you are not looking at.
  */
 export default function UserManagementLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  /* One account's record is not a tab. It keeps the section heading and the way
+     back, but the tab strip would have to mark one of four as current, and none
+     of them is where you are. */
+  const isRecord = /^\/user-management\/[^/]+$/.test(pathname) &&
+    !["/user-management/invited", "/user-management/active", "/user-management/disabled"].includes(pathname);
+
   return (
     <section className="sf-main">
+      {isRecord ? null : (
       <div className="sf-page-head">
         <div>
           <h1 className="sf-page-title">User Management</h1>
@@ -47,9 +56,10 @@ export default function UserManagementLayout({ children }: { children: React.Rea
           </p>
         </div>
       </div>
+      )}
 
       <Suspense fallback={null}>
-        <SectionTabs tabs={TABS} />
+        {isRecord ? null : <SectionTabs tabs={TABS} />}
         {children}
       </Suspense>
     </section>

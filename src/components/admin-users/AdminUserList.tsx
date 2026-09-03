@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MailAdd01Icon } from "@hugeicons/core-free-icons";
 import {
@@ -195,7 +196,12 @@ export function AdminUserList({
                 return (
                   <tr key={user.id}>
                     <td>
-                      <div className="list-editor-item-title">{user.name}</div>
+                      {/* The name opens their record — access, invitation and
+                          what they have changed. Edit stays on the row for the
+                          common case of moving a role. */}
+                      <Link className="sf-bar-group-link" href={`/user-management/${user.id}`}>
+                        {user.name}
+                      </Link>
                       <div className="list-editor-item-detail">{user.email}</div>
                     </td>
                     <td>{ADMIN_ROLE_LABELS[user.role]}</td>

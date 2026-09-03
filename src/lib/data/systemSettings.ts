@@ -277,48 +277,7 @@ export const announcements: Announcement[] = [
   }
 ];
 
-export type AuditEntry = {
-  id: string;
-  actor: string;
-  action: string;
-  target: string;
-  at: string;
-};
-
-export const auditLog: AuditEntry[] = [
-  {
-    id: "al-1",
-    actor: "Priya Nair",
-    action: "Updated alert rule",
-    target: "Attendance below 80%",
-    at: "2026-07-17T12:41:00-04:00"
-  },
-  {
-    id: "al-2",
-    actor: "Sam Okonkwo",
-    action: "Changed role",
-    target: "Marcus Reyes → School Leader",
-    at: "2026-07-17T10:12:00-04:00"
-  },
-  {
-    id: "al-3",
-    actor: "Priya Nair",
-    action: "Published development area",
-    target: "Collaboration (HS)",
-    at: "2026-07-16T15:55:00-04:00"
-  },
-  {
-    id: "al-4",
-    actor: "Sam Okonkwo",
-    action: "Re-ran Genesis ingest",
-    target: "2026-07-16 daily file",
-    at: "2026-07-16T08:07:00-04:00"
-  },
-  {
-    id: "al-5",
-    actor: "Dana Whitfield",
-    action: "Exported report",
-    target: "Faculty class performance · Edison HS",
-    at: "2026-07-15T17:20:00-04:00"
-  }
-];
+/* The audit trail is generated per admin account in adminActivity, so the
+   district-wide log and one person's record cannot disagree. The five hardcoded
+   entries that used to sit here had no section and no portal, which is most of
+   what an audit line is for. */

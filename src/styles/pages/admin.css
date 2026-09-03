@@ -2248,3 +2248,57 @@
   grid-column: 1 / -1;
   max-width: 78ch;
 }
+
+/* Admin accounts table --------------------------------------------------- */
+
+/* The filter bar and the table it filters need air between them: flush, the
+   column headings read as a fifth row of the filter row above them. */
+.sf-panel .sf-filter-bar--flush + .sf-table-wrap {
+  margin-top: 18px;
+}
+
+/* Roomier than the shared table. Every row here is two lines of text in three
+   of its columns — a name over an address, a role over a school, a send date
+   over an expiry — and at the default 11px the lines of one row sat as close to
+   the next row as to each other. */
+.sf-table--roomy th {
+  padding: 0 16px 12px;
+}
+
+.sf-table--roomy td {
+  padding: 16px;
+  vertical-align: top;
+}
+
+/* Two-line cells: the second line is a caption on the first, so it sits tight
+   under it while the rows themselves breathe. */
+.sf-table--roomy .list-editor-item-detail {
+  margin-top: 3px;
+}
+
+/* Withdrawing access, at the foot of the edit drawer. Separated and outlined
+   because it applies on its own — it is not part of what Save does. */
+.drawer-danger {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--sf-card-border);
+  border-radius: 14px;
+}
+
+.drawer-danger-head {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sf-text-dim);
+}
+
+.drawer-danger-detail {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--sf-text-muted);
+}

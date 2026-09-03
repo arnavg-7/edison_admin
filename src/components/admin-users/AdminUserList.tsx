@@ -52,8 +52,7 @@ export function AdminUserList({
   status?: AdminUserStatus;
   heading?: string;
 }) {
-  const { adminUsers, sendInvite, disableUser, enableUser, removeUser, isLoaded } =
-    useAdminUsers();
+  const { adminUsers, sendInvite, isLoaded } = useAdminUsers();
   const { roleLabel } = useAdminScope();
   const mounted = useMounted();
 
@@ -65,14 +64,6 @@ export function AdminUserList({
   const [editing, setEditing] = useState<AdminUser | null>(null);
 
   const effectiveStatus = fixedStatus ?? status;
-
-  const counts = useMemo(() => {
-    const byStatus = new Map<AdminUserStatus, number>();
-    for (const entry of ADMIN_STATUS_ORDER) {
-      byStatus.set(entry, adminUsers.filter((user) => user.status === entry).length);
-    }
-    return byStatus;
-  }, [adminUsers]);
 
   const visible = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -130,11 +121,8 @@ export function AdminUserList({
             <span>Status</span>
             <Combobox
               options={[
-                { value: ALL, label: `All statuses · ${adminUsers.length}` },
-                ...ADMIN_STATUS_ORDER.map((entry) => ({
-                  value: entry,
-                  label: `${entry} · ${counts.get(entry) ?? 0}`
-                }))
+                { value: ALL, label: "All statuses" },
+                ...ADMIN_STATUS_ORDER.map((entry) => ({ value: entry, label: entry }))
               ]}
               value={status}
               onChange={setStatus}
@@ -167,11 +155,6 @@ export function AdminUserList({
             value={school}
             onChange={setSchool}
           />
-          {/* Says why a Super Admin disappears when this is set, rather than
-              leaving it to be worked out. */}
-          <span className="sf-field-hint">
-            {school === ALL ? "" : "Super Admins are not listed — they reach every school."}
-          </span>
         </label>
       </div>
 
@@ -193,7 +176,7 @@ export function AdminUserList({
         />
       ) : (
         <div className="sf-table-wrap">
-          <table className="sf-table">
+          <table className="sf-table sf-table--roomy">
             <thead>
               <tr>
                 <th scope="col">Person</th>
@@ -257,42 +240,19 @@ export function AdminUserList({
                           Edit<span className="sf-sr-only"> {user.name}</span>
                         </Button>
 
+                        {/* Resend is the only row action beyond Edit. Disabling
+                            an account is a decision about a person, so it lives
+                            in their record next to the role it changes — not as
+                            a button one mis-click away in a list of eight. */}
                         {user.status === "Invited" ? (
-                          <>
-                            <Button
-                              color="secondary"
-                              size="xs"
-                              onClick={() => sendInvite(user.id)}
-                            >
-                              Resend<span className="sf-sr-only"> invitation to {user.name}</span>
-                            </Button>
-                            {/* Removed rather than disabled: an invitation nobody
-                                accepted has no history to keep. */}
-                            <Button
-                              color="secondary-destructive"
-                              size="xs"
-                              onClick={() => removeUser(user.id)}
-                            >
-                              Withdraw<span className="sf-sr-only"> invitation to {user.name}</span>
-                            </Button>
-                          </>
-                        ) : user.status === "Active" ? (
-                          <Button
-                            color="secondary-destructive"
-                            size="xs"
-                            onClick={() => disableUser(user.id)}
-                          >
-                            Disable<span className="sf-sr-only"> {user.name}</span>
-                          </Button>
-                        ) : (
                           <Button
                             color="secondary"
                             size="xs"
-                            onClick={() => enableUser(user.id)}
+                            onClick={() => sendInvite(user.id)}
                           >
-                            Re-enable<span className="sf-sr-only"> {user.name}</span>
+                            Resend<span className="sf-sr-only"> invitation to {user.name}</span>
                           </Button>
-                        )}
+                        ) : null}
                       </div>
                     </td>
                   </tr>

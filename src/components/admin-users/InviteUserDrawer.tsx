@@ -51,7 +51,8 @@ export function InviteUserDrawer({
   invitedBy: string;
   onClose: () => void;
 }) {
-  const { adminUsers, addUser, updateUser, sendInvite } = useAdminUsers();
+  const { adminUsers, addUser, updateUser, sendInvite, disableUser, enableUser } =
+    useAdminUsers();
   const editing = user !== undefined;
 
   const [email, setEmail] = useState(user?.email ?? "");
@@ -213,6 +214,58 @@ export function InviteUserDrawer({
                 ))}
               </ul>
             </div>
+
+            {/* Withdrawing access is a decision about a person, so it sits in
+                their record beside the role it changes rather than as a button
+                in a list of eight, one mis-click from the wrong row. Its own
+                block, below everything the Save button applies to, because it
+                takes effect on its own. */}
+            {editing ? (
+              <div className="drawer-danger">
+                <p className="drawer-danger-head">Access</p>
+                {user.status === "Disabled" ? (
+                  <>
+                    <p className="drawer-danger-detail">
+                      Withdrawn{user.lastLogin ? "" : " before they ever signed in"}. Re-enabling
+                      returns them to {user.lastLogin ? "Active" : "Invited"}.
+                    </p>
+                    <Button
+                      color="secondary"
+                      size="sm"
+                      className="justify-self-start"
+                      onClick={() => {
+                        enableUser(user.id);
+                        onClose();
+                      }}
+                    >
+                      Re-enable this account
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    {/* The reason differs by whether they ever got in: there is
+                        no history to keep on an account nobody has used, and
+                        saying there is would be untrue. */}
+                    <p className="drawer-danger-detail">
+                      {user.lastLogin
+                        ? "They stop being able to sign in. The record and its history are kept — an account that has been in use is part of the audit trail."
+                        : "The invitation stops working and the account cannot be used. The record is kept, so the same address is not invited twice by mistake."}
+                    </p>
+                    <Button
+                      color="secondary-destructive"
+                      size="sm"
+                      className="justify-self-start"
+                      onClick={() => {
+                        disableUser(user.id);
+                        onClose();
+                      }}
+                    >
+                      Disable this account
+                    </Button>
+                  </>
+                )}
+              </div>
+            ) : null}
           </div>
         </div>
 

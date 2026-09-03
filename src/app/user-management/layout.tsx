@@ -5,21 +5,21 @@ import { SectionTabs } from "@/components/shared/SectionTabs";
 import { INSTITUTIONAL_DOMAINS_LABEL } from "@/lib/data/adminUsers";
 
 /**
- * Five tabs: everyone, the three states an account can be in, and the roles
- * behind them.
+ * Four tabs: everyone, and the three states an account can be in.
  *
  * A status has a tab as well as a filter because two of them are queues — an
  * invitation waiting to be accepted, and access that has been withdrawn — and a
  * queue is a place you go, not a value you set.
+ *
+ * What each role grants is stated where it is being granted, in the invite and
+ * edit drawer, rather than on a tab of its own: a reference page nobody opens
+ * before they act is a page that does not do the job.
  */
 const TABS = [
   { label: "All Users", href: "/user-management" },
   { label: "Invited", href: "/user-management/invited" },
   { label: "Active", href: "/user-management/active" },
-  { label: "Disabled", href: "/user-management/disabled" },
-  /* Last, and about roles rather than people: reference for what an invitation
-     is about to grant. */
-  { label: "Roles", href: "/user-management/roles" }
+  { label: "Disabled", href: "/user-management/disabled" }
 ];
 
 /**
